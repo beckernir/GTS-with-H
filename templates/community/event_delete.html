@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Community Event{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Delete Community Event</h2>
+    {% if user.is_reb_officer or user.is_system_admin %}
+    <div class="alert alert-danger">
+        <p>Are you sure you want to delete the event <strong>{{ event.event_title }}</strong>?</p>
+    </div>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Yes, Delete</button>
+        <a href="{% url 'community:event_detail' event.event_id %}" class="btn btn-secondary ms-2">Cancel</a>
+    </form>
+    {% else %}
+    <div class="alert alert-danger mt-3">You are not authorized to delete this community event.</div>
+    {% endif %}
+</div>
+{% endblock %}

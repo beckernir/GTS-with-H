@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Create Tender</h2>
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-7">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="id_title" class="form-label">Title</label>
+                            {{ form.title|add_class:"form-control" }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_description" class="form-label">Description</label>
+                            {{ form.description|add_class:"form-control" }}
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="id_status" class="form-label">Status</label>
+                                {{ form.status|add_class:"form-select" }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="id_school" class="form-label">School</label>
+                                {{ form.school|add_class:"form-select" }}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_submission_deadline" class="form-label">Submission deadline</label>
+                            {{ form.submission_deadline|add_class:"form-control" }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_awarded_to" class="form-label">Awarded to</label>
+                            {{ form.awarded_to|add_class:"form-control" }}
+                        </div>
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">Submit</button>
+                            <a href="{% url 'procurement:tender_list' %}" class="btn btn-secondary btn-lg">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_css %}
+<style>
+    .form-label {
+        font-weight: 500;
+    }
+
+    .card {
+        border-radius: 1rem;
+    }
+
+    .btn-lg {
+        font-size: 1.1rem;
+        padding: 0.75rem 0;
+    }
+</style>
+{% endblock %}

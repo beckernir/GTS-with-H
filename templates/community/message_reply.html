@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block title %}Reply to Message{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h2 class="mb-0">Reply to Message</h2>
+                </div>
+                <div class="card-body position-relative">
+                    <div class="mb-3">
+                        <strong>From:</strong> {{ parent.sender.get_full_name|default:parent.sender.username }}<br>
+                        <strong>To:</strong>
+                        {% for user in parent.recipients.all %}
+                            {{ user.get_full_name|default:user.username }}{% if not forloop.last %}, {% endif %}
+                        {% endfor %}<br>
+                        <strong>Subject:</strong> {{ parent.subject|default:"(No Subject)" }}<br>
+                        <strong>Message:</strong>
+                        <div class="border rounded p-2 mt-1 bg-light">{{ parent.content|linebreaks }}</div>
+                        <p class="text-muted small mt-2">Sent: {{ parent.created_at|date:"Y-m-d H:i" }}</p>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ form.non_field_errors }}
+
+                        <div class="mb-3 position-relative">
+                            <label for="id_recipients" class="form-label">To</label>
+                            {{ form.recipients }}
+                            {% if form.recipients.help_text %}
+                                <div class="form-text">{{ form.recipients.help_text }}</div>
+                            {% endif %}
+                            {% for error in form.recipients.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                            <ul id="user-suggestions" class="list-group position-absolute w-100"
+                                style="z-index: 1000; display: none;"></ul>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_subject" class="form-label">Subject</label>
+                            {{ form.subject }}
+                            {% for error in form.subject.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_content" class="form-label">Message</label>
+                            {{ form.content }}
+                            {% for error in form.content.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary">Send Reply</button>
+                            <a href="{% url 'community:message_detail' parent.message_id %}" class="btn btn-secondary ms-2">Back to Message</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const input = document.getElementById('id_recipients');
+    const suggestions = document.getElementById('user-suggestions');
+
+    input.addEventListener('input', function () {
+        const value = input.value;
+        const atIndex = value.lastIndexOf('@');
+        if (atIndex !== -1) {
+            const query = value.slice(atIndex + 1).toLowerCase();
+            if (query.length > 0) {
+                fetch(`/community/ajax/user-suggestions/?q=${encodeURIComponent(query)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const matches = data.results;
+                        suggestions.innerHTML = '';
+                        if (matches.length > 0) {
+                            matches.forEach(username => {
+                                const li = document.createElement('li');
+                                li.className = 'list-group-item list-group-item-action';
+                                li.textContent = '@' + username;
+                                li.onclick = function () {
+                                    input.value = value.slice(0, atIndex + 1) + username + ' ';
+                                    suggestions.style.display = 'none';
+                                    input.focus();
+                                };
+                                suggestions.appendChild(li);
+                            });
+                            suggestions.style.display = 'block';
+                        } else {
+                            suggestions.style.display = 'none';
+                        }
+                    });
+            } else {
+                suggestions.style.display = 'none';
+            }
+        } else {
+            suggestions.style.display = 'none';
+        }
+    });
+
+    document.addEventListener('click', function (e) {
+        if (!suggestions.contains(e.target) && e.target !== input) {
+            suggestions.style.display = 'none';
+        }
+    });
+</script>
+{% endblock %}

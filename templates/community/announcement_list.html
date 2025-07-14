@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-3">Announcements</h2>
+    <hr>
+
+    {% if announcements %}
+        <ul class="list-group">
+            {% for announcement in announcements %}
+                <li class="list-group-item">
+                    <h5 class="mb-1">{{ announcement.title }}</h5>
+                    <p class="mb-1">{{ announcement.content|linebreaks }}</p>
+                    <small class="text-muted">
+                        Posted by {{ announcement.created_by.get_full_name|default:announcement.created_by.username }}
+                        on {{ announcement.created_at|date:"Y-m-d H:i" }}
+                    </small>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No announcements found.</p>
+    {% endif %}
+
+    <div class="mt-4">
+        <a href="{% url 'community:announcement_create' %}" class="btn btn-primary">Create Announcement</a>
+    </div>
+</div>
+{% endblock %}

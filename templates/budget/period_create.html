@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Budget Period{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0"><i class="fas fa-calendar-plus me-2"></i>Create Budget Period</h3>
+                </div>
+                <div class="card-body">
+                    {% if user.is_school_admin or user.is_reb_officer or user.is_system_admin %}
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        {{ form.non_field_errors }}
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label for="id_period_name" class="form-label">Period Name</label>
+                                {{ form.period_name }}
+                                {% if form.period_name.help_text %}<div class="form-text">{{ form.period_name.help_text }}</div>{% endif %}
+                                {% for error in form.period_name.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="id_period_type" class="form-label">Period Type</label>
+                                {{ form.period_type }}
+                                {% if form.period_type.help_text %}<div class="form-text">{{ form.period_type.help_text }}</div>{% endif %}
+                                {% for error in form.period_type.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="id_start_date" class="form-label">Start Date</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                                    {{ form.start_date }}
+                                </div>
+                                {% for error in form.start_date.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="id_end_date" class="form-label">End Date</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                                    {{ form.end_date }}
+                                </div>
+                                {% for error in form.end_date.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="id_total_budget_limit" class="form-label">Total Budget Limit (RWF)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-coins"></i></span>
+                                    {{ form.total_budget_limit }}
+                                </div>
+                                {% for error in form.total_budget_limit.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-6 mb-3 d-flex align-items-center">
+                                <div class="form-check mt-4">
+                                    {{ form.is_active }}
+                                    <label for="id_is_active" class="form-check-label ms-2">Active Period</label>
+                                </div>
+                                {% for error in form.is_active.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between mt-4">
+                            <button type="submit" class="btn btn-primary"><i class="fas fa-save me-2"></i>Submit</button>
+                            <a href="{% url 'budget:period_list' %}" class="btn btn-secondary ms-2">Back to Periods</a>
+                        </div>
+                    </form>
+                    {% else %}
+                    <div class="alert alert-danger">You are not authorized to create a budget period.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Fallback for browsers that do not support input type="date"
+document.addEventListener('DOMContentLoaded', function() {
+    var dateInputs = document.querySelectorAll('input[type="date"]');
+    dateInputs.forEach(function(input) {
+        if (input.type !== 'date') {
+            // You could add a datepicker polyfill here if needed
+        }
+    });
+});
+</script>
+{% endblock %}

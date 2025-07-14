@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete School Budget{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card border-danger shadow-sm">
+                <div class="card-header bg-danger text-white d-flex align-items-center">
+                    <h3 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Delete School Budget</h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger d-flex align-items-center" role="alert">
+                        <i class="fas fa-exclamation-circle fa-2x me-3"></i>
+                        <div>
+                            <strong>Warning:</strong> This action cannot be undone. Are you sure you want to
+                            <strong>delete</strong> the following school budget?
+                        </div>
+                    </div>
+                    <ul class="list-group mb-4">
+                        <li class="list-group-item"><strong>School:</strong> {{ budget.school.school_name }}</li>
+                        <li class="list-group-item"><strong>Budget Period:</strong> {{ budget.budget_period.period_name
+                            }}</li>
+                        <li class="list-group-item"><strong>Budget Title:</strong> {{ budget.budget_title }}</li>
+                        <li class="list-group-item"><strong>Total Budget:</strong> RWF {{
+                            budget.total_budget_amount|floatformat:0|intcomma }}</li>
+                    </ul>
+                    <form method="post" class="d-flex gap-2">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger px-4">
+                            <i class="fas fa-trash me-1"></i>Yes, Delete
+                        </button>
+                        <a href="{% url 'budget:school_budget_list' %}" class="btn btn-secondary ms-2">
+                            <i class="fas fa-arrow-left me-1"></i>Cancel
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

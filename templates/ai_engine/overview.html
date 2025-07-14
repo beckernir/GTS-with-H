@@ -1,0 +1,611 @@
+{% extends 'base.html' %}
+
+{% block title %}AI Engine - GrantTracker{% endblock %}
+
+{% block page_title %}AI Engine{% endblock %}
+
+{% block page_subtitle %}
+<p class="text-muted mb-0">Intelligent grant allocation and predictive analytics powered by machine learning</p>
+{% endblock %}
+
+{% block content %}
+
+<!-- AI Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="mb-0">
+                            {% if model_accuracy %}{{ model_accuracy|floatformat:2 }}%{% else %}N/A{% endif %}
+                        </h4>
+                        <p class="mb-0">Model Accuracy</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-brain fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="mb-0">{{ processed_proposals|default:"1,250" }}</h4>
+                        <p class="mb-0">Processed Proposals</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-cogs fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="mb-0">{{ time_saved|default:"65" }}%</h4>
+                        <p class="mb-0">Time Saved</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-clock fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="mb-0">{{ predictions|default:"850" }}</h4>
+                        <p class="mb-0">Predictions Made</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-chart-line fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Dynamic Metrics Row -->
+<div class="row mb-4">
+    <div class="col-md-2">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">Proposals</h5>
+                <h3>{{ total_proposals }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">Predictions</h5>
+                <h3>{{ total_predictions }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">Anomalies</h5>
+                <h3>{{ total_anomalies }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">Avg. Score</h5>
+                <h3>{{ avg_score|floatformat:2 }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">Anomaly %</h5>
+                <h3>{{ anomaly_pct|floatformat:1 }}%</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row mb-4">
+    <div class="col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header"><strong>Prediction Score Distribution</strong></div>
+            <div class="card-body"><canvas id="scoreDistChart"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header"><strong>Anomalies by Month</strong></div>
+            <div class="card-body"><canvas id="anomalyFreqChart"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header"><strong>Top 5 Proposals by Score</strong></div>
+            <div class="card-body"><canvas id="topProposalsChart"></canvas></div>
+        </div>
+    </div>
+</div>
+
+
+<div class="row">
+    <!-- Main Content -->
+    <div class="col-lg-8">
+        <!-- AI Predictions Chart -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">AI Prediction Accuracy Over Time</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="predictionChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+
+        <!-- Grant Allocation Recommendations -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">AI Grant Allocation Recommendations</h5>
+            </div>
+            <div class="card-body">
+                <div class="recommendation-list">
+                    {% for rec in recommendations %}
+                    <div class="recommendation-item">
+                        <div class="d-flex align-items-center">
+                            <div class="ai-score bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-3"
+                                style="width: 50px; height: 50px;">
+                                <span class="fw-bold">{{ rec.score }}%</span>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">{{ rec.title }} - {{ rec.school }}</h6>
+                                <p class="text-muted small mb-2">{{ rec.desc }}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">
+                                        <i class="fas fa-calendar me-1"></i>Recommended: {{ rec.date }}
+                                    </small>
+                                    <span class="badge bg-info ms-2">
+                                        Prediction: {{ rec.prediction|floatformat:2 }}
+                                    </span>
+
+                                    <div>
+                                        {% if rec.action == 'accept' %}
+                                        <span class="badge bg-success">Accepted</span>
+                                        {% elif rec.action == 'review' %}
+                                        <span class="badge bg-secondary">Reviewed</span>
+                                        {% else %}
+                                        <form method="post" style="display:inline;">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="proposal_title" value="{{ rec.title }}">
+                                            <button class="btn btn-success btn-sm me-2" name="action"
+                                                value="accept">Accept</button>
+                                            <button class="btn btn-outline-secondary btn-sm" name="action"
+                                                value="review">Review</button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% if not forloop.last %}
+                    <hr>{% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- AI Actions -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">AI Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <form method="post" style="display:inline;">
+                        {% csrf_token %}
+                        <button class="btn btn-primary mb-2" name="ai_action" value="run_allocation">
+                            <i class="fas fa-brain me-2"></i>Run Allocation Analysis
+                        </button>
+                        <button class="btn btn-success mb-2" name="ai_action" value="generate_predictions">
+                            <i class="fas fa-chart-line me-2"></i>Generate Predictions
+                        </button>
+                        <button class="btn btn-info mb-2" name="ai_action" value="optimize_budget">
+                            <i class="fas fa-calculator me-2"></i>Optimize Budget
+                        </button>
+                        <button class="btn btn-warning mb-2" name="ai_action" value="detect_anomalies">
+                            <i class="fas fa-exclamation-triangle me-2"></i>Detect Anomalies
+                        </button>
+                        <button class="btn btn-secondary mb-2" name="ai_action" value="train_model">
+                            <i class="fas fa-cog me-2"></i>Train Model
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Model Status -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Model Status</h5>
+            </div>
+            <div class="card-body">
+                <div class="model-status">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>Allocation Model</span>
+                        <span class="badge bg-success">{{ model_status.allocation }}</span>
+                    </div>
+                    <div class="progress mb-3" style="height: 8px;">
+                        <div class="progress-bar bg-success" style="width: {{ model_status.allocation_progress }}%">
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>Prediction Model</span>
+                        <span class="badge bg-success">{{ model_status.prediction }}</span>
+                    </div>
+                    <div class="progress mb-3" style="height: 8px;">
+                        <div class="progress-bar bg-success" style="width: {{ model_status.prediction_progress }}%">
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>Risk Assessment</span>
+                        <span class="badge bg-warning">{{ model_status.risk }}</span>
+                    </div>
+                    <div class="progress mb-3" style="height: 8px;">
+                        <div class="progress-bar bg-warning" style="width: {{ model_status.risk_progress }}%"></div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>Fraud Detection</span>
+                        <span class="badge bg-info">{{ model_status.fraud }}</span>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-info" style="width: {{ model_status.fraud_progress }}%"></div>
+                    </div>
+                </div>
+                {% if feature_importances %}
+                <hr>
+                <h6>Feature Importances</h6>
+                <ul class="list-group list-group-flush">
+                    {% for feature, importance in feature_importances.items %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>{{ feature|capfirst }}</span>
+                        <span class="badge bg-info">{{ importance|floatformat:3 }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- AI Insights -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">AI Insights</h5>
+            </div>
+            <div class="card-body">
+                <div class="insight-list">
+                    {% if anomalies %}
+                    <div class="alert alert-warning">
+                        <strong>Anomaly Alert:</strong> The following proposals have unusual prediction scores:<br>
+                        <ul>
+                            {% for rec in anomalies %}
+                            <li>{{ rec.title }} (Prediction: {{ rec.prediction|floatformat:2 }})</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                    <div class="insight-item mb-3">
+                        <div class="d-flex">
+                            <i class="fas fa-lightbulb text-warning me-2 mt-1"></i>
+                            <div>
+                                <h6 class="mb-1">Budget Optimization</h6>
+                                <p class="text-muted small mb-0">AI suggests reallocating 15% of budget to high-impact
+                                    projects.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="insight-item mb-3">
+                        <div class="d-flex">
+                            <i class="fas fa-chart-line text-success me-2 mt-1"></i>
+                            <div>
+                                <h6 class="mb-1">Trend Analysis</h6>
+                                <p class="text-muted small mb-0">Science and technology proposals show 25% higher
+                                    success rates.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="insight-item">
+                        <div class="d-flex">
+                            <i class="fas fa-exclamation-triangle text-danger me-2 mt-1"></i>
+                            <div>
+                                <h6 class="mb-1">Risk Alert</h6>
+                                <p class="text-muted small mb-0">3 proposals flagged for potential budget overruns.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Metrics -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Performance Metrics</h5>
+            </div>
+            <div class="card-body">
+                <div class="metric-item mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>Processing Speed</span>
+                        <strong>2.3s avg</strong>
+                    </div>
+                    <div class="progress mt-1" style="height: 4px;">
+                        <div class="progress-bar bg-primary" style="width: 85%"></div>
+                    </div>
+                </div>
+
+                <div class="metric-item mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>Memory Usage</span>
+                        <strong>67%</strong>
+                    </div>
+                    <div class="progress mt-1" style="height: 4px;">
+                        <div class="progress-bar bg-success" style="width: 67%"></div>
+                    </div>
+                </div>
+
+                <div class="metric-item">
+                    <div class="d-flex justify-content-between">
+                        <span>Uptime</span>
+                        <strong>99.8%</strong>
+                    </div>
+                    <div class="progress mt-1" style="height: 4px;">
+                        <div class="progress-bar bg-info" style="width: 99.8%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- All Predictions Table -->
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="mb-0">All Proposal Predictions</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped mb-0">
+                <thead>
+                    <tr>
+                        <th>Proposal</th>
+                        <th>Score</th>
+                        <th>Last Updated</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pred in all_predictions %}
+                    <tr>
+                        <td>{{ pred.proposal.proposal_title }}</td>
+                        <td>{{ pred.score|floatformat:2 }}</td>
+                        <td>{{ pred.updated_at|date:'Y-m-d H:i' }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center">No predictions available.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- All Anomalies Table -->
+<div class="card mt-4 mb-5">
+    <div class="card-header">
+        <h5 class="mb-0">Detected Anomalies</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped mb-0">
+                <thead>
+                    <tr>
+                        <th>Proposal</th>
+                        <th>Anomaly Type</th>
+                        <th>Score</th>
+                        <th>Detected At</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for anomaly in all_anomalies %}
+                    <tr>
+                        <td>{{ anomaly.proposal.proposal_title }}</td>
+                        <td>{{ anomaly.anomaly_type }}</td>
+                        <td>{{ anomaly.score|floatformat:2 }}</td>
+                        <td>{{ anomaly.detected_at|date:'Y-m-d H:i' }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center">No anomalies detected.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% if messages %}
+<div class="mt-3">
+    {% for message in messages %}
+    <div class="alert alert-success">{{ message }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Prediction Accuracy Chart
+    const predictionCtx = document.getElementById('predictionChart').getContext('2d');
+    const predictionChart = new Chart(predictionCtx, {
+        type: 'line',
+        data: {
+            labels: {{ prediction_labels_json| safe }},
+    datasets: [{
+        label: 'Prediction Accuracy',
+        data: {{ prediction_accuracy_json| safe }},
+        borderColor: '#36A2EB',
+        backgroundColor: 'rgba(54, 162, 235, 0.1)',
+        tension: 0.4,
+        fill: true
+            }]
+        },
+    options: {
+        responsive: true,
+            scales: {
+            y: {
+                beginAtZero: false,
+                    min: 80,
+                        max: 100
+            }
+        }
+    }
+    });
+
+    // Prediction Score Distribution (Histogram)
+    const scoreList = {{ score_list| safe }};
+    const bins = Array(10).fill(0);
+    scoreList.forEach(s => {
+        const idx = Math.min(Math.floor(s * 10), 9);
+        bins[idx] += 1;
+    });
+    const binLabels = [
+        '0-0.1', '0.1-0.2', '0.2-0.3', '0.3-0.4', '0.4-0.5',
+        '0.5-0.6', '0.6-0.7', '0.7-0.8', '0.8-0.9', '0.9-1.0'
+    ];
+    new Chart(document.getElementById('scoreDistChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: binLabels,
+            datasets: [{
+                label: 'Proposals',
+                data: bins,
+                backgroundColor: '#36A2EB',
+            }]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } } }
+    });
+
+    // Anomaly Frequency by Month
+    new Chart(document.getElementById('anomalyFreqChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: {{ anomaly_months| safe }},
+        datasets: [{
+            label: 'Anomalies',
+            data: {{ anomaly_freq| safe }},
+        backgroundColor: '#FF6384',
+            }]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } } }
+    });
+
+    // Top 5 Proposals by Score
+    new Chart(document.getElementById('topProposalsChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: {{ top_titles| safe }},
+        datasets: [{
+            label: 'Score',
+            data: {{ top_scores| safe }},
+        backgroundColor: '#4BC0C0',
+            }]
+        },
+        options: {
+        responsive: true, plugins: { legend: { display: false } },
+        scales: { y: { min: 0, max: 1 } }
+    }
+    });
+
+    function runAllocationAnalysis() {
+        // Simulate AI analysis
+        alert('AI allocation analysis started. This may take a few minutes.');
+    }
+
+    function generatePredictions() {
+        // Simulate prediction generation
+        alert('Generating predictions based on current data...');
+    }
+
+    function optimizeBudget() {
+        // Simulate budget optimization
+        alert('AI is optimizing budget allocation...');
+    }
+
+    function detectAnomalies() {
+        // Simulate anomaly detection
+        alert('Scanning for anomalies in grant data...');
+    }
+
+    function trainModel() {
+        // Simulate model training
+        alert('Training AI model with latest data...');
+    }
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .recommendation-item {
+        padding: 15px 0;
+    }
+
+    .recommendation-item:hover {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        margin: 0 -15px;
+    }
+
+    .ai-score {
+        font-size: 0.9rem;
+    }
+
+    .insight-item {
+        padding: 10px 0;
+    }
+
+    .metric-item {
+        padding: 10px 0;
+    }
+
+    .model-status .progress {
+        border-radius: 10px;
+    }
+</style>
+{% endblock %}

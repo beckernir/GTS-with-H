@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2>User Details</h2>
+    <div class="card mt-3">
+        <div class="card-body">
+            <h5 class="card-title">{{ user.username }}</h5>
+            <p class="card-text"><strong>Email:</strong> {{ user.email }}</p>
+            <p class="card-text"><strong>Role:</strong> {{ user.role }}</p>
+            <p class="card-text"><strong>Status:</strong> {{ user.status }}</p>
+        </div>
+    </div>
+    <a href="{% url 'core:user_list' %}" class="btn btn-secondary mt-3">Back to User List</a>
+</div>
+{% endblock %}

@@ -1,0 +1,326 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ proposal.title }} - GrantTracker{% endblock %}
+
+{% block page_title %}{{ proposal.title }}{% endblock %}
+
+{% block page_subtitle %}
+<p class="text-muted mb-0">
+    <span class="badge bg-{{ proposal.get_status_color }} me-2">{{ proposal.get_status_display }}</span>
+    Submitted by {{ proposal.submitted_by.get_full_name }} on {{ proposal.created_at|date:"F j, Y" }}
+</p>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Main Content -->
+    <div class="col-lg-8">
+        <!-- Proposal Details -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Proposal Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>School Information</h6>
+                        <p><strong>School:</strong> {{ proposal.school.school_name|default:"N/A" }}</p>
+                        <p><strong>District:</strong> {{ proposal.school.district|default:"N/A" }}</p>
+                        <p><strong>Principal:</strong> {{ proposal.school.principal_name|default:"N/A" }}</p>
+                        <p><strong>Contact:</strong> {{ proposal.school.phone_number|default:"N/A" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Financial Information</h6>
+                        <p><strong>Requested Amount:</strong> {{ proposal.requested_amount|floatformat:0 }} RWF</p>
+                        <p><strong>Allocated Amount:</strong> {% if proposal.allocated_amount %}
+                            {{ proposal.allocated_amount|floatformat:0 }} RWF
+                            {% else %}Not allocated{% endif %}</p>
+                        <p><strong>Category:</strong> {{ proposal.grant_category.category_name|default:"N/A" }}</p>
+                        <p><strong>Priority Level:</strong> {{ proposal.get_priority_level_display|default:"N/A" }}</p>
+                    </div>
+                </div>
+
+                <hr>
+
+                <h6>Description</h6>
+                <p>{{ proposal.description }}</p>
+
+                {% if proposal.objectives %}
+                <h6>Objectives</h6>
+                <p>{{ proposal.objectives }}</p>
+                {% endif %}
+
+                {% if proposal.expected_outcomes %}
+                <h6>Expected Outcomes</h6>
+                <p>{{ proposal.expected_outcomes }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Budget Breakdown -->
+        {% if proposal.budget_items.all %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Budget Breakdown</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Description</th>
+                                <th>Quantity</th>
+                                <th>Unit Cost</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in proposal.budget_items.all %}
+                            <tr>
+                                <td>{{ item.item_name }}</td>
+                                <td>{{ item.description }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>{{ item.unit_cost|floatformat:0 }} RWF</td>
+                                <td>{{ item.total_cost|floatformat:0 }} RWF</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-primary">
+                                <th colspan="4" class="text-end">Total Requested:</th>
+                                <th>{{ proposal.requested_amount|floatformat:0 }} RWF</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Timeline -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Implementation Timeline</h5>
+            </div>
+            <div class="card-body">
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-primary"></div>
+                        <div class="timeline-content">
+                            <h6>Proposal Submitted</h6>
+                            <p class="text-muted">{{ proposal.created_at|date:"F j, Y" }}</p>
+                        </div>
+                    </div>
+
+                    {% if proposal.submitted_at %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-info"></div>
+                        <div class="timeline-content">
+                            <h6>Under Review</h6>
+                            <p class="text-muted">{{ proposal.submitted_at|date:"F j, Y" }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if proposal.reviewed_at %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-{{ proposal.get_status_color }}"></div>
+                        <div class="timeline-content">
+                            <h6>{{ proposal.get_status_display }}</h6>
+                            <p class="text-muted">{{ proposal.reviewed_at|date:"F j, Y" }}</p>
+                            {% if proposal.review_notes %}
+                            <p class="mt-2">{{ proposal.review_notes }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if proposal.implementation_start_date %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-success"></div>
+                        <div class="timeline-content">
+                            <h6>Implementation Started</h6>
+                            <p class="text-muted">{{ proposal.implementation_start_date|date:"F j, Y" }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if proposal.completion_date %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-success"></div>
+                        <div class="timeline-content">
+                            <h6>Completed</h6>
+                            <p class="text-muted">{{ proposal.completion_date|date:"F j, Y" }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Actions -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    {% if user.is_reb_officer or user.is_system_admin %}
+                    {% if proposal.status == 'submitted' %}
+                    <a href="{% url 'grants:proposal_review' proposal.proposal_id %}" class="btn btn-primary">
+                        <i class="fas fa-check-circle me-2"></i>Review Proposal
+                    </a>
+                    {% endif %}
+                    {% if proposal.status == 'approved' %}
+                    <a href="{% url 'grants:proposal_allocate' proposal.proposal_id %}" class="btn btn-success">
+                        <i class="fas fa-money-bill me-2"></i>Allocate Funds
+                    </a>
+                    {% endif %}
+                    {% endif %}
+
+                    {% if proposal.submitted_by == user or user.is_school_admin or user.is_system_admin %}
+                    <a href="{% url 'grants:proposal_edit' proposal.proposal_id %}" class="btn btn-outline-primary">
+                        <i class="fas fa-edit me-2"></i>Edit Proposal
+                    </a>
+                    {% endif %}
+
+                    {% if user.is_school_admin or user.is_system_admin %}
+                    <a href="{% url 'grants:proposal_delete' proposal.proposal_id %}" class="btn btn-outline-danger">
+                        <i class="fas fa-trash me-2"></i>Delete Proposal
+                    </a>
+                    {% endif %}
+
+                    {% if proposal.status == 'draft' and proposal.submitted_by == user %}
+                    <form method="post" action="{% url 'grants:proposal_submit' proposal.proposal_id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-paper-plane me-2"></i>Submit for Review
+                        </button>
+                    </form>
+                    {% elif proposal.status == 'draft' and user.is_school_admin %}
+                    <form method="post" action="{% url 'grants:proposal_submit' proposal.proposal_id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-paper-plane me-2"></i>Submit for Review
+                        </button>
+                    </form>
+                    {% elif proposal.status == 'draft' and user.is_system_admin %}
+                    <form method="post" action="{% url 'grants:proposal_submit' proposal.proposal_id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-paper-plane me-2"></i>Submit for Review
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Information -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Status Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Current Status</label>
+                    <div class="d-flex align-items-center">
+                        <span class="badge bg-{{ proposal.get_status_color }} me-2">{{ proposal.get_status_display
+                            }}</span>
+                        <small class="text-muted">{{ proposal.get_status_description }}</small>
+                    </div>
+                </div>
+
+                {% if proposal.reviewer %}
+                <div class="mb-3">
+                    <label class="form-label">Reviewed By</label>
+                    <p class="mb-0">{{ proposal.reviewer.get_full_name }}</p>
+                    <small class="text-muted">{{ proposal.reviewed_at|date:"F j, Y" }}</small>
+                </div>
+                {% endif %}
+
+                {% if proposal.review_notes %}
+                <div class="mb-3">
+                    <label class="form-label">Review Notes</label>
+                    <p class="mb-0">{{ proposal.review_notes }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Progress Tracking -->
+        {% if proposal.status == 'approved' or proposal.status == 'in_progress' %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Progress Tracking</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Implementation Progress</label>
+                    <div class="progress mb-2">
+                        <div class="progress-bar" style="width: {{ proposal.progress_percentage|default:0 }}%"></div>
+                    </div>
+                    <small class="text-muted">{{ proposal.progress_percentage|default:0 }}% Complete</small>
+                </div>
+                {% if proposal.implementation_start_date %}
+                <div class="mb-3">
+                    <label class="form-label">Start Date</label>
+                    <p class="mb-0">{{ proposal.implementation_start_date|date:"F j, Y" }}</p>
+                </div>
+                {% endif %}
+                {% if proposal.expected_completion_date %}
+                <div class="mb-3">
+                    <label class="form-label">Expected Completion</label>
+                    <p class="mb-0">{{ proposal.expected_completion_date|date:"F j, Y" }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 15px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #dee2e6;
+    }
+
+    .timeline-item {
+        position: relative;
+        margin-bottom: 30px;
+    }
+
+    .timeline-marker {
+        position: absolute;
+        left: -22px;
+        top: 0;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: 2px solid white;
+        box-shadow: 0 0 0 2px #dee2e6;
+    }
+
+    .timeline-content h6 {
+        margin-bottom: 5px;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}

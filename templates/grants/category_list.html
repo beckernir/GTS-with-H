@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block title %}Grant Categories{% endblock %}
+{% block page_title %}Grant Categories{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Grant Categories</h2>
+        <div>
+            <a href="{% url 'grants:category_export_excel' %}" class="btn btn-outline-success me-2">
+                <i class="fas fa-file-excel"></i> Export to Excel
+            </a>
+            <a href="{% url 'grants:category_export_pdf' %}" class="btn btn-outline-danger me-2">
+                <i class="fas fa-file-pdf"></i> Export to PDF
+            </a>
+            <a href="{% url 'grants:category_create' %}" class="btn btn-primary">+ New Category</a>
+        </div>
+    </div>
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <table class="table table-striped mb-0">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                        <th>Min Amount</th>
+                        <th>Max Amount</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for category in categories %}
+                    <tr>
+                        <td>{{ category.category_name }}</td>
+                        <td>{{ category.get_category_type_display }}</td>
+                        <td>{{ category.description|truncatechars:40 }}</td>
+                        <td>{{ category.min_amount }}</td>
+                        <td>{{ category.max_amount }}</td>
+                        <td>{{ category.priority_weight }}</td>
+                        <td>
+                            {% if category.is_active %}
+                            <span class="badge bg-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'grants:category_edit' category.category_id %}"
+                                class="btn btn-sm btn-outline-primary">Edit</a>
+                            <a href="{% url 'grants:category_delete' category.category_id %}"
+                                class="btn btn-sm btn-outline-danger">Delete</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center">No categories found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

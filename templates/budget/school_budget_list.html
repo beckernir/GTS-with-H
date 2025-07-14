@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}School Budgets - GrantTracker{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-school me-2"></i>
+                        School Budgets
+                    </h4>
+                    {% if user.is_school_admin or user.is_reb_officer or user.is_system_admin %}
+                    <a href="{% url 'budget:school_budget_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>
+                        Create New Budget
+                    </a>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <!-- Summary Cards -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">Total Schools</h5>
+                                    <h3 class="card-text">{{ total_schools }}</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">Approved Budgets</h5>
+                                    <h3 class="card-text">{{ approved_budgets }}</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-warning text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">Pending Review</h5>
+                                    <h3 class="card-text">{{ pending_budgets }}</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-info text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">Total Budget</h5>
+                                    <h3 class="card-text">RWF {{ total_budget_sum|floatformat:0|intcomma }}</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>School Name</th>
+                                    <th>District</th>
+                                    <th>Budget Period</th>
+                                    <th>Total Budget</th>
+                                    <th>Status</th>
+                                    <th>Students</th>
+                                    {% if user.is_school_admin or user.is_reb_officer or user.is_system_admin %}
+                                    <th>Actions</th>
+                                    {% endif %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for budget in budgets %}
+                                <tr>
+                                    <td>{{ budget.school.school_name }}</td>
+                                    <td>{{ budget.school.district }}</td>
+                                    <td>{{ budget.budget_period.period_name }}</td>
+                                    <td>RWF {{ budget.total_budget_amount|floatformat:0|intcomma }}</td>
+                                    <td>
+                                        {% if budget.status == 'approved' %}
+                                        <span class="badge bg-success">Approved</span>
+                                        {% elif budget.status == 'submitted' %}
+                                        <span class="badge bg-warning">Pending</span>
+                                        {% elif budget.status == 'draft' %}
+                                        <span class="badge bg-info">Draft</span>
+                                        {% elif budget.status == 'closed' %}
+                                        <span class="badge bg-secondary">Closed</span>
+                                        {% else %}
+                                        <span class="badge bg-light text-dark">{{ budget.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ budget.school.student_count|default:'N/A' }}</td>
+                                    {% if user.is_school_admin or user.is_reb_officer or user.is_system_admin %}
+                                    <td>
+                                        <a href="{% url 'budget:school_budget_detail' budget.budget_id %}"
+                                            class="btn btn-sm btn-outline-primary" title="View">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% if budget.can_edit %}
+                                        <a href="{% url 'budget:school_budget_edit' budget.budget_id %}"
+                                            class="btn btn-sm btn-outline-secondary" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'budget:school_budget_delete' budget.budget_id %}"
+                                            class="btn btn-sm btn-outline-danger" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                        {% endif %}
+                                    </td>
+                                    {% endif %}
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center">No school budgets found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

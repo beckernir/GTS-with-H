@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Community Forums{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Community Forums</h2>
+        {% if user.is_authenticated %}
+            {% if user.is_school_admin or user.is_reb_officer or user.is_system_admin %}
+                <a href="{% url 'community:forum_create' %}" class="btn btn-primary">Create Forum</a>
+            {% endif %}
+        {% endif %}
+    </div>
+    <div class="card">
+        <div class="card-body">
+            {% if forums %}
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Access</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for forum in forums %}
+                    <tr>
+                        <td><a href="{% url 'community:forum_detail' forum.forum_id %}">{{ forum.forum_name }}</a></td>
+                        <td>{{ forum.get_forum_type_display }}</td>
+                        <td>{{ forum.get_access_level_display }}</td>
+                        <td>
+                            {% if forum.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'community:forum_detail' forum.forum_id %}" class="btn btn-sm btn-info">View</a>
+                            {% if user.is_authenticated %}
+                                {% if user.is_school_admin or user.is_reb_officer or user.is_system_admin %}
+                                    <a href="{% url 'community:forum_edit' forum.forum_id %}" class="btn btn-sm btn-warning">Edit</a>
+                                {% endif %}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="text-muted">No forums available.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}Certificates{% endblock %}
+
+{% block page_title %}Certificates{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="fas fa-certificate me-2"></i> Certificates</h4>
+                    {% if user.is_staff or user.is_school_admin %}
+                    <a href="{% url 'training:certificate_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i> Add Certificate
+                    </a>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Type</th>
+                                    <th>Number</th>
+                                    <th>Issue Date</th>
+                                    <th>Enrollment</th>
+                                    <th>Valid</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for cert in certificates %}
+                                <tr>
+                                    <td>{{ cert.certificate_title }}</td>
+                                    <td>{{ cert.get_certificate_type_display }}</td>
+                                    <td>{{ cert.certificate_number }}</td>
+                                    <td>{{ cert.issue_date|date:'Y-m-d' }}</td>
+                                    <td>{{ cert.enrollment }}</td>
+                                    <td>{% if cert.is_valid %}<span class="badge bg-success">Yes</span>{% else %}<span
+                                            class="badge bg-danger">No</span>{% endif %}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center">No certificates found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

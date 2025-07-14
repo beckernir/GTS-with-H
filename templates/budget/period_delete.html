@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Budget Period{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card border-danger shadow-sm">
+                <div class="card-header bg-danger text-white">
+                    <h3 class="mb-0"><i class="fas fa-trash me-2"></i>Delete Budget Period</h3>
+                </div>
+                <div class="card-body">
+                    <p class="lead">Are you sure you want to <strong>delete</strong> the following budget period?</p>
+                    <ul class="list-group mb-3">
+                        <li class="list-group-item"><strong>Name:</strong> {{ period.period_name }}</li>
+                        <li class="list-group-item"><strong>Type:</strong> {{ period.get_period_type_display }}</li>
+                        <li class="list-group-item"><strong>Start Date:</strong> {{ period.start_date|date:'F j, Y' }}
+                        </li>
+                        <li class="list-group-item"><strong>End Date:</strong> {{ period.end_date|date:'F j, Y' }}</li>
+                    </ul>
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        This action cannot be undone.
+                    </div>
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between">
+                            <button type="submit" class="btn btn-danger"><i class="fas fa-trash me-1"></i>Yes,
+                                Delete</button>
+                            <a href="{% url 'budget:period_detail' period.period_id %}"
+                                class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

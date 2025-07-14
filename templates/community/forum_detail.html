@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Forum Details{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>{{ forum.forum_name }}</h2>
+        {% if user.is_authenticated %}
+        {% if user.is_school_admin or user.is_reb_officer or user.is_system_admin %}
+        <a href="{% url 'community:forum_edit' forum.forum_id %}" class="btn btn-warning">Edit Forum</a>
+        {% endif %}
+        {% endif %}
+    </div>
+    <div class="card mb-3">
+        <div class="card-body">
+            <p><strong>Type:</strong> {{ forum.get_forum_type_display }}</p>
+            <p><strong>Access:</strong> {{ forum.get_access_level_display }}</p>
+            <p><strong>Description:</strong> {{ forum.description }}</p>
+            <p><strong>Status:</strong> <span class="badge {{ forum.is_active|yesno:'bg-success,bg-secondary' }}">{{
+                    forum.is_active|yesno:"Active,Inactive" }}</span></p>
+
+            <p><strong>Created by:</strong> {{ forum.created_by.get_full_name|default:"Unknown" }}</p>
+            <p><strong>Created at:</strong> {{ forum.created_at|date:"Y-m-d H:i" }}</p>
+            <p><strong>Last updated:</strong> {{ forum.updated_at|date:"Y-m-d H:i" }}</p>
+        </div>
+    </div>
+    <a href="{% url 'community:forum_list' %}" class="btn btn-secondary">Back to Forums</a>
+</div>
+{% endblock %}

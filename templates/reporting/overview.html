@@ -1,0 +1,383 @@
+{% extends 'base.html' %}
+
+{% block title %}Reports & Analytics - GrantTracker{% endblock %}
+
+{% block page_title %}Reports & Analytics{% endblock %}
+
+{% block page_subtitle %}
+<p class="text-muted mb-0">Generate comprehensive reports and analyze grant performance data</p>
+{% endblock %}
+
+{% block content %}
+<!-- Report Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="mb-0">{{ total_reports }}</h4>
+                        <p class="mb-0">Total Reports</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-chart-bar fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="mb-0">{{ approved_proposals }}</h4>
+                        <p class="mb-0">Approved Proposals</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="mb-0">{{ total_funding|floatformat:0 }}</h4>
+                        <p class="mb-0">Total Funding (RWF)</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-money-bill-wave fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="mb-0">{{ success_rate }}%</h4>
+                        <p class="mb-0">Success Rate</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-percentage fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Charts -->
+    <div class="col-lg-8">
+        <!-- Grant Performance Chart -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Grant Performance Overview</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="performanceChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+
+        <!-- Funding Distribution -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Funding Distribution by District</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="fundingChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Quick Report Generation -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Generate Reports</h5>
+            </div>
+            <div class="card-body">
+                {% if user.is_reb_officer or user.is_system_admin %}
+                <div class="d-grid gap-2">
+                    <a href="{% url 'reporting:report_generate' 'monthly' %}" class="btn btn-primary btn-block mb-2">
+                        <i class="fas fa-file-pdf me-2"></i>Monthly Report
+                    </a>
+                    <a href="{% url 'reporting:report_generate' 'performance' %}"
+                        class="btn btn-success btn-block mb-2">
+                        <i class="fas fa-chart-line me-2"></i>Performance Report
+                    </a>
+                    <a href="{% url 'reporting:report_generate' 'financial' %}" class="btn btn-info btn-block mb-2">
+                        <i class="fas fa-money-bill me-2"></i>Financial Report
+                    </a>
+                    <a href="{% url 'reporting:report_generate' 'school' %}" class="btn btn-warning btn-block mb-2">
+                        <i class="fas fa-school me-2"></i>School Report
+                    </a>
+                    <a href="{% url 'reporting:report_generate' 'custom' %}" class="btn btn-secondary btn-block">
+                        <i class="fas fa-cog me-2"></i>Custom Report
+                    </a>
+                </div>
+                {% else %}
+                <div class="alert alert-danger mt-3">You are not authorized to generate or download reports.</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Recent Reports -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Recent Reports</h5>
+            </div>
+            <div class="card-body">
+                {% if user.is_reb_officer or user.is_system_admin %}
+                <div class="report-list">
+                    {% for report in recent_reports %}
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h6 class="mb-0">{{ report.report_name }}</h6>
+                            <small class="text-muted">{{ report.get_report_type_display }}</small>
+                        </div>
+                        <div>
+                            {% if report.report_file %}
+                            <a href="{{ report.report_file.url }}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-download"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted">No recent reports available.</p>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="alert alert-danger mt-3">You are not authorized to view or download recent reports.</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Key Metrics -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Key Metrics</h5>
+            </div>
+            <div class="card-body">
+                <div class="metric-item mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>Average Grant Size</span>
+                        <strong>{{ avg_grant_size|default:'0' }} RWF</strong>
+                    </div>
+                    <div class="progress mt-1" style="height: 4px;">
+                        <div class="progress-bar bg-primary" style="width: 75%"></div>
+                    </div>
+                </div>
+
+                <div class="metric-item mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>Processing Time</span>
+                        <strong>{{ avg_processing_days|default:'0' }} days</strong>
+                    </div>
+                    <div class="progress mt-1" style="height: 4px;">
+                        <div class="progress-bar bg-success" style="width: 85%"></div>
+                    </div>
+                </div>
+
+                <div class="metric-item mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>Completion Rate</span>
+                        <strong>{{ completion_rate|default:'0' }}%</strong>
+                    </div>
+                    <div class="progress mt-1" style="height: 4px;">
+                        <div class="progress-bar bg-info" style="width: {{ completion_rate|default:'0' }}%"></div>
+                    </div>
+                </div>
+
+                <div class="metric-item mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>Total Number of Schools</span>
+                        <strong>{{ total_schools|default:'0' }}</strong>
+                    </div>
+                    <div class="progress mt-1" style="height: 4px;">
+                        <div class="progress-bar bg-secondary" style="width: 100%"></div>
+                    </div>
+                </div>
+
+                <div class="metric-item mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>Most Funded District</span>
+                        <strong>{{ most_funded_district|default:'N/A' }} ({{ most_funded_amount|default:'0' }}
+                            RWF)</strong>
+                    </div>
+                    <div class="progress mt-1" style="height: 4px;">
+                        <div class="progress-bar bg-warning" style="width: 100%"></div>
+                    </div>
+                </div>
+
+                <div class="metric-item">
+                    <div class="d-flex justify-content-between">
+                        <span>Stakeholder Satisfaction</span>
+                        <strong>4.5/5</strong>
+                    </div>
+                    <div class="progress mt-1" style="height: 4px;">
+                        <div class="progress-bar bg-warning" style="width: 90%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Report Templates -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Report Templates</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-chart-bar fa-3x text-primary mb-3"></i>
+                        <h6>Executive Summary</h6>
+                        <p class="text-muted small">High-level overview for senior management</p>
+                        {% if user.is_reb_officer or user.is_system_admin %}
+                        <a href="{% url 'reporting:report_generate' 'executive_summary' %}"
+                            class="btn btn-outline-primary btn-sm">Generate</a>
+                        {% else %}
+                        <span class="text-danger small">Not authorized</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-chart-pie fa-3x text-success mb-3"></i>
+                        <h6>Financial Analysis</h6>
+                        <p class="text-muted small">Detailed financial breakdown and trends</p>
+                        {% if user.is_reb_officer or user.is_system_admin %}
+                        <a href="{% url 'reporting:report_generate' 'financial_analysis' %}"
+                            class="btn btn-outline-success btn-sm">Generate</a>
+                        {% else %}
+                        <span class="text-danger small">Not authorized</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-chart-line fa-3x text-info mb-3"></i>
+                        <h6>Performance Metrics</h6>
+                        <p class="text-muted small">KPI tracking and performance indicators</p>
+                        {% if user.is_reb_officer or user.is_system_admin %}
+                        <a href="{% url 'reporting:report_generate' 'performance_metrics' %}"
+                            class="btn btn-outline-info btn-sm">Generate</a>
+                        {% else %}
+                        <span class="text-danger small">Not authorized</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Performance Chart
+    const performanceCtx = document.getElementById('performanceChart').getContext('2d');
+    const performanceChart = new Chart(performanceCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ performance_labels_json| safe }},
+    datasets: [{
+        label: 'Proposals Submitted',
+        data: {{ performance_submitted_json| safe }},
+        backgroundColor: 'rgba(54, 162, 235, 0.8)',
+        borderColor: 'rgba(54, 162, 235, 1)',
+        borderWidth: 1
+            }, {
+        label: 'Proposals Approved',
+        data: {{ performance_approved_json| safe }},
+        backgroundColor: 'rgba(75, 192, 192, 0.8)',
+        borderColor: 'rgba(75, 192, 192, 1)',
+        borderWidth: 1
+            }]
+        },
+    options: {
+        responsive: true,
+            scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+    });
+
+    // Funding Distribution Chart
+    const fundingCtx = document.getElementById('fundingChart').getContext('2d');
+    const fundingChart = new Chart(fundingCtx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ district_labels_json| safe }},
+    datasets: [{
+        data: {{ district_data_json| safe }},
+        backgroundColor: [
+        '#FF6384',
+        '#36A2EB',
+        '#FFCE56',
+        '#4BC0C0',
+        '#9966FF',
+        '#FF9F40',
+        '#C9CBCF',
+        '#8BC34A',
+        '#E91E63',
+        '#00BCD4'
+    ]
+            }]
+        },
+    options: {
+        responsive: true,
+            plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+    });
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .metric-item {
+        padding: 10px 0;
+    }
+
+    .report-list .btn {
+        width: 35px;
+        height: 35px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .card {
+        transition: transform 0.2s;
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}

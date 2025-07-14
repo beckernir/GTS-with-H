@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}Create School Budget{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white d-flex align-items-center">
+                    <h3 class="mb-0"><i class="fas fa-plus me-2"></i>Create School Budget</h3>
+                </div>
+                <div class="card-body">
+                    {% if user.is_school_admin or user.is_reb_officer or user.is_system_admin %}
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        {{ form.non_field_errors }}
+
+                        {% if is_sys_admin %}
+                        <div class="mb-3">
+                            <label for="id_school" class="form-label">
+                                School <span class="text-danger">*</span>
+                            </label>
+                            {{ form.school }}
+                            {% for error in form.school.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        {% for field in form %}
+                            {% if not is_sys_admin and field.name == 'school' %}
+                                {# Skip the school field for non-system admins #}
+                            {% else %}
+                            <div class="mb-3">
+                                <label for="{{ field.id_for_label }}" class="form-label">
+                                    {{ field.label }}{% if field.field.required %}
+                                    <span class="text-danger">*</span>
+                                    {% endif %}
+                                </label>
+                                {{ field }}
+                                {% if field.help_text %}
+                                    <div class="form-text">{{ field.help_text }}</div>
+                                {% endif %}
+                                {% for error in field.errors %}
+                                    <div class="text-danger small">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+
+                        <div class="d-flex justify-content-between align-items-center mt-4">
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="fas fa-save me-1"></i>Submit
+                            </button>
+                            <a href="{% url 'budget:school_budget_list' %}" class="btn btn-secondary ms-2">
+                                <i class="fas fa-arrow-left me-1"></i>Back to Budgets
+                            </a>
+                        </div>
+                    </form>
+                    {% else %}
+                    <div class="alert alert-danger mt-3">
+                        You are not authorized to create a school budget.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Grant Proposal{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Delete Grant Proposal</h2>
+    {% if user.is_school_admin or user.is_system_admin %}
+    <div class="alert alert-danger">
+        <p>Are you sure you want to delete the proposal <strong>{{ proposal.proposal_title }}</strong>?</p>
+    </div>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Yes, Delete</button>
+        <a href="{% url 'grants:proposal_detail' proposal.proposal_id %}" class="btn btn-secondary ms-2">Cancel</a>
+    </form>
+    {% else %}
+    <div class="alert alert-danger">You are not authorized to delete this grant proposal.</div>
+    {% endif %}
+</div>
+{% endblock %}

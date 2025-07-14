@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block title %}Enrollment Details{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Enrollment Details</h4>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div
+                            class="avatar-sm bg-primary rounded-circle d-flex align-items-center justify-content-center me-2">
+                            <span class="text-white fw-bold" style="font-size:1.2em;">
+                                {{ enrollment.user.get_full_name|default:enrollment.user.username|slice:':2'|upper }}
+                            </span>
+                        </div>
+                        <div>
+                            <div class="fw-bold">{{ enrollment.user.get_full_name|default:enrollment.user.username }}
+                            </div>
+                            <small class="text-muted">{{ enrollment.user.email }}</small>
+                        </div>
+                    </div>
+                    <p><strong>Course:</strong> {{ enrollment.course.course_title }}</p>
+                    <p><strong>Session:</strong> {{ enrollment.session.session_title|default:"-" }}</p>
+                    <p><strong>Enrollment Date:</strong> {{ enrollment.enrollment_date|date:'Y-m-d' }}</p>
+                    <p><strong>Progress:</strong>
+                    <div class="progress"
+                        style="height: 8px; max-width: 200px; display: inline-block; vertical-align: middle;">
+                        <div class="progress-bar bg-success"
+                            style="width: {{ enrollment.progress_percentage|default:0 }}%"></div>
+                    </div>
+                    <span class="ms-2">{{ enrollment.progress_percentage|default:0 }}%</span>
+                    </p>
+                    <p><strong>Status:</strong>
+                        <span class="badge 
+                            {% if enrollment.status == 'completed' %}bg-success
+                            {% elif enrollment.status == 'in_progress' %}bg-warning
+                            {% elif enrollment.status == 'dropped' %}bg-danger
+                            {% else %}bg-secondary{% endif %}">
+                            {{ enrollment.get_status_display }}
+                        </span>
+                    </p>
+                    <p><strong>Start Date:</strong> {{ enrollment.start_date|date:'Y-m-d'|default:"-" }}</p>
+                    <p><strong>Completion Date:</strong> {{ enrollment.completion_date|date:'Y-m-d'|default:"-" }}</p>
+                    <p><strong>Final Score:</strong> {{ enrollment.final_score|default:0 }}</p>
+                    <p><strong>Certified:</strong> {% if enrollment.is_certified %}Yes{% else %}No{% endif %}</p>
+                    {% if enrollment.certification_date %}
+                    <p><strong>Certification Date:</strong> {{ enrollment.certification_date|date:'Y-m-d' }}</p>
+                    {% endif %}
+                    {% if enrollment.enrollment_notes %}
+                    <p><strong>Notes:</strong> {{ enrollment.enrollment_notes }}</p>
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <a href="{% url 'training:enrollment_list' %}" class="btn btn-secondary"><i
+                            class="fas fa-arrow-left me-2"></i>Back to Enrollments</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

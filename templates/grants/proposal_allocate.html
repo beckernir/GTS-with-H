@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block title %}Allocate Funds - Grant Proposal{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h3 class="mb-0">Allocate Funds to Proposal</h3>
+                </div>
+                <div class="card-body">
+                    <h5>{{ proposal.proposal_title }}</h5>
+                    <p><strong>School:</strong> {{ proposal.school.school_name }}</p>
+                    <p><strong>Status:</strong> {{ proposal.get_status_display }}</p>
+                    <p><strong>Requested Amount:</strong> {{ proposal.requested_amount|floatformat:0 }} RWF</p>
+                    <div class="alert alert-success mt-4">
+                        Allocation actions and fund disbursement will be available here soon.
+                    </div>
+                    <a href="{% url 'grants:proposal_detail' proposal.proposal_id %}" class="btn btn-secondary mt-2">Back to Details</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

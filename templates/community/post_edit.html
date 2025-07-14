@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Forum Post{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Edit Forum Post</h2>
+    {% if user.is_reb_officer or user.is_system_admin %}
+    <form method="post">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {% for field in form %}
+        <div class="mb-3">
+            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+            {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+        </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <a href="{% url 'community:post_detail' post.post_id %}" class="btn btn-secondary ms-2">Back to Details</a>
+    </form>
+    {% else %}
+    <div class="alert alert-danger mt-3">You are not authorized to edit this forum post.</div>
+    {% endif %}
+</div>
+{% endblock %}

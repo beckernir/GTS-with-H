@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}School Budget Details{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white shadow">
+                <div class="card-body">
+                    <h6>Total Schools</h6>
+                    <h4>{{ total_schools|default:'3' }}</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white shadow">
+                <div class="card-body">
+                    <h6>Approved Budgets</h6>
+                    <h4>{{ approved_budgets|default:'1' }}</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white shadow">
+                <div class="card-body">
+                    <h6>Pending Review</h6>
+                    <h4>{{ pending_budgets|default:'1' }}</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white shadow">
+                <div class="card-body">
+                    <h6>Total Budget</h6>
+                    <h4>RWF {{ total_budget_amount|default:"80M" }}</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Budget Details Card -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0"><i class="fas fa-school me-2"></i>School Budget Details</h3>
+                    <a href="{% url 'budget:school_budget_list' %}" class="btn btn-light btn-sm">
+                        <i class="fas fa-arrow-left me-1"></i>Back
+                    </a>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">School</dt>
+                        <dd class="col-sm-8">{{ budget.school.school_name }}</dd>
+
+                        <dt class="col-sm-4">District</dt>
+                        <dd class="col-sm-8">{{ budget.school.district }}</dd>
+
+                        <dt class="col-sm-4">Budget Period</dt>
+                        <dd class="col-sm-8">{{ budget.budget_period.period_name }}</dd>
+
+                        <dt class="col-sm-4">Title</dt>
+                        <dd class="col-sm-8">{{ budget.budget_title }}</dd>
+
+                        <dt class="col-sm-4">Description</dt>
+                        <dd class="col-sm-8">{{ budget.description }}</dd>
+
+                        <dt class="col-sm-4">Total Budget</dt>
+                        <dd class="col-sm-8">RWF {{ budget.total_budget_amount|floatformat:0|intcomma }}</dd>
+
+                        <dt class="col-sm-4">Status</dt>
+                        <dd class="col-sm-8">{{ budget.get_status_display }}</dd>
+
+                        <dt class="col-sm-4">Created By</dt>
+                        <dd class="col-sm-8">{{ budget.created_by }}</dd>
+
+                        <dt class="col-sm-4">Created At</dt>
+                        <dd class="col-sm-8">{{ budget.created_at|date:'Y-m-d H:i' }}</dd>
+                    </dl>
+
+                    {% if user_can_edit %}
+                    <div class="mt-4 d-flex gap-2">
+                        <a href="{% url 'budget:school_budget_edit' budget.budget_id %}" class="btn btn-secondary">
+                            <i class="fas fa-edit me-1"></i>Edit
+                        </a>
+                        <a href="{% url 'budget:school_budget_delete' budget.budget_id %}" class="btn btn-danger">
+                            <i class="fas fa-trash me-1"></i>Delete
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

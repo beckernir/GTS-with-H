@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Grant Proposals{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1>Grant Proposals</h1>
+
+    {% if user.is_school_admin or user.is_system_admin %}
+    <a href="{% url 'grants:proposal_create' %}" class="btn btn-primary mb-3">Create Grant Proposal</a>
+    {% endif %}
+
+    {% if proposals %}
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Title</th>
+                    <th>School</th>
+                    <th>Category</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    {% if user.is_school_admin or user.is_reb_officer or user.is_system_admin %}
+                    <th>Actions</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for proposal in proposals %}
+                <tr>
+                    <td>{{ proposal.proposal_code }}</td>
+                    <td>{{ proposal.proposal_title }}</td>
+                    <td>{{ proposal.school.school_name }}</td>
+                    <td>{{ proposal.grant_category.category_name }}</td>
+                    <td>RWF {{ proposal.requested_amount }}</td>
+                    <td>{{ proposal.get_status_display }}</td>
+                    <td>{{ proposal.created_at|date:"M d, Y" }}</td>
+                    {% if user.is_school_admin or user.is_reb_officer or user.is_system_admin %}
+                    <td>
+                        {% if user.is_school_admin or user.is_system_admin %}
+                        <a href="{% url 'grants:proposal_edit' proposal.proposal_id %}"
+                            class="btn btn-sm btn-outline-primary">Edit</a>
+                        <a href="{% url 'grants:proposal_delete' proposal.proposal_id %}"
+                            class="btn btn-sm btn-outline-danger">Delete</a>
+                        {% if user.is_reb_officer or user.is_system_admin %}
+                        <a href="{% url 'grants:proposal_approve' proposal.proposal_id %}"
+                            class="btn btn-sm btn-outline-success">Approve</a>
+                        <a href="{% url 'grants:proposal_reject' proposal.proposal_id %}"
+                            class="btn btn-sm btn-outline-warning">Reject</a>
+                        {% endif %}
+                        {% elif user.is_reb_officer %}
+                        <a href="#" class="btn btn-sm btn-outline-primary">Review</a>
+                        {% endif %}
+                    </td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <p>No grant proposals found.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

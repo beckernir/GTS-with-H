@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Reject Grant Proposal{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Reject Grant Proposal</h2>
+    <div class="alert alert-warning">
+        <p>Are you sure you want to reject the proposal <strong>{{ proposal.proposal_title }}</strong>?</p>
+    </div>
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="rejection_reason" class="form-label">Rejection Reason</label>
+            <textarea name="rejection_reason" id="rejection_reason" class="form-control" rows="3" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-warning">Reject Proposal</button>
+        <a href="{% url 'grants:proposal_detail' proposal.proposal_id %}" class="btn btn-secondary ms-2">Cancel</a>
+    </form>
+</div>
+{% endblock %}

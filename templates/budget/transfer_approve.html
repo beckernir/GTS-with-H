@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% load humanize %}
+
+{% block title %}Approve Budget Transfer{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white d-flex align-items-center">
+                    <h3 class="mb-0"><i class="fas fa-check me-2"></i>Approve Budget Transfer</h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning d-flex align-items-center" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Are you sure you want to approve this budget transfer?
+                    </div>
+                    <dl class="row">
+                        <dt class="col-sm-4">Transfer ID</dt>
+                        <dd class="col-sm-8">{{ transfer.transfer_id }}</dd>
+                        <dt class="col-sm-4">From School</dt>
+                        <dd class="col-sm-8">{{ transfer.source_line_item.school_budget.school.school_name }}</dd>
+                        <dt class="col-sm-4">To School</dt>
+                        <dd class="col-sm-8">{{ transfer.destination_line_item.school_budget.school.school_name }}</dd>
+                        <dt class="col-sm-4">Amount</dt>
+                        <dd class="col-sm-8">RWF {{ transfer.transfer_amount|intcomma }}</dd>
+                        <dt class="col-sm-4">Category</dt>
+                        <dd class="col-sm-8">{{ transfer.source_line_item.budget_category.category_name }}</dd>
+                        <dt class="col-sm-4">Transfer Type</dt>
+                        <dd class="col-sm-8">{{ transfer.get_transfer_type_display }}</dd>
+                        <dt class="col-sm-4">Date</dt>
+                        <dd class="col-sm-8">{{ transfer.transfer_date }}</dd>
+                        <dt class="col-sm-4">Reason</dt>
+                        <dd class="col-sm-8">{{ transfer.reason }}</dd>
+                    </dl>
+                    <form method="post" class="mt-4">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check me-1"></i>Approve Transfer
+                        </button>
+                        <a href="{% url 'budget:transfer_detail' transfer.transfer_id %}"
+                            class="btn btn-secondary ms-2">
+                            <i class="fas fa-arrow-left me-1"></i>Cancel
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

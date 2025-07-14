@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}Message Details{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <strong>From:</strong> {{ message.sender.get_full_name|default:message.sender.username }}<br>
+                <strong>To:</strong>
+                {% for user in message.recipients.all %}
+                {{ user.get_full_name|default:user.username }}{% if not forloop.last %}, {% endif %}
+                {% endfor %}<br>
+                <strong>Subject:</strong> {{ message.subject|default:"(No Subject)" }}
+            </div>
+            <div>
+                <a href="{% url 'community:message_reply' message.message_id %}"
+                    class="btn btn-sm btn-primary">Reply</a>
+                <a href="{% url 'community:message_list' %}" class="btn btn-secondary btn-sm ms-2">Back to Messages</a>
+            </div>
+        </div>
+        <div class="card-body">
+            <p>{{ message.content }}</p>
+            <p class="text-muted small">Sent: {{ message.created_at|date:"Y-m-d H:i" }}</p>
+        </div>
+    </div>
+    {% if replies %}
+    <div class="card">
+        <div class="card-header">Replies</div>
+        <div class="card-body">
+            {% for reply in replies %}
+            <div class="mb-3">
+                <strong>{{ reply.sender.get_full_name|default:reply.sender.username }}</strong> to
+                {% for user in reply.recipients.all %}
+                {{ user.get_full_name|default:user.username }}{% if not forloop.last %}, {% endif %}
+                {% endfor %}
+                <span class="text-muted small">({{ reply.created_at|date:"Y-m-d H:i" }})</span>
+                <div>{{ reply.content }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

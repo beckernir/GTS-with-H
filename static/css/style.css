@@ -1,0 +1,83 @@
+/* REB Color Palette */
+:root {
+    --reb-blue: #0057B7;
+    --reb-yellow: #FFD600;
+}
+
+body {
+    /* fallback for backgrounds */
+    background: linear-gradient(135deg, #e3f0ff 0%, #f8fafc 100%);
+}
+
+.btn-primary,
+.btn-reb {
+    background-color: var(--reb-blue) !important;
+    border-color: var(--reb-blue) !important;
+    color: #fff !important;
+    transition: background 0.2s, color 0.2s, border 0.2s;
+}
+
+.btn-primary:hover,
+.btn-reb:hover,
+.btn-primary:focus,
+.btn-reb:focus {
+    background-color: var(--reb-yellow) !important;
+    border-color: var(--reb-yellow) !important;
+    color: #222 !important;
+}
+
+.navbar,
+.navbar-brand,
+.sidebar,
+.footer {
+    background-color: var(--reb-blue) !important;
+    color: #fff !important;
+}
+
+a,
+.link {
+    color: var(--reb-blue);
+    transition: color 0.2s;
+}
+
+a:hover,
+.link:hover,
+a:focus,
+.link:focus {
+    color: var(--reb-yellow);
+}
+
+.form-label,
+.form-control:focus {
+    border-color: var(--reb-blue);
+    box-shadow: 0 0 0 0.2rem rgba(0, 87, 183, 0.15);
+}
+
+.card {
+    border-top: 3px solid var(--reb-blue);
+}
+
+/* Home page hero section */
+.hero {
+    background: linear-gradient(120deg, var(--reb-blue) 0%, #60a5fa 100%);
+}
+
+.hero .btn-primary {
+    background-color: var(--reb-blue);
+    border-color: var(--reb-blue);
+}
+
+.hero .btn-primary:hover,
+.hero .btn-primary:focus {
+    background-color: var(--reb-yellow);
+    border-color: var(--reb-yellow);
+    color: #222;
+}
+
+/* Highlight for important info */
+.highlight {
+    background: var(--reb-yellow);
+    color: #222;
+    padding: 0.2em 0.5em;
+    border-radius: 0.3em;
+}

@@ -1,0 +1,259 @@
+{% extends 'base.html' %}
+
+{% block title %}GrantTracker - Dashboard{% endblock %}
+
+{% block page_title %}Dashboard{% endblock %}
+
+{% block page_subtitle %}
+<p class="text-muted mb-0">Welcome to the GrantTracker system</p>
+{% endblock %}
+
+{% block content %}
+<style>
+    .stats-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        margin-bottom: 1rem;
+    }
+
+    .stats-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+    }
+</style>
+
+<!-- Stats Cards -->
+<div class="row">
+    <div class="col-md-3">
+        <div class="stats-card">
+            <div class="d-flex align-items-center">
+                <div class="stats-icon bg-primary me-3">
+                    <i class="fas fa-school"></i>
+                </div>
+                <div>
+                    <h4 class="mb-0">{{ total_schools|default:"0" }}</h4>
+                    <small class="text-muted">Total Schools</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card">
+            <div class="d-flex align-items-center">
+                <div class="stats-icon bg-success me-3">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <div>
+                    <h4 class="mb-0">{{ total_proposals|default:"0" }}</h4>
+                    <small class="text-muted">Grant Proposals</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card">
+            <div class="d-flex align-items-center">
+                <div class="stats-icon bg-warning me-3">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div>
+                    <h4 class="mb-0">{{ pending_proposals|default:"0" }}</h4>
+                    <small class="text-muted">Pending Review</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card">
+            <div class="d-flex align-items-center">
+                <div class="stats-icon bg-info me-3">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
+                <div>
+                    <h4 class="mb-0">{{ total_budget_allocated|default:"0" }}</h4>
+                    <small class="text-muted">Budget Allocated</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- AI Statistics Row -->
+<div class="row mb-4">
+    <div class="col-md-2">
+        <div class="stats-card text-center">
+            <div class="stats-icon bg-primary mx-auto mb-2"><i class="fas fa-brain"></i></div>
+            <h5 class="mb-0">{{ ai_accuracy|floatformat:2 }}%</h5>
+            <small class="text-muted">Model Accuracy</small>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="stats-card text-center">
+            <div class="stats-icon bg-success mx-auto mb-2"><i class="fas fa-cogs"></i></div>
+            <h5 class="mb-0">{{ ai_total_predictions }}</h5>
+            <small class="text-muted">Predictions</small>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="stats-card text-center">
+            <div class="stats-icon bg-warning mx-auto mb-2"><i class="fas fa-exclamation-triangle"></i></div>
+            <h5 class="mb-0">{{ ai_total_anomalies }}</h5>
+            <small class="text-muted">Anomalies</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card text-center">
+            <div class="stats-icon bg-info mx-auto mb-2"><i class="fas fa-percentage"></i></div>
+            <h5 class="mb-0">{{ ai_avg_pred_score|floatformat:2 }}</h5>
+            <small class="text-muted">Avg. Prediction Score</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card text-center">
+            <div class="stats-icon bg-danger mx-auto mb-2"><i class="fas fa-bug"></i></div>
+            <h5 class="mb-0">{{ ai_anomaly_rate|floatformat:1 }}%</h5>
+            <small class="text-muted">Anomaly Rate</small>
+        </div>
+    </div>
+</div>
+
+<!-- AI Charts Row -->
+<div class="row mb-4">
+    <div class="col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header"><strong>Prediction Score Distribution</strong></div>
+            <div class="card-body"><canvas id="aiScoreDistChart"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header"><strong>Anomalies by Month</strong></div>
+            <div class="card-body"><canvas id="aiAnomalyFreqChart"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header"><strong>Top 5 Proposals by AI Score</strong></div>
+            <div class="card-body"><canvas id="aiTopProposalsChart"></canvas></div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Recent Grant Proposals</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_proposals %}
+                {% for proposal in recent_proposals %}
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                        <strong>{{ proposal.title }}</strong>
+                        <br>
+                        <small class="text-muted">{{ proposal.school.name }}</small>
+                    </div>
+                    <span class="badge bg-{{ proposal.get_status_color }}">{{ proposal.get_status_display }}</span>
+                </div>
+                {% endfor %}
+                {% else %}
+                <p class="text-muted">No recent proposals</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'grants:proposal_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Create New Proposal
+                    </a>
+                    <a href="{% url 'budget:overview' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-chart-pie me-2"></i>View Budget
+                    </a>
+                    <a href="{% url 'training:overview' %}" class="btn btn-outline-success">
+                        <i class="fas fa-graduation-cap me-2"></i>Training Programs
+                    </a>
+                    <a href="{% url 'reporting:overview' %}" class="btn btn-outline-info">
+                        <i class="fas fa-chart-bar me-2"></i>Generate Reports
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // AI Prediction Score Distribution (Histogram)
+    const aiScoreList = {{ ai_score_list| safe }};
+    const aiBins = Array(10).fill(0);
+    aiScoreList.forEach(s => {
+        const idx = Math.min(Math.floor(s * 10), 9);
+        aiBins[idx] += 1;
+    });
+    const aiBinLabels = [
+        '0-0.1', '0.1-0.2', '0.2-0.3', '0.3-0.4', '0.4-0.5',
+        '0.5-0.6', '0.6-0.7', '0.7-0.8', '0.8-0.9', '0.9-1.0'
+    ];
+    new Chart(document.getElementById('aiScoreDistChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: aiBinLabels,
+            datasets: [{
+                label: 'Proposals',
+                data: aiBins,
+                backgroundColor: '#36A2EB',
+            }]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } } }
+    });
+
+    // AI Anomaly Frequency by Month
+    new Chart(document.getElementById('aiAnomalyFreqChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: {{ ai_anomaly_months| safe }},
+        datasets: [{
+            label: 'Anomalies',
+            data: {{ ai_anomaly_freq| safe }},
+        backgroundColor: '#FF6384',
+            }]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } } }
+    });
+
+    // AI Top 5 Proposals by Score
+    new Chart(document.getElementById('aiTopProposalsChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: {{ ai_top_titles| safe }},
+        datasets: [{
+            label: 'Score',
+            data: {{ ai_top_scores| safe }},
+        backgroundColor: '#4BC0C0',
+            }]
+        },
+        options: {
+            responsive: true, plugins: { legend: { display: false } },
+        scales: { y: { min: 0, max: 1 } }
+    }
+    });
+</script>
+{% endblock %}

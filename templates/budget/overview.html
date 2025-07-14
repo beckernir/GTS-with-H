@@ -1,0 +1,292 @@
+{% extends 'base.html' %}
+
+{% block title %}Budget Overview - GrantTracker{% endblock %}
+
+{% block page_title %}Budget Overview{% endblock %}
+
+{% block page_subtitle %}
+<p class="text-muted mb-0">Financial management and budget allocation for grant programs</p>
+{% endblock %}
+
+{% block content %}
+<!-- Budget Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="mb-0">{{ total_budget|floatformat:0 }}</h4>
+                        <p class="mb-0">Total Budget</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-wallet fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="mb-0">{{ allocated_budget|floatformat:0 }}</h4>
+                        <p class="mb-0">Allocated</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="mb-0">{{ pending_budget|floatformat:0 }}</h4>
+                        <p class="mb-0">Pending</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-clock fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="mb-0">{{ remaining_budget|floatformat:0 }}</h4>
+                        <p class="mb-0">Available</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-piggy-bank fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Charts -->
+    <div class="col-lg-8">
+        <!-- Budget Allocation Chart -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Budget Allocation by Category</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="budgetChart" width="400" height="200"></canvas>
+                <script>
+                    const budgetChartLabels = [{% for row in category_data %}'{{ row.category|escapejs }}'{% if not forloop.last %}, {% endif %} {% endfor %}];
+                    const budgetAllocatedData = [{% for row in category_data %}Number('{{ row.allocated|default_if_none:"0"|floatformat:"0" }}'){% if not forloop.last %}, {% endif %} {% endfor %}];
+                    const budgetSpentData = [{% for row in category_data %}Number('{{ row.spent|default_if_none:"0"|floatformat:"0" }}'){% if not forloop.last %}, {% endif %} {% endfor %}];
+                    const budgetChartData = {
+                        labels: budgetChartLabels,
+                        datasets: [
+                            {
+                                label: 'Allocated',
+                                backgroundColor: '#0d6efd',
+                                data: budgetAllocatedData
+                            },
+                            {
+                                label: 'Spent',
+                                backgroundColor: '#198754',
+                                data: budgetSpentData
+                            }
+                        ]
+                    };
+                    new Chart(document.getElementById('budgetChart').getContext('2d'), {
+                        type: 'bar',
+                        data: budgetChartData,
+                        options: { responsive: true, plugins: { legend: { position: 'top' } } }
+                    });
+                </script>
+            </div>
+        </div>
+
+        <!-- Monthly Spending Trend -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Monthly Spending Trend</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="spendingChart" width="400" height="200"></canvas>
+                <script>
+                    const spendingLabels = [{% for alloc in recent_allocations %}'{{ alloc.created_at|date:"M j" }}'{% if not forloop.last %}, {% endif %} {% endfor %}];
+                    const spendingData = [{% for alloc in recent_allocations %}Number('{{ alloc.spent_amount|default_if_none:"0"|floatformat:"0" }}'){% if not forloop.last %}, {% endif %} {% endfor %}];
+                    new Chart(document.getElementById('spendingChart').getContext('2d'), {
+                        type: 'line',
+                        data: {
+                            labels: spendingLabels,
+                            datasets: [{
+                                label: 'Spent',
+                                backgroundColor: '#ffc107',
+                                borderColor: '#ffc107',
+                                data: spendingData,
+                                fill: false,
+                                tension: 0.1
+                            }]
+                        },
+                        options: { responsive: true, plugins: { legend: { position: 'top' } } }
+                    });
+                </script>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Quick Actions -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    {% if user.is_school_admin or user.is_reb_officer or user.is_system_admin %}
+                    <a href="{% url 'budget:period_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Create Budget Period
+                    </a>
+                    <a href="{% url 'budget:school_budget_create' %}" class="btn btn-success">
+                        <i class="fas fa-money-bill me-2"></i>Create School Budget
+                    </a>
+                    <a href="{% url 'budget:report_generate' %}" class="btn btn-info">
+                        <i class="fas fa-chart-bar me-2"></i>Generate Report
+                    </a>
+                    <a href="{% url 'budget:transfer_create' %}" class="btn btn-warning">
+                        <i class="fas fa-exchange-alt me-2"></i>Budget Transfer
+                    </a>
+                    {% else %}
+                    <div class="alert alert-danger">You are not authorized to perform budget actions.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Budget Activities -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Recent Budget Activities</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_allocations %}
+                {% for allocation in recent_allocations %}
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h6 class="mb-0">{{ allocation.budget_title|truncatechars:30 }}</h6>
+                        <small class="text-muted">{{ allocation.school.school_name }}</small>
+                    </div>
+                    <div class="text-end">
+                        <strong>{{ allocation.spent_amount|floatformat:0 }} RWF</strong>
+                        <br>
+                        <small class="text-muted">{{ allocation.created_at|date:"M j" }}</small>
+                    </div>
+                </div>
+                {% if not forloop.last %}
+                <hr>{% endif %}
+                {% endfor %}
+                {% else %}
+                <p class="text-muted">No recent budget activities</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Budget Alerts -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Budget Alerts</h5>
+            </div>
+            <div class="card-body">
+                {% if budget_alerts %}
+                {% for alert in budget_alerts %}
+                <div class="alert alert-{{ alert.level }} alert-sm mb-2">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    {{ alert.message }}
+                </div>
+                {% endfor %}
+                {% else %}
+                <p class="text-muted">No budget alerts</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Budget Details Table -->
+<div class="card">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Budget Details</h5>
+            <div>
+                <button class="btn btn-outline-primary btn-sm" onclick="exportBudget()">
+                    <i class="fas fa-download me-2"></i>Export
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Total Budget</th>
+                        <th>Allocated</th>
+                        <th>Spent</th>
+                        <th>Remaining</th>
+                        <th>Utilization %</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in category_data %}
+                    <tr>
+                        <td>{{ row.category }}</td>
+                        <td>{{ row.total|floatformat:0 }}</td>
+                        <td>{{ row.allocated|floatformat:0 }}</td>
+                        <td>{{ row.spent|floatformat:0 }}</td>
+                        <td>{{ row.remaining|floatformat:0 }}</td>
+                        <td>{{ row.utilization|floatformat:1 }}%</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                {% if row.category_id %}
+                                <a href="{% url 'budget:category_detail' row.category_id %}"
+                                    class="btn btn-outline-primary">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% else %}
+                                <button class="btn btn-outline-secondary" disabled title="No detail available">
+                                    <i class="fas fa-eye-slash"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center">No category data available.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    function exportBudget() {
+        // Placeholder function - can be implemented later
+        alert('Export functionality will be implemented soon.');
+    }
+</script>
+{% endblock %}

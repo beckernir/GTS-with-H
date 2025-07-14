@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Budget Line Item{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Delete Budget Line Item</h2>
+    {% if user.is_school_admin or user.is_reb_officer or user.is_system_admin %}
+    <div class="alert alert-danger">
+        <p>Are you sure you want to delete the line item <strong>{{ item.item_description }}</strong>?</p>
+    </div>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Yes, Delete</button>
+        <a href="{% url 'budget:line_item_list' item.school_budget.budget_id %}"
+            class="btn btn-secondary ms-2">Cancel</a>
+    </form>
+    {% else %}
+    <div class="alert alert-danger mt-3">You are not authorized to delete this line item.</div>
+    {% endif %}
+</div>
+{% endblock %}

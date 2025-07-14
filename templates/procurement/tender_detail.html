@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2>{{ tender.title }}</h2>
+    <div class="mb-3">
+        <strong>Status:</strong> {{ tender.get_status_display }}<br>
+        <strong>Submission Deadline:</strong> {{ tender.submission_deadline|date:'Y-m-d H:i' }}<br>
+        <strong>Created By:</strong> {{ tender.created_by.get_full_name|default:'-' }}<br>
+        <strong>Description:</strong> <br>
+        <div class="border rounded p-2 bg-light">{{ tender.description }}</div>
+    </div>
+    <h4>Supporting Documents</h4>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Type</th>
+                <th>Uploaded By</th>
+                <th>Uploaded At</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for doc in documents %}
+            <tr>
+                <td>{{ doc.document_title }}</td>
+                <td>{{ doc.get_document_type_display }}</td>
+                <td>{{ doc.uploaded_by.get_full_name|default:'-' }}</td>
+                <td>{{ doc.uploaded_at|date:'Y-m-d H:i' }}</td>
+                <td><a href="{{ doc.document_file.url }}" class="btn btn-sm btn-outline-primary"
+                        target="_blank">Download</a></td>
+            </tr>
+            <tr>
+                <td colspan="5">
+                    {% if doc.ocr_text %}
+                    <div class="alert alert-warning mb-0"><strong>OCR Extracted Text:</strong><br>
+                        <pre style="white-space: pre-wrap; word-break: break-word;">{{ doc.ocr_text }}</pre>
+                    </div>
+                    {% else %}
+                    <div class="text-muted">No OCR data available.</div>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center">No documents uploaded.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% if user.is_authenticated %}
+    {% if user.is_reb_officer or user.is_system_admin %}
+    <a href="{% url 'procurement:tender_document_upload' tender.tender_id %}" class="btn btn-primary">Upload Supporting
+        Document</a>
+    {% endif %}
+    {% endif %}
+    <a href="{% url 'procurement:tender_list' %}" class="btn btn-secondary mt-3">Back to Tenders</a>
+</div>
+{% endblock %}

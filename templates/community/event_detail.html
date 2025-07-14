@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}Event Details{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>{{ event.event_title }}</h2>
+        {% if user.is_authenticated %}
+        {% if user.is_school_admin or user.is_reb_officer or user.is_system_admin %}
+        <a href="{% url 'community:event_edit' event.event_id %}" class="btn btn-warning">Edit Event</a>
+        {% endif %}
+        {% endif %}
+    </div>
+    <div class="card mb-3">
+        <div class="card-body">
+            <p><strong>Type:</strong> {{ event.get_event_type_display }}</p>
+            <p><strong>Status:</strong> {{ event.get_status_display }}</p>
+            <p><strong>Description:</strong> {{ event.description }}</p>
+            <p><strong>Objectives:</strong> {{ event.objectives }}</p>
+            <p><strong>Start Date:</strong> {{ event.start_date|date:"Y-m-d H:i" }}</p>
+            <p><strong>End Date:</strong> {{ event.end_date|date:"Y-m-d H:i" }}</p>
+            <p><strong>Location:</strong> {{ event.location|default:"TBA" }}</p>
+            <p><strong>Is Virtual:</strong> {% if event.is_virtual %}Yes{% else %}No{% endif %}</p>
+            {% if event.is_virtual and event.virtual_meeting_link %}
+            <p><strong>Virtual Meeting Link:</strong> <a href="{{ event.virtual_meeting_link }}"
+                    target="_blank">Join</a></p>
+            {% endif %}
+            <p><strong>Max Participants:</strong> {{ event.max_participants|default:"Unlimited" }}</p>
+            <p><strong>Current Participants:</strong> {{ event.current_participants }}</p>
+            <p><strong>Created by:</strong> {{ event.created_by.get_full_name|default:"Unknown" }}</p>
+            <p><strong>Created at:</strong> {{ event.created_at|date:"Y-m-d H:i" }}</p>
+            <p><strong>Last updated:</strong> {{ event.updated_at|date:"Y-m-d H:i" }}</p>
+        </div>
+    </div>
+    <a href="{% url 'community:event_list' %}" class="btn btn-secondary">Back to Events</a>
+</div>
+{% endblock %}

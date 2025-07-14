@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% load humanize %}
+
+{% block title %}Budget Transfer Details{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white d-flex align-items-center">
+                    <h3 class="mb-0"><i class="fas fa-exchange-alt me-2"></i>Budget Transfer Details</h3>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">Transfer ID</dt>
+                        <dd class="col-sm-8">{{ transfer.transfer_id }}</dd>
+                        <dt class="col-sm-4">From School</dt>
+                        <dd class="col-sm-8">{{ transfer.source_line_item.school_budget.school.school_name }}</dd>
+                        <dt class="col-sm-4">To School</dt>
+                        <dd class="col-sm-8">{{ transfer.destination_line_item.school_budget.school.school_name }}</dd>
+                        <dt class="col-sm-4">Amount</dt>
+                        <dd class="col-sm-8">RWF {{ transfer.transfer_amount|intcomma }}</dd>
+                        <dt class="col-sm-4">Category</dt>
+                        <dd class="col-sm-8">{{ transfer.source_line_item.budget_category.category_name }}</dd>
+                        <dt class="col-sm-4">Transfer Type</dt>
+                        <dd class="col-sm-8">{{ transfer.get_transfer_type_display }}</dd>
+                        <dt class="col-sm-4">Date</dt>
+                        <dd class="col-sm-8">{{ transfer.transfer_date }}</dd>
+                        <dt class="col-sm-4">Status</dt>
+                        <dd class="col-sm-8">
+                            {% if transfer.is_approved %}
+                            <span class="badge bg-success">Approved</span>
+                            {% else %}
+                            <span class="badge bg-warning">Pending</span>
+                            {% endif %}
+                        </dd>
+                        <dt class="col-sm-4">Reason</dt>
+                        <dd class="col-sm-8">{{ transfer.reason }}</dd>
+                        <dt class="col-sm-4">Created By</dt>
+                        <dd class="col-sm-8">{{ transfer.created_by }}</dd>
+                        <dt class="col-sm-4">Created At</dt>
+                        <dd class="col-sm-8">{{ transfer.created_at }}</dd>
+                        {% if transfer.is_approved %}
+                        <dt class="col-sm-4">Approved By</dt>
+                        <dd class="col-sm-8">{{ transfer.approved_by }}</dd>
+                        <dt class="col-sm-4">Approval Date</dt>
+                        <dd class="col-sm-8">{{ transfer.approval_date }}</dd>
+                        {% endif %}
+                    </dl>
+                    <div class="d-flex justify-content-between align-items-center mt-4">
+                        <a href="{% url 'budget:transfer_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Back to Transfers
+                        </a>
+                        {% if not transfer.is_approved and user_can_approve %}
+                        <a href="{% url 'budget:transfer_approve' transfer.transfer_id %}" class="btn btn-success">
+                            <i class="fas fa-check me-1"></i>Approve Transfer
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

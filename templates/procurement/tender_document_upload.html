@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Upload Supporting Document for: {{ tender.title }}</h2>
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-7">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" novalidate>
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="id_document_type" class="form-label">Document Type</label>
+                            {{ form.document_type|add_class:"form-select" }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_document_title" class="form-label">Title</label>
+                            {{ form.document_title|add_class:"form-control" }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_document_file" class="form-label">File</label>
+                            {{ form.document_file|add_class:"form-control" }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_description" class="form-label">Description</label>
+                            {{ form.description|add_class:"form-control" }}
+                        </div>
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">Upload</button>
+                            <a href="{% url 'procurement:tender_detail' tender.tender_id %}"
+                                class="btn btn-secondary btn-lg">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_css %}
+<style>
+    .form-label {
+        font-weight: 500;
+    }
+
+    .card {
+        border-radius: 1rem;
+    }
+
+    .btn-lg {
+        font-size: 1.1rem;
+        padding: 0.75rem 0;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}Budget Period Details{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Budget Period Details</h3>
+                    <a href="{% url 'budget:period_list' %}" class="btn btn-light btn-sm"><i
+                            class="fas fa-arrow-left me-1"></i>Back</a>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">Period Name</dt>
+                        <dd class="col-sm-8">{{ period.period_name }}</dd>
+                        <dt class="col-sm-4">Period Type</dt>
+                        <dd class="col-sm-8">{{ period.get_period_type_display }}</dd>
+                        <dt class="col-sm-4">Start Date</dt>
+                        <dd class="col-sm-8">{{ period.start_date|date:'F j, Y' }}</dd>
+                        <dt class="col-sm-4">End Date</dt>
+                        <dd class="col-sm-8">{{ period.end_date|date:'F j, Y' }}</dd>
+                        <dt class="col-sm-4">Total Budget Limit</dt>
+                        <dd class="col-sm-8">RWF {{ period.total_budget_limit|floatformat:0 }}</dd>
+                        <dt class="col-sm-4">Allocated Budget</dt>
+                        <dd class="col-sm-8">RWF {{ period.allocated_budget|floatformat:0 }}</dd>
+                        <dt class="col-sm-4">Spent Budget</dt>
+                        <dd class="col-sm-8">RWF {{ period.spent_budget|floatformat:0 }}</dd>
+                        <dt class="col-sm-4">Status</dt>
+                        <dd class="col-sm-8">
+                            {% if period.is_active %}
+                            <span class="badge bg-success">Active</span>
+                            {% elif period.is_closed %}
+                            <span class="badge bg-secondary">Closed</span>
+                            {% else %}
+                            <span class="badge bg-warning">Draft</span>
+                            {% endif %}
+                        </dd>
+                        <dt class="col-sm-4">Created By</dt>
+                        <dd class="col-sm-8">{{
+                            period.created_by.get_full_name|default:period.created_by.username|default:'N/A' }}</dd>
+                        <dt class="col-sm-4">Created At</dt>
+                        <dd class="col-sm-8">{{ period.created_at|date:'F j, Y, H:i' }}</dd>
+                        <dt class="col-sm-4">Last Updated</dt>
+                        <dd class="col-sm-8">{{ period.updated_at|date:'F j, Y, H:i' }}</dd>
+                    </dl>
+                    {% if user.is_system_admin or user.is_reb_officer %}
+                    <div class="d-flex justify-content-end">
+                        <a href="{% url 'budget:period_edit' period.period_id %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-edit me-1"></i>Edit
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

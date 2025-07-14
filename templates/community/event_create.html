@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Community Event{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="mb-0">Create Community Event</h2>
+                </div>
+                <div class="card-body">
+    {% if user.is_reb_officer or user.is_system_admin %}
+    <form method="post">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {% for field in form %}
+        <div class="mb-3">
+            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+            {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+        </div>
+        {% endfor %}
+                        <div class="d-flex justify-content-end">
+        <button type="submit" class="btn btn-primary">Submit</button>
+        <a href="{% url 'community:event_list' %}" class="btn btn-secondary ms-2">Back to Events</a>
+                        </div>
+    </form>
+    {% else %}
+    <div class="alert alert-danger mt-3">You are not authorized to create a community event.</div>
+    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
