@@ -4,7 +4,7 @@ Pillow
 PyPDF2
 djangorestframework
 openpyxl
-widget-tweaks
+django-widget-tweaks
 joblib
 scikit-learn
 pandas
