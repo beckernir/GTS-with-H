@@ -1,2 +1,13 @@
+Django>=4.2,<5.3
 pytesseract
-Pillow 
+Pillow
+PyPDF2
+djangorestframework
+openpyxl
+widget-tweaks
+joblib
+scikit-learn
+pandas
+numpy
+reportlab
+mysqlclient 

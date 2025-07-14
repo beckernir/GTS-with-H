@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2>{{ school.school_name }}</h2>
+    <p><strong>School Code:</strong> {{ school.school_code }}</p>
+    <p><strong>District:</strong> {{ school.district }}</p>
+    <p><strong>Sector:</strong> {{ school.sector }}</p>
+    <p><strong>Cell:</strong> {{ school.cell }}</p>
+    <p><strong>Village:</strong> {{ school.village }}</p>
+    <p><strong>Address:</strong> {{ school.address }}</p>
+    <p><strong>Principal:</strong> {{ school.principal_name }} ({{ school.principal_email }})</p>
+    <p><strong>Phone:</strong> {{ school.phone_number }}</p>
+    <hr>
+    <h4>Statistics</h4>
+    <ul>
+        <li><strong>Total Proposals:</strong> {{ total_proposals }}</li>
+        <li><strong>Active Proposals:</strong> {{ active_proposals }}</li>
+        <li><strong>Total Budget:</strong> {{ total_budget }}</li>
+    </ul>
+    <hr>
+    <h4>Recent Proposals</h4>
+    <ul>
+        {% for proposal in recent_proposals %}
+        <li>{{ proposal.title }} ({{ proposal.status }})</li>
+        {% empty %}
+        <li>No recent proposals.</li>
+        {% endfor %}
+    </ul>
+    <a href="{% url 'core:school_list' %}" class="btn btn-secondary mt-3">Back to School List</a>
+</div>
+{% endblock %}
