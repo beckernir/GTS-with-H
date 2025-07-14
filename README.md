@@ -1,3 +1,4 @@
+
 # GrantTracker
 
 GrantTracker is a comprehensive Django-based platform for managing grants, budgets, training, community engagement, and reporting in educational or organizational settings. It features strict role-based access (system admin, REB officer, school admin, teacher) and modern, user-friendly interfaces for all modules.
