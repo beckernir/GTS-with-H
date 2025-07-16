@@ -1,6 +1,7 @@
 from django import forms
 from .models import GrantProposal, GrantCategory
 from core.models import School
+from reporting.models import ProposalCriterion
 
 class GrantProposalForm(forms.ModelForm):
     school = forms.ModelChoiceField(
@@ -14,7 +15,7 @@ class GrantProposalForm(forms.ModelForm):
         fields = [
             'proposal_title', 'grant_category', 'description', 'objectives',
             'expected_outcomes', 'target_beneficiaries', 'requested_amount',
-            'start_date', 'end_date', 'priority_level', 'status'
+            'start_date', 'end_date', 'priority_level'
         ]
         widgets = {
             'start_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
@@ -40,4 +41,31 @@ class GrantCategoryForm(forms.ModelForm):
             'max_amount': forms.NumberInput(attrs={'class': 'form-control'}),
             'priority_weight': forms.NumberInput(attrs={'class': 'form-control'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-        } 
+        }
+
+class GrantProposalWithCriteriaForm(GrantProposalForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Dynamically add fields for all active proposal criteria
+        for criterion in ProposalCriterion.objects.filter(active=True).order_by('ordering', 'name'):
+            field_name = f'criterion_{criterion.id}'
+            if criterion.type == 'file':
+                self.fields[field_name] = forms.FileField(
+                    label=criterion.name,
+                    required=criterion.required,
+                    help_text=criterion.description,
+                )
+            elif criterion.type == 'text':
+                self.fields[field_name] = forms.CharField(
+                    label=criterion.name,
+                    required=criterion.required,
+                    help_text=criterion.description,
+                    widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 2})
+                )
+            elif criterion.type == 'boolean':
+                self.fields[field_name] = forms.BooleanField(
+                    label=criterion.name,
+                    required=criterion.required,
+                    help_text=criterion.description,
+                )
+            self.fields[field_name].criterion_obj = criterion 

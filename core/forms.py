@@ -1,6 +1,7 @@
 from django import forms
 from .models import School
 from .models import User
+from reporting.models import SupplierCriterion
 
 class SchoolForm(forms.ModelForm):
     class Meta:
@@ -76,3 +77,30 @@ class UserCreateForm(forms.ModelForm):
         if commit:
             user.save()
         return user 
+
+class SupplierRegistrationWithCriteriaForm(UserCreateForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Dynamically add fields for all active supplier criteria
+        for criterion in SupplierCriterion.objects.filter(active=True).order_by('ordering', 'name'):
+            field_name = f'criterion_{criterion.id}'
+            if criterion.type == 'file':
+                self.fields[field_name] = forms.FileField(
+                    label=criterion.name,
+                    required=criterion.required,
+                    help_text=criterion.description,
+                )
+            elif criterion.type == 'text':
+                self.fields[field_name] = forms.CharField(
+                    label=criterion.name,
+                    required=criterion.required,
+                    help_text=criterion.description,
+                    widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 2})
+                )
+            elif criterion.type == 'boolean':
+                self.fields[field_name] = forms.BooleanField(
+                    label=criterion.name,
+                    required=criterion.required,
+                    help_text=criterion.description,
+                )
+            self.fields[field_name].criterion_obj = criterion 

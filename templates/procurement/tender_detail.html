@@ -62,76 +62,83 @@
     </table>
 
     {% if user.is_authenticated %}
-        {% if user.is_reb_officer or user.is_system_admin %}
-        <a href="{% url 'procurement:tender_document_upload' tender.tender_id %}" class="btn btn-primary">
-            Upload Supporting Document
-        </a>
-        {% endif %}
+    {% if user.is_reb_officer or user.is_system_admin %}
+    <a href="{% url 'procurement:tender_document_upload' tender.tender_id %}" class="btn btn-primary">
+        Upload Supporting Document
+    </a>
+    {% endif %}
 
-        {% if user.is_supplier %}
-        <a href="{% url 'procurement:bid_submit' tender.tender_id %}" class="btn btn-success mt-2">
-            Submit Bid
-        </a>
-        {% endif %}
+    {% if user.is_supplier %}
+    <a href="{% url 'procurement:bid_submit' tender.tender_id %}" class="btn btn-success mt-2">
+        Submit Bid
+    </a>
+    {% endif %}
     {% endif %}
 
     {% if user.is_authenticated %}
-        {% if user.is_reb_officer or user.is_system_admin %}
-        <h4 class="mt-4">Bids Submitted</h4>
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>Supplier</th>
-                    <th>Proposal</th>
-                    <th>Document</th>
-                    <th>Submitted At</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for bid in bids %}
-                <tr class="{% if bid.status == 'awarded' %}table-success{% endif %}">
-                    <td>
-                        {% if bid.supplier.user_id %}
-                        <a href="{% url 'core:user_detail' bid.supplier.user_id %}" title="View supplier profile">
-                            {{ bid.supplier.get_full_name|default:bid.supplier.username }}
-                        </a>
-                        {% else %}
+    {% if user.is_reb_officer or user.is_system_admin %}
+    <h4 class="mt-4">Bids Submitted</h4>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Supplier</th>
+                <th>Proposal</th>
+                <th>Document</th>
+                <th>Submitted At</th>
+                <th>Status</th>
+                <th>ML Score</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for bid in bids %}
+            <tr class="{% if bid.status == 'awarded' %}table-success{% endif %}">
+                <td>
+                    {% if bid.supplier.user_id %}
+                    <a href="{% url 'core:user_detail' bid.supplier.user_id %}" title="View supplier profile">
                         {{ bid.supplier.get_full_name|default:bid.supplier.username }}
-                        {% endif %}
-                    </td>
-                    <td>{{ bid.proposal_text|truncatechars:50 }}</td>
-                    <td>
-                        {% if bid.document %}
-                        <a href="{{ bid.document.url }}" target="_blank">Download</a>
-                        {% else %}
-                        -
-                        {% endif %}
-                    </td>
-                    <td>{{ bid.submitted_at|date:'Y-m-d H:i' }}</td>
-                    <td>{{ bid.get_status_display }}</td>
-                    <td>
-                        {% if bid.status != 'awarded' and tender.status != 'awarded' %}
-                        <form method="post" action="{% url 'procurement:award_bid' tender.tender_id bid.bid_id %}">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-sm btn-success" title="Award this bid">
-                                Award
-                            </button>
-                        </form>
-                        {% elif bid.status == 'awarded' %}
-                        <span class="badge bg-success">Awarded</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="6" class="text-center">No bids submitted yet.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% endif %}
+                    </a>
+                    {% else %}
+                    {{ bid.supplier.get_full_name|default:bid.supplier.username }}
+                    {% endif %}
+                </td>
+                <td>{{ bid.proposal_text|truncatechars:50 }}</td>
+                <td>
+                    {% if bid.document %}
+                    <a href="{{ bid.document.url }}" target="_blank">Download</a>
+                    {% else %}
+                    -
+                    {% endif %}
+                </td>
+                <td>{{ bid.submitted_at|date:'Y-m-d H:i' }}</td>
+                <td>{{ bid.get_status_display }}</td>
+                <td>
+                    <span class="badge bg-info">Score: {{ bid.ml_score }}</span>
+                    {% if forloop.first %}
+                    <span class="badge bg-success">Recommended</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if bid.status != 'awarded' and tender.status != 'awarded' %}
+                    <form method="post" action="{% url 'procurement:award_bid' tender.tender_id bid.bid_id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-success" title="Award this bid">
+                            Award
+                        </button>
+                    </form>
+                    {% elif bid.status == 'awarded' %}
+                    <span class="badge bg-success">Awarded</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center">No bids submitted yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
     {% endif %}
 
     <a href="{% url 'procurement:tender_list' %}" class="btn btn-secondary mt-3">

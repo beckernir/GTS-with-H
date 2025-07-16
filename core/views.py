@@ -21,6 +21,8 @@ from community.models import CommunityForum, Announcement
 from .forms import SchoolForm
 from ai_engine.models import ProposalPrediction, ProposalAnomaly, AIModelStatus
 from .forms import UserCreateForm
+from .forms import SupplierRegistrationWithCriteriaForm
+from reporting.models import SupplierCriterionResponse
 
 
 def login_view(request):
@@ -112,41 +114,38 @@ def supplier_register_view(request):
     """Dedicated registration view for suppliers."""
     role_choices = User.ROLE_CHOICES
     if request.method == 'POST':
-        username = request.POST.get('username')
-        email = request.POST.get('email')
-        password1 = request.POST.get('password1')
-        password2 = request.POST.get('password2')
-        first_name = request.POST.get('first_name')
-        last_name = request.POST.get('last_name')
-        # Force role to 'supplier'
-        role = 'supplier'
-
-        if password1 != password2:
-            messages.error(request, 'Passwords do not match.')
-            return render(request, 'core/register.html', {'role_choices': role_choices, 'supplier_registration': True})
-
-        if User.objects.filter(username=username).exists():
-            messages.error(request, 'Username already exists.')
-            return render(request, 'core/register.html', {'role_choices': role_choices, 'supplier_registration': True})
-
-        if User.objects.filter(email=email).exists():
-            messages.error(request, 'Email already registered.')
-            return render(request, 'core/register.html', {'role_choices': role_choices, 'supplier_registration': True})
-
-        user = User.objects.create_user(
-            username=username,
-            email=email,
-            password=password1,
-            first_name=first_name,
-            last_name=last_name,
-            role=role,
-            status='pending'
-        )
-
-        messages.success(request, 'Supplier registration successful! Please wait for approval.')
-        return redirect('core:login')
-
-    return render(request, 'core/register.html', {'role_choices': role_choices, 'supplier_registration': True})
+        form = SupplierRegistrationWithCriteriaForm(request.POST, request.FILES)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.role = 'supplier'
+            user.status = 'pending'
+            user.save()
+            # Save criterion responses
+            for field_name, field in form.fields.items():
+                if hasattr(field, 'criterion_obj'):
+                    criterion = field.criterion_obj
+                    value = form.cleaned_data.get(field_name)
+                    response_kwargs = {'supplier': user, 'criterion': criterion}
+                    if criterion.type == 'file':
+                        SupplierCriterionResponse.objects.update_or_create(
+                            **response_kwargs,
+                            defaults={'value_file': value, 'value_text': None, 'value_bool': None}
+                        )
+                    elif criterion.type == 'text':
+                        SupplierCriterionResponse.objects.update_or_create(
+                            **response_kwargs,
+                            defaults={'value_text': value, 'value_file': None, 'value_bool': None}
+                        )
+                    elif criterion.type == 'boolean':
+                        SupplierCriterionResponse.objects.update_or_create(
+                            **response_kwargs,
+                            defaults={'value_bool': value, 'value_file': None, 'value_text': None}
+                        )
+            messages.success(request, 'Supplier registration successful! Please wait for approval.')
+            return redirect('core:login')
+    else:
+        form = SupplierRegistrationWithCriteriaForm()
+    return render(request, 'core/register.html', {'form': form, 'role_choices': role_choices, 'supplier_registration': True})
 
 
 def home_view(request):

@@ -534,3 +534,67 @@ class REBGrantBudget(models.Model):
 
     def __str__(self):
         return f"REB Grant Budget {self.year}: {self.total_amount}"
+
+CRITERION_TYPE_CHOICES = [
+    ('file', 'File Upload'),
+    ('text', 'Text'),
+    ('boolean', 'Yes/No'),
+]
+
+class ProposalCriterion(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    type = models.CharField(max_length=10, choices=CRITERION_TYPE_CHOICES, default='file')
+    required = models.BooleanField(default=True)
+    active = models.BooleanField(default=True)
+    ordering = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        db_table = 'reporting_proposal_criterion'
+        verbose_name = 'Proposal Criterion'
+        verbose_name_plural = 'Proposal Criteria'
+        ordering = ['ordering', 'name']
+
+    def __str__(self):
+        return self.name
+
+class SupplierCriterion(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    type = models.CharField(max_length=10, choices=CRITERION_TYPE_CHOICES, default='file')
+    required = models.BooleanField(default=True)
+    active = models.BooleanField(default=True)
+    ordering = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        db_table = 'reporting_supplier_criterion'
+        verbose_name = 'Supplier Criterion'
+        verbose_name_plural = 'Supplier Criteria'
+        ordering = ['ordering', 'name']
+
+    def __str__(self):
+        return self.name
+
+class ProposalCriterionResponse(models.Model):
+    proposal = models.ForeignKey('grants.GrantProposal', on_delete=models.CASCADE, related_name='criterion_responses')
+    criterion = models.ForeignKey(ProposalCriterion, on_delete=models.CASCADE)
+    value_text = models.TextField(blank=True, null=True)
+    value_file = models.FileField(upload_to='proposal_criteria/', blank=True, null=True)
+    value_bool = models.BooleanField(null=True, blank=True)
+    submitted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'reporting_proposal_criterion_response'
+        unique_together = ('proposal', 'criterion')
+
+class SupplierCriterionResponse(models.Model):
+    supplier = models.ForeignKey('core.User', on_delete=models.CASCADE, related_name='supplier_criterion_responses')
+    criterion = models.ForeignKey(SupplierCriterion, on_delete=models.CASCADE)
+    value_text = models.TextField(blank=True, null=True)
+    value_file = models.FileField(upload_to='supplier_criteria/', blank=True, null=True)
+    value_bool = models.BooleanField(null=True, blank=True)
+    submitted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'reporting_supplier_criterion_response'
+        unique_together = ('supplier', 'criterion')

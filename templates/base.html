@@ -150,6 +150,16 @@
                             <i class="fas fa-plus me-2"></i> Add School
                         </a>
                         {% endif %}
+                        <hr class="my-2">
+                        <div class="text-uppercase small mb-2 mt-3">Criteria Management</div>
+                        <a class="nav-link {% if request.resolver_match.url_name == 'proposal_criterion_list' %}active{% endif %}"
+                            href="{% url 'reporting:proposal_criterion_list' %}">
+                            <i class="fas fa-list-alt me-2"></i> Proposal Criteria
+                        </a>
+                        <a class="nav-link {% if request.resolver_match.url_name == 'supplier_criterion_list' %}active{% endif %}"
+                            href="{% url 'reporting:supplier_criterion_list' %}">
+                            <i class="fas fa-list me-2"></i> Supplier Criteria
+                        </a>
                         <hr class="my-3">
                         <a class="nav-link {% if request.resolver_match.url_name == 'profile' %}active{% endif %}"
                             href="{% url 'core:profile' %}">

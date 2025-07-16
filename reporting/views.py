@@ -18,7 +18,7 @@ from django import forms
 import pandas as pd
 from django.template.loader import render_to_string
 from collections import defaultdict
-from .models import REBGrantBudget
+from .models import REBGrantBudget, ProposalCriterion, SupplierCriterion
 try:
     from xhtml2pdf import pisa
 except ImportError:
@@ -27,6 +27,9 @@ from django.urls import reverse
 from .forms import REBGrantBudgetForm
 from django.contrib import messages
 from django.shortcuts import redirect
+from django.urls import reverse_lazy
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView
+from django.contrib.auth.mixins import UserPassesTestMixin, LoginRequiredMixin
 
 # Create your views here.
 
@@ -496,3 +499,55 @@ def reb_budget_planning_export_pdf(request):
     response['Content-Disposition'] = 'attachment; filename=reb_budget_planning.pdf'
     pisa.CreatePDF(html, dest=response)
     return response
+
+class REBAdminRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
+    def test_func(self):
+        return self.request.user.is_reb_officer() or self.request.user.is_system_admin()
+
+# Proposal Criteria Views
+class ProposalCriterionListView(REBAdminRequiredMixin, ListView):
+    model = ProposalCriterion
+    template_name = 'reporting/proposal_criterion_list.html'
+    context_object_name = 'criteria'
+    ordering = ['ordering', 'name']
+
+class ProposalCriterionCreateView(REBAdminRequiredMixin, CreateView):
+    model = ProposalCriterion
+    fields = ['name', 'description', 'type', 'required', 'active', 'ordering']
+    template_name = 'reporting/proposal_criterion_form.html'
+    success_url = reverse_lazy('reporting:proposal_criterion_list')
+
+class ProposalCriterionUpdateView(REBAdminRequiredMixin, UpdateView):
+    model = ProposalCriterion
+    fields = ['name', 'description', 'type', 'required', 'active', 'ordering']
+    template_name = 'reporting/proposal_criterion_form.html'
+    success_url = reverse_lazy('reporting:proposal_criterion_list')
+
+class ProposalCriterionDeleteView(REBAdminRequiredMixin, DeleteView):
+    model = ProposalCriterion
+    template_name = 'reporting/proposal_criterion_confirm_delete.html'
+    success_url = reverse_lazy('reporting:proposal_criterion_list')
+
+# Supplier Criteria Views
+class SupplierCriterionListView(REBAdminRequiredMixin, ListView):
+    model = SupplierCriterion
+    template_name = 'reporting/supplier_criterion_list.html'
+    context_object_name = 'criteria'
+    ordering = ['ordering', 'name']
+
+class SupplierCriterionCreateView(REBAdminRequiredMixin, CreateView):
+    model = SupplierCriterion
+    fields = ['name', 'description', 'type', 'required', 'active', 'ordering']
+    template_name = 'reporting/supplier_criterion_form.html'
+    success_url = reverse_lazy('reporting:supplier_criterion_list')
+
+class SupplierCriterionUpdateView(REBAdminRequiredMixin, UpdateView):
+    model = SupplierCriterion
+    fields = ['name', 'description', 'type', 'required', 'active', 'ordering']
+    template_name = 'reporting/supplier_criterion_form.html'
+    success_url = reverse_lazy('reporting:supplier_criterion_list')
+
+class SupplierCriterionDeleteView(REBAdminRequiredMixin, DeleteView):
+    model = SupplierCriterion
+    template_name = 'reporting/supplier_criterion_confirm_delete.html'
+    success_url = reverse_lazy('reporting:supplier_criterion_list')

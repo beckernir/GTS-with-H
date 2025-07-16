@@ -62,4 +62,12 @@ urlpatterns += [
     path('reb-budget-planning/edit/', views.reb_budget_edit_view, name='reb_budget_edit'),
     path('reb-budget-planning/export/excel/', views.reb_budget_planning_export_excel, name='reb_budget_planning_export_excel'),
     path('reb-budget-planning/export/pdf/', views.reb_budget_planning_export_pdf, name='reb_budget_planning_export_pdf'),
+    path('criteria/proposal/', views.ProposalCriterionListView.as_view(), name='proposal_criterion_list'),
+    path('criteria/proposal/add/', views.ProposalCriterionCreateView.as_view(), name='proposal_criterion_add'),
+    path('criteria/proposal/<int:pk>/edit/', views.ProposalCriterionUpdateView.as_view(), name='proposal_criterion_edit'),
+    path('criteria/proposal/<int:pk>/delete/', views.ProposalCriterionDeleteView.as_view(), name='proposal_criterion_delete'),
+    path('criteria/supplier/', views.SupplierCriterionListView.as_view(), name='supplier_criterion_list'),
+    path('criteria/supplier/add/', views.SupplierCriterionCreateView.as_view(), name='supplier_criterion_add'),
+    path('criteria/supplier/<int:pk>/edit/', views.SupplierCriterionUpdateView.as_view(), name='supplier_criterion_edit'),
+    path('criteria/supplier/<int:pk>/delete/', views.SupplierCriterionDeleteView.as_view(), name='supplier_criterion_delete'),
 ] 

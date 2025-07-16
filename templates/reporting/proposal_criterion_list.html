@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block title %}Proposal Criteria{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h4 class="card-title">Manage Criteria</h4>
+                    <p class="card-text">Add, edit, or remove the criteria used for evaluating school grant proposals
+                        and supplier bids. These criteria are used by the system and the ML engine for recommendations.
+                    </p>
+                    <a href="{% url 'reporting:proposal_criterion_list' %}"
+                        class="btn btn-outline-primary mb-2">Proposal Criteria</a>
+                    <a href="{% url 'reporting:supplier_criterion_list' %}"
+                        class="btn btn-outline-secondary mb-2">Supplier Criteria</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <h2>Proposal Criteria</h2>
+    <a href="{% url 'reporting:proposal_criterion_add' %}" class="btn btn-primary mb-3">Add Criterion</a>
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Order</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Active</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in criteria %}
+            <tr>
+                <td>{{ c.ordering }}</td>
+                <td>{{ c.name }}</td>
+                <td>{{ c.get_type_display }}</td>
+                <td>{{ c.required|yesno:"Yes,No" }}</td>
+                <td>{{ c.active|yesno:"Yes,No" }}</td>
+                <td>
+                    <a href="{% url 'reporting:proposal_criterion_edit' c.pk %}" class="btn btn-sm btn-warning">Edit</a>
+                    <a href="{% url 'reporting:proposal_criterion_delete' c.pk %}"
+                        class="btn btn-sm btn-danger">Delete</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center">No criteria found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load widget_tweaks %}
 
 {% block title %}GrantTracker - Register{% endblock %}
 
@@ -42,63 +43,132 @@
                 </div>
 
                 {% if messages %}
-                {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-                {% endfor %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
                 {% endif %}
 
-                <form method="post">
+                <form method="post" enctype="multipart/form-data">
                     {% csrf_token %}
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="first_name" class="form-label">First Name</label>
-                                <input type="text" class="form-control" id="first_name" name="first_name" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="last_name" class="form-label">Last Name</label>
-                                <input type="text" class="form-control" id="last_name" name="last_name" required>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="email" name="email" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="username" class="form-label">Username</label>
-                        <input type="text" class="form-control" id="username" name="username" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="role" class="form-label">Role</label>
-                        {% if supplier_registration %}
-                        <input type="hidden" name="role" value="supplier">
-                        <input type="text" class="form-control" value="Supplier" disabled>
-                        <div class="form-text">You are registering as a Supplier.</div>
-                        {% else %}
-                        <select class="form-select" id="role" name="role" required>
-                            <option value="">Select your role</option>
-                            {% for value, label in role_choices %}
-                            {% if value in allowed_roles %}
-                            <option value="{{ value }}">{{ label }}</option>
+                    {{ form.non_field_errors }}
+
+                    {% for field in form.visible_fields %}
+                        {% for error in field.errors %}
+                            <div class="alert alert-danger">{{ field.label }}: {{ error }}</div>
+                        {% endfor %}
+                    {% endfor %}
+
+                    {% if form %}
+                        {% for field in form %}
+                            {% if field.name|slice:":10" != "criterion_" %}
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        {{ field.label }}
+                                        {% if field.field.required %}
+                                            <span class="text-danger">*</span>
+                                        {% endif %}
+                                    </label>
+                                    {% if field.field.help_text %}
+                                        <div class="form-text">{{ field.field.help_text }}</div>
+                                    {% endif %}
+                                    {{ field|add_class:'form-control' }}
+                                    {% for error in field.errors %}
+                                        <div class="text-danger small">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
                             {% endif %}
+                        {% endfor %}
+
+                        <div class="mb-4">
+                            <h5>Supplier Criteria</h5>
+                            {% for field in form %}
+                                {% if field.name|slice:":10" == "criterion_" %}
+                                    <div class="mb-3">
+                                        <label class="form-label">
+                                            {{ field.label }}
+                                            {% if field.field.required %}
+                                                <span class="text-danger">*</span>
+                                            {% endif %}
+                                        </label>
+                                        {% if field.field.help_text %}
+                                            <div class="form-text">{{ field.field.help_text }}</div>
+                                        {% endif %}
+                                        {% if field.field.widget.input_type == 'file' or field.field.widget.input_type == 'textarea' %}
+                                            {{ field|add_class:'form-control' }}
+                                        {% elif field.field.widget.input_type == 'checkbox' %}
+                                            <div class="form-check">
+                                                {{ field|add_class:'form-check-input' }}
+                                                <label class="form-check-label">{{ field.label }}</label>
+                                            </div>
+                                        {% else %}
+                                            {{ field|add_class:'form-control' }}
+                                        {% endif %}
+                                        {% for error in field.errors %}
+                                            <div class="text-danger small">{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
                             {% endfor %}
-                        </select>
-                        {% endif %}
-                    </div>
-                    <div class="mb-3">
-                        <label for="password1" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="password1" name="password1" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="password2" class="form-label">Confirm Password</label>
-                        <input type="password" class="form-control" id="password2" name="password2" required>
-                    </div>
+                        </div>
+                    {% else %}
+                        <!-- Fallback manual fields -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="first_name" class="form-label">First Name</label>
+                                    <input type="text" class="form-control" id="first_name" name="first_name" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="last_name" class="form-label">Last Name</label>
+                                    <input type="text" class="form-control" id="last_name" name="last_name" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="role" class="form-label">Role</label>
+                            {% if supplier_registration %}
+                                <input type="hidden" name="role" value="supplier">
+                                <input type="text" class="form-control" value="Supplier" disabled>
+                                <div class="form-text">You are registering as a Supplier.</div>
+                            {% else %}
+                                <select class="form-select" id="role" name="role" required>
+                                    <option value="">Select your role</option>
+                                    {% for value, label in role_choices %}
+                                        {% if value in allowed_roles %}
+                                            <option value="{{ value }}">{{ label }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password1" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password1" name="password1" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password2" class="form-label">Confirm Password</label>
+                            <input type="password" class="form-control" id="password2" name="password2" required>
+                        </div>
+                    {% endif %}
+
                     <div class="d-grid">
                         <button type="submit" class="btn btn-primary">Register</button>
                     </div>

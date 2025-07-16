@@ -22,6 +22,7 @@
                     <th>Amount</th>
                     <th>Status</th>
                     <th>Created</th>
+                    <th>ML Score</th>
                     {% if user.is_school_admin or user.is_reb_officer or user.is_system_admin %}
                     <th>Actions</th>
                     {% endif %}
@@ -37,6 +38,12 @@
                     <td>RWF {{ proposal.requested_amount }}</td>
                     <td>{{ proposal.get_status_display }}</td>
                     <td>{{ proposal.created_at|date:"M d, Y" }}</td>
+                    <td>
+                        <span class="badge bg-info">Score: {{ proposal.ml_score }}</span>
+                        {% if forloop.first %}
+                        <span class="badge bg-success">Recommended</span>
+                        {% endif %}
+                    </td>
                     {% if user.is_school_admin or user.is_reb_officer or user.is_system_admin %}
                     <td>
                         {% if user.is_school_admin or user.is_system_admin %}

@@ -18,8 +18,35 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 import os
 from PyPDF2 import PdfReader
 from ai_engine.ml_pipeline import predict, extract_features_from_ocr
+from reporting.models import ProposalCriterion
+from reporting.models import ProposalCriterionResponse
+from .forms import GrantProposalWithCriteriaForm
 
 # Create your views here.
+
+def get_proposal_score(proposal):
+    features = {
+        'requested_amount': proposal.requested_amount or 0,
+        # Add more static features as needed
+    }
+    # Add dynamic criteria responses
+    for response in proposal.criterion_responses.all():
+        if response.criterion.type == 'text':
+            features[f'criterion_{response.criterion.id}_text'] = response.value_text or ''
+        elif response.criterion.type == 'boolean':
+            features[f'criterion_{response.criterion.id}_bool'] = int(response.value_bool) if response.value_bool is not None else 0
+        elif response.criterion.type == 'file' and response.value_file:
+            # Optionally use OCR or file metadata
+            try:
+                ocr_text = response.value_file.read().decode(errors='ignore') if hasattr(response.value_file, 'read') else ''
+            except Exception:
+                ocr_text = ''
+            features.update(extract_features_from_ocr(ocr_text))
+    try:
+        score = predict(features)
+    except Exception:
+        score = 0
+    return score
 
 def proposal_list_view(request):
     """Display a list of all grant proposals."""
@@ -47,8 +74,25 @@ def proposal_list_view(request):
     if category_filter:
         proposals = proposals.filter(grant_category_id=category_filter)
     
+    # ML scoring and sorting
+    proposal_scores = [(p, get_proposal_score(p)) for p in proposals]
+    if proposal_scores:
+        min_score = min(s for _, s in proposal_scores)
+        max_score = max(s for _, s in proposal_scores)
+        if min_score == max_score:
+            min_score = 0  # avoid division by zero
+        for p, score in proposal_scores:
+            if max_score > min_score:
+                norm_score = (score - min_score) / (max_score - min_score) * 99.9
+                p.ml_score = '{:.1f}'.format(norm_score)
+            else:
+                p.ml_score = '99.9'
+    else:
+        for p, _ in proposal_scores:
+            p.ml_score = '0.0'
+    proposal_scores.sort(key=lambda x: float(x[0].ml_score), reverse=True)
     context = {
-        'proposals': proposals,
+        'proposals': [p for p, s in proposal_scores],
         'categories': categories,
         'status_choices': GrantProposal.STATUS_CHOICES,
         'current_status': status_filter,
@@ -60,10 +104,11 @@ def proposal_list_view(request):
 @user_passes_test(lambda u: (hasattr(u, 'is_school_admin') and u.is_school_admin()) or (hasattr(u, 'is_system_admin') and (u.is_system_admin if isinstance(u.is_system_admin, bool) else u.is_system_admin())))
 def proposal_create_view(request):
     if request.method == 'POST':
-        form = GrantProposalForm(request.POST, user=request.user)
+        form = GrantProposalWithCriteriaForm(request.POST, request.FILES, user=request.user)
         if form.is_valid():
             proposal = form.save(commit=False)
             proposal.created_by = request.user
+            proposal.status = 'submitted'
             if hasattr(request.user, 'is_system_admin') and (
                 request.user.is_system_admin if isinstance(request.user.is_system_admin, bool) else request.user.is_system_admin()
             ):
@@ -76,9 +121,34 @@ def proposal_create_view(request):
                 form.add_error('school', 'School is required.')
                 return render(request, "grants/proposal_create.html", {'form': form, 'is_system_admin': request.user.is_system_admin()})
             proposal.save()
+            # Save criterion responses
+            for field_name, field in form.fields.items():
+                if hasattr(field, 'criterion_obj'):
+                    criterion = field.criterion_obj
+                    value = form.cleaned_data.get(field_name)
+                    response_kwargs = {'proposal': proposal, 'criterion': criterion}
+                    if criterion.type == 'file':
+                        if value:
+                            obj, created = ProposalCriterionResponse.objects.update_or_create(
+                                **response_kwargs,
+                                defaults={'value_file': value, 'value_text': None, 'value_bool': None}
+                            )
+                            if not created and value:
+                                obj.value_file = value
+                                obj.save()
+                    elif criterion.type == 'text':
+                        ProposalCriterionResponse.objects.update_or_create(
+                            **response_kwargs,
+                            defaults={'value_text': value, 'value_file': None, 'value_bool': None}
+                        )
+                    elif criterion.type == 'boolean':
+                        ProposalCriterionResponse.objects.update_or_create(
+                            **response_kwargs,
+                            defaults={'value_bool': value, 'value_file': None, 'value_text': None}
+                        )
             return redirect('grants:proposal_list')
     else:
-        form = GrantProposalForm(user=request.user)
+        form = GrantProposalWithCriteriaForm(user=request.user)
     is_system_admin = hasattr(request.user, 'is_system_admin') and (
         request.user.is_system_admin if isinstance(request.user.is_system_admin, bool) else request.user.is_system_admin()
     )

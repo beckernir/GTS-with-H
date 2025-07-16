@@ -13,9 +13,16 @@
                 </div>
                 <div class="card-body">
                     {% if user.is_school_admin or user.is_system_admin %}
-                    <form method="post" novalidate>
+                    <form method="post" enctype="multipart/form-data" novalidate>
                         {% csrf_token %}
                         {{ form.non_field_errors }}
+
+                        {% for field in form.visible_fields %}
+                        {% for error in field.errors %}
+                        <div class="alert alert-danger">{{ field.label }}: {{ error }}</div>
+                        {% endfor %}
+                        {% endfor %}
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="id_proposal_title" class="form-label">Title</label>
@@ -25,9 +32,9 @@
                                 <label for="id_grant_category"
                                     class="form-label d-flex justify-content-between align-items-center">
                                     <span>Category</span>
-                                    {% if is_system_admin %}
+                                    {% if user.is_system_admin %}
                                     <a href="/admin/grants/grantcategory/add/" target="_blank"
-                                        class="btn btn-sm btn-outline-primary ms-2" title="Add New Category">
+                                        class="btn btn-sm btn-outline-light ms-2" title="Add New Category">
                                         <i class="fas fa-plus"></i> New
                                     </a>
                                     {% endif %}
@@ -35,16 +42,19 @@
                                 {{ form.grant_category|add_class:'form-select' }}
                             </div>
                         </div>
+
                         {% if form.school %}
                         <div class="mb-3">
                             <label for="id_school" class="form-label">School</label>
                             {{ form.school|add_class:'form-select' }}
                         </div>
                         {% endif %}
+
                         <div class="mb-3">
                             <label for="id_description" class="form-label">Description</label>
                             {{ form.description|add_class:'form-control' }}
                         </div>
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="id_objectives" class="form-label">Objectives</label>
@@ -55,10 +65,12 @@
                                 {{ form.expected_outcomes|add_class:'form-control' }}
                             </div>
                         </div>
+
                         <div class="mb-3">
                             <label for="id_target_beneficiaries" class="form-label">Target Beneficiaries</label>
                             {{ form.target_beneficiaries|add_class:'form-control' }}
                         </div>
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="id_requested_amount" class="form-label">Requested Amount (RWF)</label>
@@ -73,17 +85,69 @@
                                 {{ form.end_date|add_class:'form-control' }}
                             </div>
                         </div>
+
                         <div class="mb-3">
                             <label for="id_priority_level" class="form-label">Priority Level</label>
                             {{ form.priority_level|add_class:'form-select' }}
                         </div>
+                        {% if user.is_system_admin or user.is_reb_officer %}
+                        <div class="mb-3">
+                            <label for="id_status" class="form-label">Status</label>
+                            <select name="status" id="id_status" class="form-select">
+                                <option value="submitted" selected>Submitted</option>
+                                <option value="draft">Draft</option>
+                                <option value="under_review">Under Review</option>
+                                <option value="approved">Approved</option>
+                                <option value="rejected">Rejected</option>
+                            </select>
+                        </div>
+                        {% endif %}
+
+                        <div class="mb-4">
+                            <h5>REB Proposal Criteria</h5>
+                            {% for field in form %}
+                            {% if field.name|slice:":10" == "criterion_" %}
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    {{ field.label }}
+                                    {% if field.field.required %}
+                                    <span class="text-danger">*</span>
+                                    {% endif %}
+                                </label>
+
+                                {% if field.field.help_text %}
+                                <div class="form-text">{{ field.field.help_text }}</div>
+                                {% endif %}
+
+                                {% if field.field.widget.input_type == 'file' or field.field.widget.input_type ==
+                                'textarea' %}
+                                {{ field|add_class:'form-control' }}
+                                {% elif field.field.widget.input_type == 'checkbox' %}
+                                <div class="form-check">
+                                    {{ field|add_class:'form-check-input' }}
+                                    <label class="form-check-label">{{ field.label }}</label>
+                                </div>
+                                {% else %}
+                                {{ field|add_class:'form-control' }}
+                                {% endif %}
+
+                                {% for error in field.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+
                         <div class="d-flex justify-content-between align-items-center mt-4">
                             <a href="{% url 'grants:proposal_list' %}" class="btn btn-secondary">Back to Proposals</a>
                             <button type="submit" class="btn btn-primary px-4">Submit Proposal</button>
                         </div>
                     </form>
                     {% else %}
-                    <div class="alert alert-danger">You are not authorized to create a grant proposal.</div>
+                    <div class="alert alert-danger">
+                        You are not authorized to create a grant proposal.
+                    </div>
                     {% endif %}
                 </div>
             </div>
