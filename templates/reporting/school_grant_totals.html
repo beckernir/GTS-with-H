@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Total Grants by School</h2>
+    <form method="post" class="mb-4">
+        {% csrf_token %}
+        <div class="row align-items-end">
+            <div class="col-md-4">
+                {{ form.total_amount.label_tag }}
+                {{ form.total_amount }}
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary">Distribute</button>
+            </div>
+        </div>
+    </form>
+    {% if allocated %}
+    <div class="alert alert-info mb-3">
+        AI has distributed <strong>{{ total_amount|floatformat:0 }} RWF</strong> among the schools below.
+    </div>
+    {% endif %}
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>School</th>
+                <th>District</th>
+                <th>Total Proposed (RWF)</th>
+                <th>Total Predicted (RWF)</th>
+                <th>AI Allocated (RWF)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in school_data %}
+            <tr>
+                <td>
+                    <a href="{% url 'grants:proposal_list' %}?school_id={{ row.school.school_id }}">
+                        {{ row.school.school_name }}
+                    </a>
+                </td>
+                <td>{{ row.school.district }}</td>
+                <td>{{ row.total_proposed|floatformat:0 }}</td>
+                <td>{{ row.total_predicted|floatformat:0 }}</td>
+                <td>
+                    {% if row.ai_allocated is not None %}
+                    {{ row.ai_allocated|floatformat:0 }}
+                    {% else %}
+                    -
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center">No schools found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

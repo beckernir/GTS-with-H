@@ -30,7 +30,7 @@ urlpatterns = [
     # App-specific URLs
     path('grants/', include('grants.urls')),
     path('budget/', include('budget.urls')),
-    path('reporting/', include('reporting.urls')),
+    path('reporting/', include(('reporting.urls', 'reporting'), namespace='reporting')),
     path('training/', include('training.urls')),
     path('community/', include('community.urls')),
     path('ai-engine/', include('ai_engine.urls')),

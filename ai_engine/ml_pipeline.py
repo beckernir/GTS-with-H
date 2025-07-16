@@ -2,9 +2,9 @@ import pandas as pd
 import numpy as np
 import os
 import joblib
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import mean_squared_error
 from ai_engine.models import AIModelStatus, ProposalPrediction, ProposalAnomaly
 from django.utils import timezone
 from grants.models import GrantProposal
@@ -16,7 +16,7 @@ FEATURES = [
     'requested_amount',
     # Add more features as needed
 ]
-TARGET = 'status'
+TARGET = 'requested_amount'  # Use requested_amount as the regression target
 
 STATUS_MAP = {
     'approved': 1,
@@ -31,20 +31,18 @@ STATUS_MAP = {
 
 def load_data():
     df = pd.read_csv(DATA_PATH)
-    # Convert status to binary
-    df['status_bin'] = df['status'].map(STATUS_MAP).fillna(0).astype(int)
-    df = df.dropna(subset=FEATURES)
+    df = df.dropna(subset=FEATURES + [TARGET])
     return df
 
 def train_model():
     df = load_data()
     X = df[FEATURES]
-    y = df['status_bin']
+    y = df[TARGET]
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    model = RandomForestClassifier(n_estimators=100, random_state=42)
+    model = RandomForestRegressor(n_estimators=100, random_state=42)
     model.fit(X_train, y_train)
     y_pred = model.predict(X_test)
-    acc = accuracy_score(y_test, y_pred)
+    mse = mean_squared_error(y_test, y_pred)
     joblib.dump(model, MODEL_PATH)
     # Save status and feature importances
     importances = dict(zip(FEATURES, model.feature_importances_))
@@ -53,12 +51,12 @@ def train_model():
         defaults={
             'status': 'active',
             'progress': 100,
-            'accuracy': acc,
+            'accuracy': mse,
             'feature_importances': importances,
             'updated_at': timezone.now(),
         }
     )
-    return acc
+    return mse
 
 def load_model():
     if not os.path.exists(MODEL_PATH):
@@ -67,9 +65,10 @@ def load_model():
 
 def predict(features_dict):
     model = load_model()
-    X = np.array([[features_dict.get(f, 0) for f in FEATURES]])
-    proba = model.predict_proba(X)[0][1]  # Probability of positive class
-    return proba
+    import pandas as pd
+    X = pd.DataFrame([features_dict], columns=FEATURES)
+    amount = model.predict(X)[0]
+    return amount
 
 def generate_predictions():
     proposals = GrantProposal.objects.all()
@@ -78,7 +77,7 @@ def generate_predictions():
     created = 0
     for i, p in enumerate(proposals, 1):
         features = {f: getattr(p, f, 0) or 0 for f in FEATURES}
-        score = model.predict_proba(np.array([[features.get(f, 0) for f in FEATURES]]))[0][1]
+        score = model.predict(np.array([[features.get(f, 0) for f in FEATURES]]))[0]
         obj, _ = ProposalPrediction.objects.update_or_create(
             proposal=p,
             defaults={'score': score}
@@ -112,7 +111,7 @@ def detect_anomalies():
     created = 0
     for i, p in enumerate(proposals, 1):
         features = {f: getattr(p, f, 0) or 0 for f in FEATURES}
-        score = model.predict_proba(np.array([[features.get(f, 0) for f in FEATURES]]))[0][1]
+        score = model.predict(np.array([[features.get(f, 0) for f in FEATURES]]))[0]
         if score < 0.2 or score > 0.95:
             ProposalAnomaly.objects.create(
                 proposal=p,
@@ -139,4 +138,10 @@ def detect_anomalies():
             'updated_at': timezone.now(),
         }
     )
-    return anomalies 
+    return anomalies
+
+def extract_features_from_ocr(ocr_text):
+    keywords = ['infrastructure', 'repair', 'urgent']
+    features = {f'has_{kw}': int(kw in ocr_text.lower()) for kw in keywords}
+    features['ocr_length'] = len(ocr_text)
+    return features 

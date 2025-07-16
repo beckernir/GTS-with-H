@@ -17,6 +17,7 @@ import io
 from django.core.files.uploadedfile import InMemoryUploadedFile
 import os
 from PyPDF2 import PdfReader
+from ai_engine.ml_pipeline import predict, extract_features_from_ocr
 
 # Create your views here.
 
@@ -94,6 +95,25 @@ def proposal_detail_view(request, proposal_id):
         'allocations': proposal.fund_allocations.all(),
         'reviews': proposal.reviews.all(),
     }
+    # ML Recommendation logic
+    recommended_amount = None
+    # Aggregate OCR text from all related documents
+    ocr_texts = [doc.ocr_text for doc in proposal.documents.all() if doc.ocr_text]
+    full_ocr_text = "\n".join(ocr_texts)
+    # If no document OCR, use proposal description
+    if not full_ocr_text and proposal.description:
+        full_ocr_text = proposal.description
+    if full_ocr_text:
+        features = {
+            'requested_amount': proposal.requested_amount,
+            # Add other structured features as needed
+        }
+        features.update(extract_features_from_ocr(full_ocr_text))
+        try:
+            recommended_amount = predict(features)
+        except Exception:
+            recommended_amount = None
+    context['recommended_amount'] = recommended_amount
     return render(request, "grants/proposal_detail.html", context)
 
 @login_required

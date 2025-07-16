@@ -6,7 +6,7 @@
 <div class="container mt-4">
     <h2>Edit Training Course</h2>
     {% if user.is_reb_officer or user.is_system_admin %}
-    <form method="post">
+    <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         {{ form.non_field_errors }}
         {% for field in form %}

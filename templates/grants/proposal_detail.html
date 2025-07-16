@@ -98,6 +98,12 @@
         </div>
         {% endif %}
 
+        {% if recommended_amount %}
+        <div class="alert alert-info">
+            <strong>AI Recommendation:</strong> {{ recommended_amount }} RWF
+        </div>
+        {% endif %}
+
         <!-- Timeline -->
         <div class="card mb-4">
             <div class="card-header">

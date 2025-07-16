@@ -1,0 +1,51 @@
+<html>
+
+<head>
+    <title>REB Budget Planning Report</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid #333;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background: #eee;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>REB Budget Planning Report{% if year %} ({{ year }}){% endif %}</h2>
+    <table>
+        <tr>
+            <th>Total Grant</th>
+            <td>{{ total_grant|floatformat:2 }} RWF</td>
+        </tr>
+        <tr>
+            <th>Total Granted</th>
+            <td>{{ total_granted|floatformat:2 }} RWF</td>
+        </tr>
+        <tr>
+            <th>Remaining</th>
+            <td>{{ remaining|floatformat:2 }} RWF</td>
+        </tr>
+        {% if notes %}<tr>
+            <th>Notes</th>
+            <td>{{ notes }}</td>
+        </tr>{% endif %}
+    </table>
+</body>
+
+</html>

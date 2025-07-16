@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+
 {% block title %}Course Details{% endblock %}
 
 {% block content %}
@@ -7,7 +8,10 @@
         <div class="col-md-8 offset-md-2">
             <div class="card">
                 <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">{{ course.course_title }} <small class="text-light">({{ course.course_code }})</small></h4>
+                    <h4 class="mb-0">
+                        {{ course.course_title }}
+                        <small class="text-light">({{ course.course_code }})</small>
+                    </h4>
                 </div>
                 <div class="card-body">
                     <p><strong>Category:</strong> {{ course.category.category_name }}</p>
@@ -17,29 +21,84 @@
                     <p><strong>Level:</strong> {{ course.get_course_level_display }}</p>
                     <p><strong>Format:</strong> {{ course.get_course_format_display }}</p>
                     <p><strong>Duration (hours):</strong> {{ course.duration_hours }}</p>
-                    <p><strong>Max Participants:</strong> {% if course.max_participants == 0 %}Unlimited{% else %}{{ course.max_participants }}{% endif %}</p>
+                    <p><strong>Max Participants:</strong>
+                        {% if course.max_participants %}
+                            {{ course.max_participants }}
+                        {% else %}
+                            Unlimited
+                        {% endif %}
+                    </p>
+
                     {% if course.prerequisites %}
                     <p><strong>Prerequisites:</strong> {{ course.prerequisites }}</p>
                     {% endif %}
+
                     {% if course.certification_requirements %}
                     <p><strong>Certification Requirements:</strong> {{ course.certification_requirements }}</p>
                     {% endif %}
-                    <p><strong>Status:</strong> {% if course.is_active %}Active{% else %}Inactive{% endif %} {% if course.is_approved %}<span class="badge bg-success">Approved</span>{% else %}<span class="badge bg-warning text-dark">Pending Approval</span>{% endif %}</p>
-                    <p><strong>Created By:</strong> {{ course.created_by.get_full_name|default:course.created_by.username }}</p>
+
+                    <p><strong>Status:</strong>
+                        {% if course.is_active %}Active{% else %}Inactive{% endif %}
+                        {% if course.is_approved %}
+                            <span class="badge bg-success">Approved</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark">Pending Approval</span>
+                        {% endif %}
+                    </p>
+
+                    <p><strong>Created By:</strong>
+                        {{ course.created_by.get_full_name|default:course.created_by.username }}
+                    </p>
                     <p><strong>Created At:</strong> {{ course.created_at|date:"M j, Y H:i" }}</p>
+
                     {% if course.approved_by %}
-                    <p><strong>Approved By:</strong> {{ course.approved_by.get_full_name|default:course.approved_by.username }}</p>
+                    <p><strong>Approved By:</strong>
+                        {{ course.approved_by.get_full_name|default:course.approved_by.username }}
+                    </p>
                     <p><strong>Approval Date:</strong> {{ course.approval_date|date:"M j, Y H:i" }}</p>
                     {% endif %}
+
+                    {% if course.video_url %}
+                    <div class="mb-3">
+                        <strong>Training Video:</strong><br>
+                        {% if 'youtube.com' in course.video_url or 'youtu.be' in course.video_url %}
+                        <div class="ratio ratio-16x9">
+                            <iframe
+                                src="https://www.youtube.com/embed/{{ course.video_url|cut:'https://youtu.be/'|cut:'https://www.youtube.com/watch?v=' }}"
+                                allowfullscreen>
+                            </iframe>
+                        </div>
+                        {% else %}
+                        <a href="{{ course.video_url }}" target="_blank">Watch Video</a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    {% if course.guide_document %}
+                    <div class="mb-3">
+                        <strong>Guide Document:</strong><br>
+                        <a href="{{ course.guide_document.url }}" class="btn btn-outline-primary" target="_blank">
+                            <i class="fas fa-file-download me-2"></i>Download Guide
+                        </a>
+                    </div>
+                    {% endif %}
                 </div>
+
                 <div class="card-footer d-flex justify-content-between">
-                    <a href="{% url 'training:course_list' %}" class="btn btn-secondary"><i class="fas fa-arrow-left me-2"></i>Back to Courses</a>
-                    {% if user.is_authenticated and user.role in 'admin reb_official school_admin' %}
-                    <a href="{% url 'training:course_edit' course.course_id %}" class="btn btn-primary"><i class="fas fa-edit me-2"></i>Edit Course</a>
+                    <a href="{% url 'training:course_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Courses
+                    </a>
+
+                    {% if user.is_authenticated %}
+                        {% if user.is_system_admin or user.is_reb_officer or user.is_school_admin %}
+                        <a href="{% url 'training:course_edit' course.course_id %}" class="btn btn-primary">
+                            <i class="fas fa-edit me-2"></i>Edit Course
+                        </a>
+                        {% endif %}
                     {% endif %}
                 </div>
             </div>
         </div>
     </div>
 </div>
-{% endblock %} 
+{% endblock %}

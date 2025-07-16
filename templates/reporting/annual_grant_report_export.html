@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Annual Grant Report</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            border: 1px solid #333;
+            padding: 4px;
+        }
+
+        th {
+            background: #eee;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>Annual Grant Reports</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Year</th>
+                <th>Total Grants</th>
+                <th>Total Allocated Amount</th>
+                <th>Submitted</th>
+                <th>Approved</th>
+                <th>Funded</th>
+                <th>Rejected</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in grants_by_year %}
+            <tr>
+                <td>{{ row.year|default:"-" }}</td>
+                <td>{{ row.total_grants|default:"0" }}</td>
+                <td>{{ row.total_amount|default:"0.00" }}</td>
+                <td>{{ row.submitted|default:"0" }}</td>
+                <td>{{ row.approved|default:"0" }}</td>
+                <td>{{ row.funded|default:"0" }}</td>
+                <td>{{ row.rejected|default:"0" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7">No data available.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+
+</html>

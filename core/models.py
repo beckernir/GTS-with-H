@@ -19,6 +19,7 @@ class User(AbstractUser):
         ('teacher', 'Teacher'),
         ('community_member', 'Community Member'),
         ('system_admin', 'System Administrator'),
+        ('supplier', 'Supplier'),  # Added supplier role
     ]
     
     # User status choices
@@ -78,6 +79,10 @@ class User(AbstractUser):
     def is_system_admin(self):
         """Check if user is a system administrator."""
         return self.role == 'system_admin'
+
+    def is_supplier(self):
+        """Check if user is a supplier."""
+        return self.role == 'supplier'
 
 
 class School(models.Model):

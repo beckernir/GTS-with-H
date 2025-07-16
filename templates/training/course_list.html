@@ -12,10 +12,12 @@
                         <i class="fas fa-book me-2"></i>
                         Training Courses
                     </h4>
+                    {% if user.is_reb_officer or user.is_system_admin %}
                     <a href="{% url 'training:course_create' %}" class="btn btn-primary">
                         <i class="fas fa-plus me-1"></i>
                         Create Course
                     </a>
+                    {% endif %}
                 </div>
                 <div class="card-body">
                     {% if courses %}
@@ -46,8 +48,10 @@
                                         </div>
                                     </div>
                                     <div class="d-grid gap-2">
-                                        <a href="{% url 'training:course_detail' course.course_id %}" class="btn btn-outline-primary">View Details</a>
-                                        <a href="{% url 'training:enrollment_create' %}" class="btn btn-success">Enroll Now</a>
+                                        <a href="{% url 'training:course_detail' course.course_id %}"
+                                            class="btn btn-outline-primary">View Details</a>
+                                        <a href="{% url 'training:enrollment_create' %}" class="btn btn-success">Enroll
+                                            Now</a>
                                     </div>
                                 </div>
                                 <div class="card-footer">

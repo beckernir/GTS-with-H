@@ -8,8 +8,26 @@ class TrainingCourseForm(forms.ModelForm):
         fields = [
             'course_title', 'category', 'description', 'learning_objectives',
             'target_audience', 'course_level', 'course_format', 'duration_hours',
-            'max_participants', 'course_materials', 'prerequisites', 'certification_requirements', 'is_active'
+            'max_participants', 'course_materials', 'prerequisites', 'certification_requirements',
+            'video_url', 'guide_document', 'is_active'
         ]
+        widgets = {
+            'course_title': forms.TextInput(attrs={'class': 'form-control'}),
+            'category': forms.Select(attrs={'class': 'form-select'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'learning_objectives': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'target_audience': forms.TextInput(attrs={'class': 'form-control'}),
+            'course_level': forms.Select(attrs={'class': 'form-select'}),
+            'course_format': forms.Select(attrs={'class': 'form-select'}),
+            'duration_hours': forms.NumberInput(attrs={'class': 'form-control'}),
+            'max_participants': forms.NumberInput(attrs={'class': 'form-control'}),
+            'course_materials': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'prerequisites': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'certification_requirements': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'video_url': forms.URLInput(attrs={'class': 'form-control'}),
+            'guide_document': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
 
 class TrainingEnrollmentForm(forms.ModelForm):
     class Meta:

@@ -62,8 +62,8 @@ def register_view(request):
         else:
             allowed_roles = []
     else:
-        # Public registration: only allow teacher or community_member
-        allowed_roles = ['teacher', 'community_member']
+        # Public registration: allow teacher, community_member, and supplier
+        allowed_roles = ['teacher', 'community_member', 'supplier']
 
     role_choices = User.ROLE_CHOICES
 
@@ -106,6 +106,47 @@ def register_view(request):
         return redirect('core:login')
 
     return render(request, 'core/register.html', {'allowed_roles': allowed_roles, 'role_choices': role_choices})
+
+
+def supplier_register_view(request):
+    """Dedicated registration view for suppliers."""
+    role_choices = User.ROLE_CHOICES
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        password1 = request.POST.get('password1')
+        password2 = request.POST.get('password2')
+        first_name = request.POST.get('first_name')
+        last_name = request.POST.get('last_name')
+        # Force role to 'supplier'
+        role = 'supplier'
+
+        if password1 != password2:
+            messages.error(request, 'Passwords do not match.')
+            return render(request, 'core/register.html', {'role_choices': role_choices, 'supplier_registration': True})
+
+        if User.objects.filter(username=username).exists():
+            messages.error(request, 'Username already exists.')
+            return render(request, 'core/register.html', {'role_choices': role_choices, 'supplier_registration': True})
+
+        if User.objects.filter(email=email).exists():
+            messages.error(request, 'Email already registered.')
+            return render(request, 'core/register.html', {'role_choices': role_choices, 'supplier_registration': True})
+
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password1,
+            first_name=first_name,
+            last_name=last_name,
+            role=role,
+            status='pending'
+        )
+
+        messages.success(request, 'Supplier registration successful! Please wait for approval.')
+        return redirect('core:login')
+
+    return render(request, 'core/register.html', {'role_choices': role_choices, 'supplier_registration': True})
 
 
 def home_view(request):

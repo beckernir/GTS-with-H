@@ -514,3 +514,23 @@ class ReportSchedule(models.Model):
         if self.total_runs > 0:
             return (self.successful_runs / self.total_runs) * 100
         return 0
+
+
+class REBGrantBudget(models.Model):
+    """
+    Model to store the total available grant for REB for a given year/period.
+    """
+    year = models.CharField(max_length=10, help_text="Year or period for the grant budget")
+    total_amount = models.DecimalField(max_digits=15, decimal_places=2)
+    notes = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'reporting_reb_grant_budget'
+        verbose_name = 'REB Grant Budget'
+        verbose_name_plural = 'REB Grant Budgets'
+        ordering = ['-year']
+
+    def __str__(self):
+        return f"REB Grant Budget {self.year}: {self.total_amount}"

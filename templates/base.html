@@ -62,11 +62,33 @@
                             href="{% url 'core:dashboard' %}">
                             <i class="fas fa-tachometer-alt me-2"></i> Dashboard
                         </a>
+                        {% if user.is_supplier %}
+                        <a class="nav-link {% if 'procurement' in request.path %}active{% endif %}"
+                            href="{% url 'procurement:tender_list' %}">
+                            <i class="fas fa-briefcase me-2"></i> Procurement
+                        </a>
+                        {% endif %}
                         {% if user.is_school_admin or user.is_reb_officer or user.is_system_admin %}
                         <a class="nav-link {% if 'grants' in request.resolver_match.namespace %}active{% endif %}"
                             href="{% url 'grants:proposal_list' %}">
                             <i class="fas fa-file-alt me-2"></i> Grant Proposals
                         </a>
+                        {% if user.is_authenticated %}
+                        {% if user.is_system_admin or user.is_reb_officer %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'reporting:school_grant_totals' %}">
+                                <i class="fas fa-table me-2"></i> School Total Grants
+                            </a>
+                        </li>
+                        {% endif %}
+                        {% if user.is_system_admin or user.is_reb_officer %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'reporting:reb_budget_planning' %}">
+                                <i class="fas fa-coins me-2"></i> REB Budget Planning
+                            </a>
+                        </li>
+                        {% endif %}
+                        {% endif %}
                         {% endif %}
                         {% if user.is_school_admin or user.is_reb_officer or user.is_system_admin %}
                         <a class="nav-link {% if 'budget' in request.resolver_match.namespace %}active{% endif %}"
@@ -96,6 +118,12 @@
                         <a class="nav-link {% if 'reporting' in request.resolver_match.namespace %}active{% endif %}"
                             href="{% url 'reporting:overview' %}">
                             <i class="fas fa-chart-bar me-2"></i> Reports
+                        </a>
+                        {% endif %}
+                        {% if user.is_reb_officer or user.is_system_admin %}
+                        <a class="nav-link {% if request.resolver_match.url_name == 'annual_grant_report' %}active{% endif %}"
+                            href="{% url 'reporting:annual_grant_report' %}">
+                            <i class="fas fa-calendar-alt me-2"></i> Annual Grant Reports
                         </a>
                         {% endif %}
                         {% if user.is_system_admin %}
@@ -130,6 +158,7 @@
                         <a class="nav-link" href="{% url 'core:logout' %}">
                             <i class="fas fa-sign-out-alt me-2"></i> Logout
                         </a>
+
                     </nav>
                 </div>
             </div>

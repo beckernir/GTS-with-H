@@ -143,7 +143,13 @@ def course_list_view(request):
     return render(request, "training/course_list.html", {'courses': courses})
 
 @login_required
-@user_passes_test(lambda u: hasattr(u, 'is_school_admin') and u.is_school_admin())
+@user_passes_test(
+    lambda u: (
+        (hasattr(u, 'is_reb_officer') and u.is_reb_officer()) or
+        (hasattr(u, 'is_system_admin') and u.is_system_admin()) or
+        (hasattr(u, 'is_school_admin') and u.is_school_admin())
+    )
+)
 def course_create_view(request):
     if request.method == 'POST':
         form = TrainingCourseForm(request.POST)

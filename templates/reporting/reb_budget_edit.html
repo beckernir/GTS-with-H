@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}Edit REB Grant Budget{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h2>{% if budget %}Edit{% else %}Add{% endif %} REB Grant Budget</h2>
+    <form method="post" class="mt-4">
+        {% csrf_token %}
+        <div class="mb-3">
+            {{ form.year.label_tag }}
+            {{ form.year }}
+        </div>
+        <div class="mb-3">
+            {{ form.total_amount.label_tag }}
+            {{ form.total_amount }}
+        </div>
+        <div class="mb-3">
+            {{ form.notes.label_tag }}
+            {{ form.notes }}
+        </div>
+        <button type="submit" class="btn btn-primary">Save</button>
+        <a href="{% url 'reporting:reb_budget_planning' %}" class="btn btn-secondary ms-2">Cancel</a>
+    </form>
+</div>
+{% endblock %}

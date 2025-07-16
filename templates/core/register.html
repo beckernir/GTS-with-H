@@ -76,6 +76,11 @@
                     </div>
                     <div class="mb-3">
                         <label for="role" class="form-label">Role</label>
+                        {% if supplier_registration %}
+                        <input type="hidden" name="role" value="supplier">
+                        <input type="text" class="form-control" value="Supplier" disabled>
+                        <div class="form-text">You are registering as a Supplier.</div>
+                        {% else %}
                         <select class="form-select" id="role" name="role" required>
                             <option value="">Select your role</option>
                             {% for value, label in role_choices %}
@@ -84,6 +89,7 @@
                             {% endif %}
                             {% endfor %}
                         </select>
+                        {% endif %}
                     </div>
                     <div class="mb-3">
                         <label for="password1" class="form-label">Password</label>

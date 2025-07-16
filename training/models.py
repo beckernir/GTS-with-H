@@ -92,6 +92,9 @@ class TrainingCourse(models.Model):
     course_materials = models.TextField(blank=True, null=True)
     prerequisites = models.TextField(blank=True, null=True)
     certification_requirements = models.TextField(blank=True, null=True)
+    # Guide fields for help/training
+    video_url = models.URLField(blank=True, null=True, help_text="YouTube or Vimeo link for training video")
+    guide_document = models.FileField(upload_to='training_guides/', blank=True, null=True, help_text="Upload a PDF or DOCX guide")
     
     # Course status
     is_active = models.BooleanField(default=True)
@@ -114,10 +117,12 @@ class TrainingCourse(models.Model):
         return f"{self.course_title} ({self.course_code})"
     
     def save(self, *args, **kwargs):
-        # Auto-generate course code if not set
         if not self.course_code:
-            self.course_code = f"TC{timezone.now().strftime('%Y%m')}{self.id:04d}"
-        super().save(*args, **kwargs)
+            super().save(*args, **kwargs)  # Save to get an ID
+            self.course_code = f"TC{timezone.now().strftime('%Y%m')}{self.pk:04d}"
+            super().save(update_fields=['course_code'])
+        else:
+            super().save(*args, **kwargs)
 
 
 class CourseModule(models.Model):

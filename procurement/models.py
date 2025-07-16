@@ -58,3 +58,24 @@ class TenderStatusHistory(models.Model):
 
     def __str__(self):
         return f"{self.tender.title}: {self.old_status} → {self.new_status} at {self.changed_at}"
+
+class Bid(models.Model):
+    """Model for supplier bids on tenders."""
+    STATUS_CHOICES = [
+        ('submitted', 'Submitted'),
+        ('reviewed', 'Reviewed'),
+        ('awarded', 'Awarded'),
+        ('rejected', 'Rejected'),
+    ]
+    bid_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    tender = models.ForeignKey(Tender, on_delete=models.CASCADE, related_name='bids')
+    supplier = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bids')
+    proposal_text = models.TextField()
+    document = models.FileField(upload_to='bid_documents/', blank=True, null=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='submitted')
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    reviewed_at = models.DateTimeField(blank=True, null=True)
+    awarded_at = models.DateTimeField(blank=True, null=True)
+
+    def __str__(self):
+        return f"Bid by {str(self.supplier)} for {str(self.tender)}"

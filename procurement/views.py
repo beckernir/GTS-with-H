@@ -2,12 +2,15 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from .models import Tender, TenderDocument
-from .forms import TenderForm, TenderDocumentForm
+from .forms import TenderForm, TenderDocumentForm, BidForm
 from core.models import User
 import pytesseract
 from PIL import Image
 import os
 from PyPDF2 import PdfReader
+from django.utils import timezone
+
+from .models import Bid
 
 # Create your views here.
 
@@ -18,7 +21,8 @@ def tender_list_view(request):
 def tender_detail_view(request, tender_id):
     tender = get_object_or_404(Tender, tender_id=tender_id)
     documents = tender.documents.all()
-    return render(request, 'procurement/tender_detail.html', {'tender': tender, 'documents': documents})
+    bids = tender.bids.all().order_by('-submitted_at')
+    return render(request, 'procurement/tender_detail.html', {'tender': tender, 'documents': documents, 'bids': bids})
 
 @login_required
 @user_passes_test(lambda u: u.is_reb_officer() or u.is_system_admin())
@@ -65,3 +69,39 @@ def tender_document_upload_view(request, tender_id):
     else:
         form = TenderDocumentForm()
     return render(request, 'procurement/tender_document_upload.html', {'form': form, 'tender': tender})
+
+@login_required
+@user_passes_test(lambda u: u.is_supplier())
+def bid_submit_view(request, tender_id):
+    tender = get_object_or_404(Tender, tender_id=tender_id)
+    if request.method == 'POST':
+        form = BidForm(request.POST, request.FILES)
+        if form.is_valid():
+            bid = form.save(commit=False)
+            bid.tender = tender
+            bid.supplier = request.user
+            bid.save()
+            messages.success(request, 'Your bid has been submitted!')
+            return redirect('procurement:tender_detail', tender_id=tender.tender_id)
+    else:
+        form = BidForm()
+    return render(request, 'procurement/bid_submit.html', {'form': form, 'tender': tender})
+
+@login_required
+@user_passes_test(lambda u: u.is_reb_officer() or u.is_system_admin())
+def award_bid_view(request, tender_id, bid_id):
+    tender = get_object_or_404(Tender, tender_id=tender_id)
+    bid = get_object_or_404(Bid, bid_id=bid_id, tender=tender)
+    if request.method == 'POST':
+        # Set all other bids to rejected
+        tender.bids.exclude(pk=bid.pk).update(status='rejected')
+        # Award this bid
+        bid.status = 'awarded'
+        bid.awarded_at = timezone.now()
+        bid.save()
+        # Update tender
+        tender.status = 'awarded'
+        tender.awarded_to = bid.supplier.get_full_name() or bid.supplier.username
+        tender.save()
+        messages.success(request, f'Bid by {tender.awarded_to} has been awarded.')
+    return redirect('procurement:tender_detail', tender_id=tender.tender_id)

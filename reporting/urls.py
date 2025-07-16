@@ -52,4 +52,14 @@ urlpatterns = [
     
     # Report template generation
     path('generate/<str:template_type>/', views.generate_template_report, name='report_generate'),
+    path('school-grant-totals/', views.school_grant_totals_view, name='school_grant_totals'),
+    path('annual/', views.annual_grant_report_view, name='annual_grant_report'),
+    path('annual/export/<str:format>/', views.annual_grant_report_export_view, name='annual_grant_report_export'),
+]
+
+urlpatterns += [
+    path('reb-budget-planning/', views.reb_budget_planning_view, name='reb_budget_planning'),
+    path('reb-budget-planning/edit/', views.reb_budget_edit_view, name='reb_budget_edit'),
+    path('reb-budget-planning/export/excel/', views.reb_budget_planning_export_excel, name='reb_budget_planning_export_excel'),
+    path('reb-budget-planning/export/pdf/', views.reb_budget_planning_export_pdf, name='reb_budget_planning_export_pdf'),
 ] 
