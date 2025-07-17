@@ -102,6 +102,76 @@ GrantTracker is a comprehensive Django-based platform for managing grants, budge
 
 ---
 
+## Quick Start Commands
+
+Here are the essential commands to get your GrantTracker project up and running:
+
+1. **Create a virtual environment:**
+   ```sh
+   python -m venv venv
+   ```
+   Activate it:
+   - **Windows:**
+     ```sh
+     venv\Scripts\activate
+     ```
+   - **macOS/Linux:**
+     ```sh
+     source venv/bin/activate
+     ```
+
+2. **Install dependencies:**
+   ```sh
+   pip install -r requirements.txt
+   ```
+
+3. **Apply database migrations:**
+   ```sh
+   python manage.py migrate
+   ```
+
+4. **Create a superuser (admin account):**
+   ```sh
+   python manage.py createsuperuser
+   ```
+
+5. **(Optional) Load demo or dummy data:**
+   - Budget dummy transfers:
+     ```sh
+     python manage.py add_dummy_transfers
+     ```
+   - Reporting dummy data:
+     ```sh
+     python manage.py add_dummy_reporting_data
+     ```
+   - Load criteria demo:
+     ```sh
+     python manage.py load_criteria_demo
+     ```
+   - AI Engine (export and train):
+     ```sh
+     python manage.py export_training_data
+     python manage.py train_ml_model
+     ```
+
+6. **Run the development server:**
+   ```sh
+   python manage.py runserver
+   ```
+   Visit [http://127.0.0.1:8000/](http://127.0.0.1:8000/) in your browser.
+
+7. **(Optional) Collect static files (for production):**
+   ```sh
+   python manage.py collectstatic
+   ```
+
+8. **(Optional) Run tests:**
+   ```sh
+   python manage.py test
+   ```
+
+---
+
 ## Usage Guide
 
 - Log in as an admin to access all modules and management features.
