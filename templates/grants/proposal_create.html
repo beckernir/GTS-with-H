@@ -18,9 +18,9 @@
                         {{ form.non_field_errors }}
 
                         {% for field in form.visible_fields %}
-                        {% for error in field.errors %}
-                        <div class="alert alert-danger">{{ field.label }}: {{ error }}</div>
-                        {% endfor %}
+                            {% for error in field.errors %}
+                                <div class="alert alert-danger">{{ field.label }}: {{ error }}</div>
+                            {% endfor %}
                         {% endfor %}
 
                         <div class="row">
@@ -29,12 +29,11 @@
                                 {{ form.proposal_title|add_class:'form-control' }}
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="id_grant_category"
-                                    class="form-label d-flex justify-content-between align-items-center">
+                                <label for="id_grant_category" class="form-label d-flex justify-content-between align-items-center">
                                     <span>Category</span>
                                     {% if user.is_system_admin %}
                                     <a href="/admin/grants/grantcategory/add/" target="_blank"
-                                        class="btn btn-sm btn-outline-light ms-2" title="Add New Category">
+                                       class="btn btn-sm btn-outline-light ms-2" title="Add New Category">
                                         <i class="fas fa-plus"></i> New
                                     </a>
                                     {% endif %}
@@ -90,52 +89,46 @@
                             <label for="id_priority_level" class="form-label">Priority Level</label>
                             {{ form.priority_level|add_class:'form-select' }}
                         </div>
+
                         {% if user.is_system_admin or user.is_reb_officer %}
                         <div class="mb-3">
                             <label for="id_status" class="form-label">Status</label>
-                            <select name="status" id="id_status" class="form-select">
-                                <option value="submitted" selected>Submitted</option>
-                                <option value="draft">Draft</option>
-                                <option value="under_review">Under Review</option>
-                                <option value="approved">Approved</option>
-                                <option value="rejected">Rejected</option>
-                            </select>
+                            {{ form.status|add_class:'form-select' }}
                         </div>
                         {% endif %}
 
                         <div class="mb-4">
                             <h5>REB Proposal Criteria</h5>
                             {% for field in form %}
-                            {% if field.name|slice:":10" == "criterion_" %}
-                            <div class="mb-3">
-                                <label class="form-label">
-                                    {{ field.label }}
-                                    {% if field.field.required %}
-                                    <span class="text-danger">*</span>
-                                    {% endif %}
-                                </label>
+                                {% if field.name|slice:":10" == "criterion_" %}
+                                    <div class="mb-3">
+                                        <label class="form-label">
+                                            {{ field.label }}
+                                            {% if field.field.required %}
+                                                <span class="text-danger">*</span>
+                                            {% endif %}
+                                        </label>
 
-                                {% if field.field.help_text %}
-                                <div class="form-text">{{ field.field.help_text }}</div>
+                                        {% if field.field.help_text %}
+                                            <div class="form-text">{{ field.field.help_text }}</div>
+                                        {% endif %}
+
+                                        {% if field.field.widget.input_type == 'file' or field.field.widget.input_type == 'textarea' %}
+                                            {{ field|add_class:'form-control' }}
+                                        {% elif field.field.widget.input_type == 'checkbox' %}
+                                            <div class="form-check">
+                                                {{ field|add_class:'form-check-input' }}
+                                                <label class="form-check-label">{{ field.label }}</label>
+                                            </div>
+                                        {% else %}
+                                            {{ field|add_class:'form-control' }}
+                                        {% endif %}
+
+                                        {% for error in field.errors %}
+                                            <div class="text-danger small">{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
                                 {% endif %}
-
-                                {% if field.field.widget.input_type == 'file' or field.field.widget.input_type ==
-                                'textarea' %}
-                                {{ field|add_class:'form-control' }}
-                                {% elif field.field.widget.input_type == 'checkbox' %}
-                                <div class="form-check">
-                                    {{ field|add_class:'form-check-input' }}
-                                    <label class="form-check-label">{{ field.label }}</label>
-                                </div>
-                                {% else %}
-                                {{ field|add_class:'form-control' }}
-                                {% endif %}
-
-                                {% for error in field.errors %}
-                                <div class="text-danger small">{{ error }}</div>
-                                {% endfor %}
-                            </div>
-                            {% endif %}
                             {% endfor %}
                         </div>
 
