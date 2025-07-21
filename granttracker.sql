@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 17, 2025 at 04:03 PM
+-- Generation Time: Jul 21, 2025 at 01:19 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -847,7 +847,8 @@ INSERT INTO `budget_budget_period` (`id`, `period_id`, `period_name`, `period_ty
 (1, '12ef5227b694410394719ff6cf89c6f3', 'Business incubtion 2025', 'fiscal_year', '2025-06-30', '2026-06-30', 20000.00, 0.00, 0.00, 1, 0, '2025-06-30 15:07:11.396460', '2025-06-30 15:18:44.623856', 6),
 (3, '9ed88e917b3f454c8674951735e37755', '2024-2025', 'fiscal_year', '2024-07-01', '2025-06-30', 10000000.00, 8000000.00, 2000000.00, 1, 0, '2025-06-30 16:16:04.974983', '2025-06-30 16:16:04.974983', 6),
 (4, '9d08a05b247246209d292f21517f0e0f', '2024 Fiscal Year', 'fiscal_year', '2025-01-02', '2025-12-28', 0.00, 0.00, 0.00, 1, 0, '2025-07-01 08:32:00.356427', '2025-07-01 08:32:00.356427', 10),
-(5, 'b2c8db6f99104988a67cccbb8d0d7488', 'Demo Period', 'fiscal_year', '2025-07-01', '2025-07-01', 0.00, 0.00, 0.00, 1, 0, '2025-07-01 11:03:13.116226', '2025-07-01 11:03:13.116226', NULL);
+(5, 'b2c8db6f99104988a67cccbb8d0d7488', 'Demo Period', 'fiscal_year', '2025-07-01', '2025-07-01', 0.00, 0.00, 0.00, 1, 0, '2025-07-01 11:03:13.116226', '2025-07-01 11:03:13.116226', NULL),
+(6, 'b34202b410d44e77a65d5478f95e21e8', 'Business incubtion', 'quarter', '2025-07-21', '2025-07-31', 3.00, 0.00, 0.00, 1, 0, '2025-07-21 11:04:08.260286', '2025-07-21 11:04:08.260286', 6);
 
 -- --------------------------------------------------------
 
@@ -977,7 +978,8 @@ INSERT INTO `budget_school_budget` (`id`, `budget_id`, `budget_title`, `descript
 (3, '8c65d26f5cf043118b3d5ac783fbf295', 'Test Budget', 'Dummy budget for testing transfers', 'active', 1500000.00, 1500000.00, 500000.00, 0.00, NULL, NULL, NULL, NULL, NULL, NULL, '2025-06-30 16:16:04.981105', '2025-06-30 16:16:04.981105', NULL, 3, 6, 2),
 (4, '35a55d0de2f3430ebd35bfa51fe374ca', '2024 Main Budget', 'Main budget for 2024', 'approved', 10000000.00, 0.00, 0.00, 0.00, NULL, NULL, NULL, NULL, NULL, NULL, '2025-07-01 08:32:00.364774', '2025-07-01 08:32:00.364774', NULL, 4, 10, 3),
 (5, '15d794f646d740db9eb2060538af4bce', 'Demo Budget', '', 'approved', 100000.00, 80000.00, 50000.00, 0.00, NULL, NULL, NULL, NULL, NULL, NULL, '2025-07-01 11:03:21.016552', '2025-07-01 11:03:21.016552', NULL, 5, 13, 5),
-(6, '499a672d4fe54166985f57a8916b507b', 'Child care budget', 'This is the budget for this project', 'approved', 120000.00, 0.00, 0.00, 0.00, NULL, NULL, NULL, NULL, NULL, NULL, '2025-07-14 12:57:44.140159', '2025-07-14 12:59:40.858127', NULL, 1, 6, 8);
+(6, '499a672d4fe54166985f57a8916b507b', 'Child care budget', 'This is the budget for this project', 'approved', 120000.00, 0.00, 0.00, 0.00, NULL, NULL, NULL, NULL, NULL, NULL, '2025-07-14 12:57:44.140159', '2025-07-14 12:59:40.858127', NULL, 1, 6, 8),
+(7, '32d0555b32ad4223b236d555120be864', '1245y', '23456yui', 'draft', 12345.00, 0.00, 0.00, 0.00, NULL, NULL, NULL, NULL, NULL, NULL, '2025-07-21 11:04:38.787274', '2025-07-21 11:04:38.787274', NULL, 6, 6, 5);
 
 -- --------------------------------------------------------
 
@@ -1486,7 +1488,7 @@ INSERT INTO `core_user` (`id`, `password`, `last_login`, `is_superuser`, `userna
 (3, 'pbkdf2_sha256$600000$7UTDk2SRmvkeblaM9WYDgx$iWOpgTsao9XgAJauhlRz5z8yB/8OEs0MXB2LJMPfmps=', '2025-06-30 11:52:53.860767', 0, 'Hozan', 'Hozana', 'DUSABIMANA', 'dhozana559@gmail.com', 0, 1, '2025-06-30 11:09:22.519523', '61ed5ca885004906ab7646f9df245774', 'auditor', 'pending', NULL, '', NULL, NULL, NULL, '2025-06-30 11:09:22.833517', '2025-06-30 11:09:22.833517', NULL),
 (4, 'pbkdf2_sha256$600000$jLNSx59sKFVxpnSs2vVTpM$yylFQPMp8s88BWC0WX4ntuoBtXQrp9qStF6EsC2zGko=', '2025-06-30 12:49:38.305543', 0, 'Administrator2', 'Hozana', 'DUSABIMANA', 'admini@gmail.com', 1, 1, '2025-06-30 12:32:55.811852', '1895bf1578bc438fa85d0c322580b1d3', 'school_admin', 'active', NULL, '', NULL, NULL, NULL, '2025-06-30 12:32:56.112851', '2025-07-01 11:40:18.727213', NULL),
 (5, 'pbkdf2_sha256$600000$fSMwB3SyJmUvjHDDSSAlIe$mDwx5hUBDiRm4+RS/68qeNSERwMxg8V+TzIq7AOrBOo=', '2025-07-14 05:18:14.763235', 0, 'Grant-admin', 'Hozana', 'DUSABIMANA', 'admin@gmail.com', 1, 1, '2025-06-30 12:54:50.664282', '73fc559eaba84199b9dfc9e60f72dec2', 'reb_official', 'pending', NULL, '', NULL, NULL, NULL, '2025-06-30 12:54:50.975379', '2025-06-30 12:54:50.975379', NULL),
-(6, 'pbkdf2_sha256$600000$KOu0VUoyP0TT8iGKcw9XNO$8sQLJG/+D11VcS9LE/+gm647jcqZ1GW2Ptpj7eiyrs8=', '2025-07-16 08:59:22.399115', 1, 'admin', '', '', 'admin06@gmail.com', 1, 1, '2025-06-30 13:14:59.682590', '455f0aca614d43b0aae99dc59a832f2f', 'system_admin', 'active', NULL, '', NULL, NULL, NULL, '2025-06-30 13:14:59.976710', '2025-07-01 11:40:11.583622', NULL),
+(6, 'pbkdf2_sha256$600000$KOu0VUoyP0TT8iGKcw9XNO$8sQLJG/+D11VcS9LE/+gm647jcqZ1GW2Ptpj7eiyrs8=', '2025-07-21 10:59:22.890961', 1, 'admin', '', '', 'admin06@gmail.com', 1, 1, '2025-06-30 13:14:59.682590', '455f0aca614d43b0aae99dc59a832f2f', 'system_admin', 'active', NULL, '', NULL, NULL, NULL, '2025-06-30 13:14:59.976710', '2025-07-01 11:40:11.583622', NULL),
 (7, 'pbkdf2_sha256$600000$KOu0VUoyP0TT8iGKcw9XNO$8sQLJG/+D11VcS9LE/+gm647jcqZ1GW2Ptpj7eiyrs8=', '2025-07-01 11:35:34.258752', 1, 'reb-officer', '', '', 'reb-officer@reb.gov.rw', 1, 1, '2025-06-30 13:21:02.979737', '2d8b18601a14450192f63d8202e6ec2c', 'reb_officer', 'active', NULL, '', NULL, NULL, NULL, '2025-06-30 13:21:02.979737', '2025-07-01 11:40:11.583622', NULL),
 (8, 'pbkdf2_sha256$600000$KOu0VUoyP0TT8iGKcw9XNO$8sQLJG/+D11VcS9LE/+gm647jcqZ1GW2Ptpj7eiyrs8=', '2025-07-14 13:56:02.457905', 0, 'school-admin', '', '', 'school-admin@school.rw', 1, 1, '2025-06-30 13:21:09.551307', 'da700e35a8774ad086ef476c24f7de4c', 'school_admin', 'active', NULL, '', NULL, NULL, NULL, '2025-06-30 13:21:09.551307', '2025-07-01 11:40:18.727213', NULL),
 (9, 'pbkdf2_sha256$600000$KOu0VUoyP0TT8iGKcw9XNO$8sQLJG/+D11VcS9LE/+gm647jcqZ1GW2Ptpj7eiyrs8=', '2025-07-15 18:50:17.062110', 0, 'teacher', '', '', 'teacher@school.rw', 0, 1, '2025-06-30 13:21:11.277053', 'e67d9aca97cc481ca7d3bb3a6221a074', 'teacher', 'active', NULL, '', NULL, NULL, NULL, '2025-06-30 13:21:11.277053', '2025-07-01 11:40:27.147505', NULL),
@@ -1791,6 +1793,7 @@ INSERT INTO `django_session` (`session_key`, `session_data`, `expire_date`) VALU
 ('flx8e3zndxq2afnwcv5hrwo37mnaf8uh', '.eJxVjMsOgkAMRf9l1mYCFobWpXu-gbSdVlADCY-V8d-VhIVu7znnvkLH29p322JzN-RwCSmcfjdhfdi4g3zn8TZFncZ1HiTuSjzoEtsp2_N6uH8HPS_9t8ZcIWEqQLByMCZEOJei6rW5N8khuXhDyMZaAChCmYkoodRKJuH9Aez9OGw:1uWFQa:SLWG_TiNGrDNdcXlwQzDI5hMl5LDXI02KnS4RpjKDV8', '2025-06-30 15:24:12.466780'),
 ('g2hw3jcl32pl4fabz79eex5xc10o16cl', '.eJxVjMEOwiAQRP-FsyFAKbgevfsNzS67SNXQpLQn47_bJj3oYS7z3sxbDbguZVibzMPI6qKCOv12hOkpdQf8wHqfdJrqMo-kd0UftOnbxPK6Hu7fQcFWtrU4ps70FD32gdECgZNs8xZ2EbJ1ls5AHXjocwSPhimKC9kkQ-Q79fkC9nI4Ng:1ubwzR:Y9fCbOrWo4y1F5ADc4DOny4zKipPvBEsPIT-T7Fh4go', '2025-07-16 08:55:45.264591'),
 ('gbqsw3ft4simkfo0agkg8r5uzjrwjutq', '.eJxVjMEOwiAQRP-FsyFAKbgevfsNzS67SNXQpLQn47_bJj3oYS7z3sxbDbguZVibzMPI6qKCOv12hOkpdQf8wHqfdJrqMo-kd0UftOnbxPK6Hu7fQcFWtrU4ps70FD32gdECgZNs8xZ2EbJ1ls5AHXjocwSPhimKC9kkQ-Q79fkC9nI4Ng:1ubw2X:woRcDbUYgvornSs9pl3ebMCrPfRExOA-162xuAM1AzM', '2025-07-16 07:54:53.122529'),
+('itd2nl7f5skf9lkyc199poflw37nrvwa', '.eJxVjMEOwiAQRP-FsyFAKbgevfsNzS67SNXQpLQn47_bJj3oYS7z3sxbDbguZVibzMPI6qKCOv12hOkpdQf8wHqfdJrqMo-kd0UftOnbxPK6Hu7fQcFWtrU4ps70FD32gdECgZNs8xZ2EbJ1ls5AHXjocwSPhimKC9kkQ-Q79fkC9nI4Ng:1udoEs:Yd7Cs4RzkGLupPluwQ_8ccFxPk9ubOJYE2GTtafwsdM', '2025-07-21 11:59:22.894963'),
 ('j9im0rzzc8v9dsf4r2daebo6j3v5y3ag', '.eJxVjMsOgkAMRf9l1mYCFobWpXu-gbSdVlADCY-V8d-VhIVu7znnvkLH29p322JzN-RwCSmcfjdhfdi4g3zn8TZFncZ1HiTuSjzoEtsp2_N6uH8HPS_9t8ZcIWEqQLByMCZEOJei6rW5N8khuXhDyMZaAChCmYkoodRKJuH9Aez9OGw:1uWKVm:RNY_DabMsoYaLUTLt1qdHIep0IdMCrP8RMzisw6FS-A', '2025-06-30 20:49:54.629697'),
 ('joox0at6wjfi30x6qj7s9jpjintimeqq', '.eJyFzbFuAjEMgOFXOWWuTkAgOIxdmEBIDIwnx3F6V1CCkhwMiHcnSAdqVRVW-_Pvi2iwz23TJ45NZ8VCKPHxc2aQ9uzvC_uN_ivUFHyOnanvpB62qV4Fy4fPwf4KtJjacg12ChrUSBqYOsmoAeRkbIjcjJ2bKyeVM26uARlpJCWBHFuttQIzI82mRCNTg5S74JNYXMQyos_VJoZjSHio1iHmlqOvZPkW-dTxudz8hyYFIREf81-0Df370hO9Ku045UdoMNfrDQNkfRc:1uWXay:t9_NnZKsB1fIw-Cx85VYHPvc72v4JT5N00fixYf9mYU', '2025-07-01 10:48:08.896930'),
 ('p9lxrbmu8hq9844352gx5e6epljfl0vb', '.eJxVjMEOwiAQRP-FsyFAKbgevfsNzS67SNXQpLQn47_bJj3oYS7z3sxbDbguZVibzMPI6qKCOv12hOkpdQf8wHqfdJrqMo-kd0UftOnbxPK6Hu7fQcFWtrU4ps70FD32gdECgZNs8xZ2EbJ1ls5AHXjocwSPhimKC9kkQ-Q79fkC9nI4Ng:1uWvqK:g5v-Hzx5VbI-wyYkeuaTdPvI56Lt95jhBXHuSfKoKYo', '2025-07-02 12:41:36.203300'),
@@ -1924,7 +1927,8 @@ INSERT INTO `grants_grant_proposal` (`id`, `proposal_id`, `proposal_title`, `pro
 (15, '3c8591288e80491997246fd8b97e8fa9', 'Grant Proposal Northern 1', 'GP2025070015', 'Dummy proposal for Northern', 'ikejnv', 'ugiejfm', 'uigehifhhcb', 5000000.00, 0.00, 0.00, '2025-05-02', '2025-08-30', 'medium', 'submitted', NULL, '2025-07-01 09:04:53.453834', NULL, NULL, NULL, 0.00, 0.00, 0.00, '2025-07-01 09:04:53.454948', '2025-07-15 17:56:15.995260', NULL, 10, 6, 8),
 (16, '5cd6ac967cea4f75b36b73e7e27036ff', 'Grant Proposal Northern 2', 'GP2025070016', 'Dummy proposal for Northern', '', '', '', 10000000.00, 25000.00, 0.00, '2025-05-02', '2025-08-30', 'medium', 'funded', NULL, '2025-06-01 09:04:53.456875', NULL, NULL, NULL, 0.00, 0.00, 0.00, '2025-07-01 09:04:53.457953', '2025-07-01 10:57:21.519867', NULL, 10, 6, 8),
 (17, '34d236730e734806a239c29931beb117', 'Grant Proposal Northern 3', 'GP2025070017', 'This project will engage with helping people get jobs', 'Hire many people', '50% people get jobs', 'Undergraduates and graduates unemployed', 15000000.00, 0.00, 0.00, '2025-05-02', '2025-08-30', 'medium', 'funded', NULL, '2025-05-02 09:04:53.459060', NULL, NULL, NULL, 0.00, 0.00, 0.00, '2025-07-01 09:04:53.461062', '2025-07-15 17:53:15.911627', NULL, 10, 6, 8),
-(18, 'dea8aa96b97f49f29d96edb87775a37a', 'Enhancing ICT Infrastructure for Digital Learning', 'GP2025070018', 'werth', 'fghjk', 'fghjk', 'fghjk', 2000000.00, 0.00, 0.00, '2025-07-16', '2026-07-16', 'medium', 'submitted', NULL, NULL, NULL, NULL, NULL, 0.00, 0.00, 0.00, '2025-07-16 08:39:57.450931', '2025-07-16 08:39:57.450931', NULL, 6, 6, 5);
+(18, 'dea8aa96b97f49f29d96edb87775a37a', 'Enhancing ICT Infrastructure for Digital Learning', 'GP2025070018', 'werth', 'fghjk', 'fghjk', 'fghjk', 2000000.00, 0.00, 0.00, '2025-07-16', '2026-07-16', 'medium', 'submitted', NULL, NULL, NULL, NULL, NULL, 0.00, 0.00, 0.00, '2025-07-16 08:39:57.450931', '2025-07-16 08:39:57.450931', NULL, 6, 6, 5),
+(19, '2fa795b62dca4369b134cc4fddfc4b31', 'Ehaho', 'GP2025070019', 'wjekrghn', 'qweriouj', ';lwkhejf', 'lopwidfvj', 10000.00, 0.00, 0.00, '2025-07-07', '2025-08-01', 'medium', 'submitted', NULL, NULL, NULL, NULL, NULL, 0.00, 0.00, 0.00, '2025-07-21 11:03:26.774152', '2025-07-21 11:03:26.774152', NULL, 6, 4, 5);
 
 -- --------------------------------------------------------
 
@@ -2384,7 +2388,11 @@ INSERT INTO `reporting_proposal_criterion_response` (`id`, `value_text`, `value_
 (1, NULL, 'proposal_criteria/school_report.pdf', NULL, '2025-07-16 08:39:57.523464', 1, 18),
 (2, NULL, 'proposal_criteria/school_report_kItGYYo.pdf', NULL, '2025-07-16 08:39:57.527475', 2, 18),
 (3, NULL, 'proposal_criteria/school_report_jKZUaP6.pdf', NULL, '2025-07-16 08:39:57.532486', 3, 18),
-(4, NULL, 'proposal_criteria/school_report_KJgE2fv.pdf', NULL, '2025-07-16 08:39:57.536609', 4, 18);
+(4, NULL, 'proposal_criteria/school_report_KJgE2fv.pdf', NULL, '2025-07-16 08:39:57.536609', 4, 18),
+(5, NULL, 'proposal_criteria/index.html', NULL, '2025-07-21 11:03:26.863218', 1, 19),
+(6, NULL, 'proposal_criteria/README.md', NULL, '2025-07-21 11:03:26.870220', 2, 19),
+(7, NULL, 'proposal_criteria/README_DTxKi4g.md', NULL, '2025-07-21 11:03:26.876223', 3, 19),
+(8, NULL, 'proposal_criteria/README_03DG8o2.md', NULL, '2025-07-21 11:03:26.880286', 4, 19);
 
 -- --------------------------------------------------------
 
@@ -3600,7 +3608,7 @@ ALTER TABLE `budget_budget_line_item`
 -- AUTO_INCREMENT for table `budget_budget_period`
 --
 ALTER TABLE `budget_budget_period`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `budget_budget_report`
@@ -3624,7 +3632,7 @@ ALTER TABLE `budget_expenditure`
 -- AUTO_INCREMENT for table `budget_school_budget`
 --
 ALTER TABLE `budget_school_budget`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `community_announcement`
@@ -3780,7 +3788,7 @@ ALTER TABLE `grants_grant_category`
 -- AUTO_INCREMENT for table `grants_grant_proposal`
 --
 ALTER TABLE `grants_grant_proposal`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT for table `grants_proposal_budget`
@@ -3870,7 +3878,7 @@ ALTER TABLE `reporting_proposal_criterion`
 -- AUTO_INCREMENT for table `reporting_proposal_criterion_response`
 --
 ALTER TABLE `reporting_proposal_criterion_response`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `reporting_reb_grant_budget`
