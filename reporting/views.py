@@ -505,11 +505,22 @@ class REBAdminRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
         return self.request.user.is_reb_officer() or self.request.user.is_system_admin()
 
 # Proposal Criteria Views
-class ProposalCriterionListView(REBAdminRequiredMixin, ListView):
+class ProposalCriterionListView(ListView):
     model = ProposalCriterion
     template_name = 'reporting/proposal_criterion_list.html'
     context_object_name = 'criteria'
     ordering = ['ordering', 'name']
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        context['can_manage_criteria'] = (
+            user.is_authenticated and (
+                (hasattr(user, 'is_reb_officer') and callable(user.is_reb_officer) and user.is_reb_officer()) or
+                (hasattr(user, 'is_system_admin') and callable(user.is_system_admin) and user.is_system_admin())
+            )
+        )
+        return context
 
 class ProposalCriterionCreateView(REBAdminRequiredMixin, CreateView):
     model = ProposalCriterion
@@ -529,11 +540,22 @@ class ProposalCriterionDeleteView(REBAdminRequiredMixin, DeleteView):
     success_url = reverse_lazy('reporting:proposal_criterion_list')
 
 # Supplier Criteria Views
-class SupplierCriterionListView(REBAdminRequiredMixin, ListView):
+class SupplierCriterionListView(ListView):
     model = SupplierCriterion
     template_name = 'reporting/supplier_criterion_list.html'
     context_object_name = 'criteria'
     ordering = ['ordering', 'name']
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        context['can_manage_criteria'] = (
+            user.is_authenticated and (
+                (hasattr(user, 'is_reb_officer') and callable(user.is_reb_officer) and user.is_reb_officer()) or
+                (hasattr(user, 'is_system_admin') and callable(user.is_system_admin) and user.is_system_admin())
+            )
+        )
+        return context
 
 class SupplierCriterionCreateView(REBAdminRequiredMixin, CreateView):
     model = SupplierCriterion

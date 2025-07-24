@@ -3,7 +3,9 @@
 {% block content %}
 <div class="container mt-4">
     <h2>Supplier Criteria</h2>
+    {% if can_manage_criteria %}
     <a href="{% url 'reporting:supplier_criterion_add' %}" class="btn btn-primary mb-3">Add Criterion</a>
+    {% endif %}
     <table class="table table-bordered table-striped">
         <thead>
             <tr>
@@ -24,9 +26,11 @@
                 <td>{{ c.required|yesno:"Yes,No" }}</td>
                 <td>{{ c.active|yesno:"Yes,No" }}</td>
                 <td>
+                    {% if can_manage_criteria %}
                     <a href="{% url 'reporting:supplier_criterion_edit' c.pk %}" class="btn btn-sm btn-warning">Edit</a>
                     <a href="{% url 'reporting:supplier_criterion_delete' c.pk %}"
                         class="btn btn-sm btn-danger">Delete</a>
+                    {% endif %}
                 </td>
             </tr>
             {% empty %}

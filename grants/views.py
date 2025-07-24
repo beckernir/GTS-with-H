@@ -114,9 +114,22 @@ def proposal_create_view(request):
             ):
                 proposal.school = form.cleaned_data['school']
             else:
-                school_assignment = request.user.school_assignments.filter(is_active=True).first()
+                from datetime import date
+                from django.db.models import Q
+                print("User:", request.user)
+                print("Assignments:", list(request.user.school_assignments.all()))
+                school_assignment = request.user.school_assignments.filter(
+                    is_active=True,
+                    start_date__lte=date.today()
+                ).filter(
+                    Q(end_date__isnull=True) | Q(end_date__gte=date.today())
+                ).first()
+                print("Filtered assignment:", school_assignment)
                 if school_assignment:
                     proposal.school = school_assignment.school
+                else:
+                    form.add_error(None, 'You are not assigned to any active school. Please contact the administrator.')
+                    return render(request, "grants/proposal_create.html", {'form': form, 'is_system_admin': False})
             if not proposal.school:
                 form.add_error('school', 'School is required.')
                 return render(request, "grants/proposal_create.html", {'form': form, 'is_system_admin': request.user.is_system_admin()})
