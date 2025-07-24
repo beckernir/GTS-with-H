@@ -13,6 +13,7 @@ from io import BytesIO
 from openpyxl import Workbook
 from django.utils import timezone
 from django.db import models
+from django.db.models import Q
 
 # Create your views here.
 
@@ -132,7 +133,9 @@ def school_budget_list_view(request):
     if hasattr(user, 'is_reb_officer') and (user.is_reb_officer() or user.is_system_admin()):
         budgets = SchoolBudget.objects.all().order_by('-created_at')
     elif hasattr(user, 'is_school_admin') and user.is_school_admin():
-        budgets = SchoolBudget.objects.filter(school__user_assignments__user=user).order_by('-created_at')
+        budgets = SchoolBudget.objects.filter(
+            Q(school__user_assignments__user=user) | Q(created_by=user)
+        ).distinct().order_by('-created_at')
     else:
         budgets = SchoolBudget.objects.none()
     total_schools = budgets.values('school').distinct().count()

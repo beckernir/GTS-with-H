@@ -10,12 +10,20 @@ class GrantProposalForm(forms.ModelForm):
         widget=forms.Select(attrs={'class': 'form-select'})
     )
 
-    def __init__(self, *args, include_status=False, **kwargs):
+    def __init__(self, *args, include_status=False, school_instance=None, force_school_field=False, **kwargs):
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
-        # Only show the school field for system admins or REB officers
-        if not (user and (getattr(user, 'is_system_admin', lambda: False)() or getattr(user, 'is_reb_officer', lambda: False)())):
+        # Only show the school field for system admins or REB officers, or if forced
+        if not (force_school_field or (user and (getattr(user, 'is_system_admin', lambda: False)() or getattr(user, 'is_reb_officer', lambda: False)()))):
             self.fields.pop('school')
+            # If a school_instance is provided (for school admins), show as read-only
+            if school_instance:
+                self.fields['school_display'] = forms.CharField(
+                    label='School',
+                    initial=str(school_instance),
+                    required=False,
+                    widget=forms.TextInput(attrs={'class': 'form-control', 'readonly': 'readonly', 'disabled': 'disabled'})
+                )
         # Optionally include status field
         if not include_status and 'status' in self.fields:
             self.fields.pop('status')

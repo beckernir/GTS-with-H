@@ -21,6 +21,7 @@ from ai_engine.ml_pipeline import predict, extract_features_from_ocr
 from reporting.models import ProposalCriterion
 from reporting.models import ProposalCriterionResponse
 from .forms import GrantProposalWithCriteriaForm
+from core.models import School
 
 # Create your views here.
 
@@ -51,11 +52,19 @@ def get_proposal_score(proposal):
 def proposal_list_view(request):
     """Display a list of all grant proposals."""
     user = request.user
+    selected_school_id = request.GET.get('school')
+    schools = School.objects.filter(status='active').order_by('school_name')
     if user.is_authenticated:
         if hasattr(user, 'is_reb_officer') and (user.is_reb_officer() or user.is_system_admin()):
             proposals = GrantProposal.objects.all().order_by('-created_at')
         elif hasattr(user, 'is_school_admin') and user.is_school_admin():
-            proposals = GrantProposal.objects.filter(school__user_assignments__user=user).order_by('-created_at')
+            from django.db.models import Q
+            if selected_school_id:
+                proposals = GrantProposal.objects.filter(school_id=selected_school_id).order_by('-created_at')
+            else:
+                proposals = GrantProposal.objects.filter(
+                    Q(school__user_assignments__user=user) | Q(created_by=user)
+                ).distinct().order_by('-created_at')
         elif hasattr(user, 'is_teacher') and user.is_teacher():
             proposals = GrantProposal.objects.filter(created_by=user).order_by('-created_at')
         else:
@@ -97,6 +106,8 @@ def proposal_list_view(request):
         'status_choices': GrantProposal.STATUS_CHOICES,
         'current_status': status_filter,
         'current_category': category_filter,
+        'schools': schools,
+        'selected_school_id': selected_school_id,
     }
     return render(request, "grants/proposal_list.html", context)
 
@@ -104,7 +115,18 @@ def proposal_list_view(request):
 @user_passes_test(lambda u: (hasattr(u, 'is_school_admin') and u.is_school_admin()) or (hasattr(u, 'is_system_admin') and (u.is_system_admin if isinstance(u.is_system_admin, bool) else u.is_system_admin())))
 def proposal_create_view(request):
     if request.method == 'POST':
-        form = GrantProposalWithCriteriaForm(request.POST, request.FILES, user=request.user)
+        from datetime import date
+        from django.db.models import Q
+        print("User:", request.user)
+        print("Assignments:", list(request.user.school_assignments.all()))
+        school_assignment = request.user.school_assignments.filter(
+            is_active=True,
+            start_date__lte=date.today()
+        ).filter(
+            Q(end_date__isnull=True) | Q(end_date__gte=date.today())
+        ).first()
+        print("Filtered assignment:", school_assignment)
+        form = GrantProposalWithCriteriaForm(request.POST, request.FILES, user=request.user, school_instance=school_assignment.school if 'school_assignment' in locals() and school_assignment else None)
         if form.is_valid():
             proposal = form.save(commit=False)
             proposal.created_by = request.user
@@ -128,7 +150,41 @@ def proposal_create_view(request):
                 if school_assignment:
                     proposal.school = school_assignment.school
                 else:
-                    form.add_error(None, 'You are not assigned to any active school. Please contact the administrator.')
+                    # No assignment: allow user to select school
+                    form = GrantProposalWithCriteriaForm(request.POST, request.FILES, user=request.user, force_school_field=True)
+                    if form.is_valid():
+                        proposal = form.save(commit=False)
+                        proposal.created_by = request.user
+                        proposal.status = 'submitted'
+                        proposal.school = form.cleaned_data['school']
+                        proposal.save()
+                        # Save criterion responses (repeat logic as above)
+                        for field_name, field in form.fields.items():
+                            if hasattr(field, 'criterion_obj'):
+                                criterion = field.criterion_obj
+                                value = form.cleaned_data.get(field_name)
+                                response_kwargs = {'proposal': proposal, 'criterion': criterion}
+                                if criterion.type == 'file':
+                                    if value:
+                                        obj, created = ProposalCriterionResponse.objects.update_or_create(
+                                            **response_kwargs,
+                                            defaults={'value_file': value, 'value_text': None, 'value_bool': None}
+                                        )
+                                        if not created and value:
+                                            obj.value_file = value
+                                            obj.save()
+                                elif criterion.type == 'text':
+                                    ProposalCriterionResponse.objects.update_or_create(
+                                        **response_kwargs,
+                                        defaults={'value_text': value, 'value_file': None, 'value_bool': None}
+                                    )
+                                elif criterion.type == 'boolean':
+                                    ProposalCriterionResponse.objects.update_or_create(
+                                        **response_kwargs,
+                                        defaults={'value_bool': value, 'value_file': None, 'value_text': None}
+                                    )
+                        return redirect('grants:proposal_list')
+                    # If not valid, fall through to render form with errors
                     return render(request, "grants/proposal_create.html", {'form': form, 'is_system_admin': False})
             if not proposal.school:
                 form.add_error('school', 'School is required.')
@@ -161,7 +217,22 @@ def proposal_create_view(request):
                         )
             return redirect('grants:proposal_list')
     else:
-        form = GrantProposalWithCriteriaForm(user=request.user)
+        from datetime import date
+        from django.db.models import Q
+        print("User:", request.user)
+        print("Assignments:", list(request.user.school_assignments.all()))
+        school_assignment = request.user.school_assignments.filter(
+            is_active=True,
+            start_date__lte=date.today()
+        ).filter(
+            Q(end_date__isnull=True) | Q(end_date__gte=date.today())
+        ).first()
+        print("Filtered assignment:", school_assignment)
+        if school_assignment:
+            form = GrantProposalWithCriteriaForm(user=request.user, school_instance=school_assignment.school)
+        else:
+            # No assignment: allow user to select school
+            form = GrantProposalWithCriteriaForm(user=request.user, force_school_field=True)
     is_system_admin = hasattr(request.user, 'is_system_admin') and (
         request.user.is_system_admin if isinstance(request.user.is_system_admin, bool) else request.user.is_system_admin()
     )
@@ -206,12 +277,12 @@ def proposal_edit_view(request, proposal_id):
     if not (user.is_reb_officer() or user.is_system_admin() or (user.is_school_admin() and proposal.school in [a.school for a in user.school_assignments.filter(is_active=True)])):
         return HttpResponseForbidden()
     if request.method == 'POST':
-        form = GrantProposalForm(request.POST, instance=proposal)
+        form = GrantProposalForm(request.POST, instance=proposal, include_status=True)
         if form.is_valid():
             form.save()
             return redirect('grants:proposal_detail', proposal_id=proposal.proposal_id)
     else:
-        form = GrantProposalForm(instance=proposal)
+        form = GrantProposalForm(instance=proposal, include_status=True)
     return render(request, "grants/proposal_edit.html", {'form': form, 'proposal': proposal})
 
 @login_required
