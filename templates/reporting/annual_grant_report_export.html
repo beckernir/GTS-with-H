@@ -1,35 +1,19 @@
-<!DOCTYPE html>
-<html>
+{% extends 'reporting/base_report.html' %}
 
-<head>
-    <meta charset="utf-8">
-    <title>Annual Grant Report</title>
-    <style>
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
+{% block report_title %}Annual Grant Report{% endblock %}
 
-        th,
-        td {
-            border: 1px solid #333;
-            padding: 4px;
-        }
+{% block report_title_content %}Annual Grant Reports Summary{% endblock %}
 
-        th {
-            background: #eee;
-        }
-    </style>
-</head>
-
-<body>
-    <h2>Annual Grant Reports</h2>
+{% block report_content %}
+<div class="content-section">
+    <div class="section-title">Grant Summary by Fiscal Year</div>
+    
     <table>
         <thead>
             <tr>
                 <th>Year</th>
                 <th>Total Grants</th>
-                <th>Total Allocated Amount</th>
+                <th>Total Allocated Amount (RWF)</th>
                 <th>Submitted</th>
                 <th>Approved</th>
                 <th>Funded</th>
@@ -39,9 +23,9 @@
         <tbody>
             {% for row in grants_by_year %}
             <tr>
-                <td>{{ row.year|default:"-" }}</td>
+                <td><strong>{{ row.year|default:"-" }}</strong></td>
                 <td>{{ row.total_grants|default:"0" }}</td>
-                <td>{{ row.total_amount|default:"0.00" }}</td>
+                <td>{{ row.total_amount|default:"0.00"|floatformat:2 }}</td>
                 <td>{{ row.submitted|default:"0" }}</td>
                 <td>{{ row.approved|default:"0" }}</td>
                 <td>{{ row.funded|default:"0" }}</td>
@@ -49,11 +33,21 @@
             </tr>
             {% empty %}
             <tr>
-                <td colspan="7">No data available.</td>
+                <td colspan="7" class="text-center">No data available for the selected period.</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
-</body>
+    
+    {% if grants_by_year %}
+    <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+        <h4>Summary Statistics</h4>
+        <p><strong>Total Years Covered:</strong> {{ grants_by_year|length }}</p>
+        <p><strong>Total Grants Across All Years:</strong> {{ grants_by_year|length|add:"0" }}</p>
+        <p><strong>Report Generated:</strong> {{ now|date:"F d, Y at H:i" }}</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
 
-</html>
+{% block report_format %}PDF{% endblock %}

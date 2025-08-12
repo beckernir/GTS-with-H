@@ -1,51 +1,77 @@
-<html>
+{% extends 'reporting/base_report.html' %}
 
-<head>
-    <title>REB Budget Planning Report</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-        }
+{% block report_title %}REB Budget Planning Report{% endblock %}
 
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            margin-top: 20px;
-        }
+{% block report_title_content %}REB Budget Planning & Allocation Summary{% endblock %}
 
-        th,
-        td {
-            border: 1px solid #333;
-            padding: 8px;
-            text-align: left;
-        }
+{% block report_content %}
+<div class="content-section">
+    <div class="section-title">Report Information</div>
+    <p><strong>Prepared For:</strong> {{ user.get_full_name|default:user.username }}</p>
+    <p><strong>Report Type:</strong> REB Budget Planning and Allocation</p>
+    <p><strong>Fiscal Year:</strong> {% if year %}{{ year }}{% else %}{{ now|date:"Y" }}{% endif %}</p>
+    <p><strong>Description:</strong> Comprehensive budget planning and allocation summary for Rwanda Education Board.
+    </p>
+</div>
 
-        th {
-            background: #eee;
-        }
-    </style>
-</head>
-
-<body>
-    <h2>REB Budget Planning Report{% if year %} ({{ year }}){% endif %}</h2>
+<div class="content-section">
+    <div class="section-title">Budget Summary</div>
     <table>
-        <tr>
-            <th>Total Grant</th>
-            <td>{{ total_grant|floatformat:2 }} RWF</td>
-        </tr>
-        <tr>
-            <th>Total Granted</th>
-            <td>{{ total_granted|floatformat:2 }} RWF</td>
-        </tr>
-        <tr>
-            <th>Remaining</th>
-            <td>{{ remaining|floatformat:2 }} RWF</td>
-        </tr>
-        {% if notes %}<tr>
-            <th>Notes</th>
-            <td>{{ notes }}</td>
-        </tr>{% endif %}
+        <thead>
+            <tr>
+                <th>Budget Category</th>
+                <th>Amount (RWF)</th>
+                <th>Percentage</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Total Grant Allocation</strong></td>
+                <td><strong>{{ total_grant|floatformat:2 }}</strong></td>
+                <td><strong>100%</strong></td>
+            </tr>
+            <tr>
+                <td>Total Granted to Schools</td>
+                <td>{{ total_granted|floatformat:2 }}</td>
+                <td>{{ total_granted|div:total_grant|mul:100|floatformat:1 }}%</td>
+            </tr>
+            <tr>
+                <td>Remaining Budget</td>
+                <td>{{ remaining|floatformat:2 }}</td>
+                <td>{{ remaining|div:total_grant|mul:100|floatformat:1 }}%</td>
+            </tr>
+        </tbody>
     </table>
-</body>
+</div>
 
-</html>
+{% if notes %}
+<div class="content-section">
+    <div class="section-title">Additional Notes</div>
+    <div style="padding: 15px; background: #f8f9fa; border-radius: 5px;">
+        <p>{{ notes }}</p>
+    </div>
+</div>
+{% endif %}
+
+<div class="content-section">
+    <div class="section-title">Budget Analysis</div>
+    <div style="padding: 15px; background: #f8f9fa; border-radius: 5px;">
+        <p><strong>Budget Utilization Rate:</strong> {{ total_granted|div:total_grant|mul:100|floatformat:1 }}%</p>
+        <p><strong>Budget Efficiency:</strong>
+            {% if total_granted|div:total_grant|mul:100 >= 90 %}
+            <span style="color: #155724;">Excellent (≥90%)</span>
+            {% elif total_granted|div:total_grant|mul:100 >= 80 %}
+            <span style="color: #856404;">Good (80-89%)</span>
+            {% elif total_granted|div:total_grant|mul:100 >= 70 %}
+            <span style="color: #721c24;">Fair (70-79%)</span>
+            {% else %}
+            <span style="color: #721c24;">Needs Improvement (<70%)< /span>
+                    {% endif %}
+        </p>
+        <p><strong>Remaining Budget:</strong> {{ remaining|floatformat:2 }} RWF</p>
+        <p><strong>Report Generated:</strong> {{ now|date:"F d, Y at H:i" }}</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block report_format %}PDF{% endblock %}
