@@ -98,6 +98,7 @@ class SchoolBudget(models.Model):
     allocated_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0.00)
     spent_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0.00)
     committed_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0.00)
+    requesting_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0.00, help_text="Amount being requested for this budget.")
     
     # Budget timeline
     submission_date = models.DateTimeField(blank=True, null=True)
@@ -419,3 +420,25 @@ class BudgetReport(models.Model):
     
     def __str__(self):
         return f"{self.report_title} - {self.school_budget.budget_title}"
+
+
+class BudgetDocument(models.Model):
+    CRITERIA_CHOICES = [
+        ('plan', 'Budget Plan'),
+        ('approval', 'Approval Letter'),
+        ('report', 'Previous Report'),
+        ('quote', 'Supplier Quote'),
+        ('other', 'Other Required Doc'),
+    ]
+    school_budget = models.ForeignKey(SchoolBudget, on_delete=models.CASCADE, related_name='documents')
+    criteria = models.CharField(max_length=20, choices=CRITERIA_CHOICES)
+    document = models.FileField(upload_to='budget_documents/')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('school_budget', 'criteria')
+        verbose_name = 'Budget Document'
+        verbose_name_plural = 'Budget Documents'
+
+    def __str__(self):
+        return f"{self.get_criteria_display()} for {self.school_budget}";

@@ -274,7 +274,7 @@ def proposal_detail_view(request, proposal_id):
 def proposal_edit_view(request, proposal_id):
     proposal = get_object_or_404(GrantProposal, proposal_id=proposal_id)
     user = request.user
-    if not (user.is_reb_officer() or user.is_system_admin() or (user.is_school_admin() and proposal.school in [a.school for a in user.school_assignments.filter(is_active=True)])):
+    if not (user.is_system_admin() or (user.is_school_admin() and proposal.school in [a.school for a in user.school_assignments.filter(is_active=True)])):
         return HttpResponseForbidden()
     if request.method == 'POST':
         form = GrantProposalForm(request.POST, instance=proposal, include_status=True)
@@ -301,7 +301,7 @@ def proposal_submit_view(request, proposal_id):
 def proposal_delete_view(request, proposal_id):
     proposal = get_object_or_404(GrantProposal, proposal_id=proposal_id)
     user = request.user
-    if not (user.is_reb_officer() or user.is_system_admin() or (user.is_school_admin() and proposal.school in [a.school for a in user.school_assignments.filter(is_active=True)])):
+    if not (user.is_system_admin() or (user.is_school_admin() and proposal.school in [a.school for a in user.school_assignments.filter(is_active=True)])):
         return HttpResponseForbidden()
     if request.method == 'POST':
         proposal.delete()

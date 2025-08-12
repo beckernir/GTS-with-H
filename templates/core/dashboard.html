@@ -179,9 +179,11 @@
             </div>
             <div class="card-body">
                 <div class="d-grid gap-2">
+                    {% if user.is_school_admin or user.is_system_admin %}
                     <a href="{% url 'grants:proposal_create' %}" class="btn btn-primary">
                         <i class="fas fa-plus me-2"></i>Create New Proposal
                     </a>
+                    {% endif %}
                     <a href="{% url 'budget:overview' %}" class="btn btn-outline-primary">
                         <i class="fas fa-chart-pie me-2"></i>View Budget
                     </a>
@@ -251,7 +253,7 @@
             }]
         },
         options: {
-            responsive: true, plugins: { legend: { display: false } },
+        responsive: true, plugins: { legend: { display: false } },
         scales: { y: { min: 0, max: 1 } }
     }
     });

@@ -13,8 +13,8 @@ class GrantProposalForm(forms.ModelForm):
     def __init__(self, *args, include_status=False, school_instance=None, force_school_field=False, **kwargs):
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
-        # Only show the school field for system admins or REB officers, or if forced
-        if not (force_school_field or (user and (getattr(user, 'is_system_admin', lambda: False)() or getattr(user, 'is_reb_officer', lambda: False)()))):
+        # Only show the school field for system admins, or if forced
+        if not (force_school_field or (user and getattr(user, 'is_system_admin', lambda: False)())):
             self.fields.pop('school')
             # If a school_instance is provided (for school admins), show as read-only
             if school_instance:

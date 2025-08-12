@@ -12,10 +12,11 @@
                 </div>
                 <div class="card-body">
                     {% if user.is_school_admin or user.is_reb_officer or user.is_system_admin %}
-                    <form method="post" novalidate>
+                    <form method="post" novalidate enctype="multipart/form-data">
                         {% csrf_token %}
                         {{ form.non_field_errors }}
 
+                        {# Show school field only for system admins #}
                         {% if is_sys_admin %}
                         <div class="mb-3">
                             <label for="id_school" class="form-label">
@@ -29,9 +30,7 @@
                         {% endif %}
 
                         {% for field in form %}
-                        {% if not is_sys_admin and field.name == 'school' %}
-                        {# Skip school field for non-admins #}
-                        {% else %}
+                        {% if field.name != 'school' %}
                         <div class="mb-3">
                             <label for="{{ field.id_for_label }}" class="form-label">
                                 {{ field.label }}{% if field.field.required %}
@@ -48,6 +47,33 @@
                         </div>
                         {% endif %}
                         {% endfor %}
+
+                        {% if formset.non_form_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in formset.non_form_errors %}
+                            <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <h5 class="mt-4">Required Documents (5 Criteria)</h5>
+                        <div class="row">
+                            {% for doc_form in formset %}
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ doc_form.criteria.label }}</label>
+                                {{ doc_form.criteria }}
+                                {% if doc_form.instance.pk and doc_form.instance.document %}
+                                <div>
+                                    Current: <a href="{{ doc_form.instance.document.url }}" target="_blank">Download</a>
+                                </div>
+                                {% endif %}
+                                {{ doc_form.document }}
+                                {% for error in doc_form.non_field_errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endfor %}
+                        </div>
 
                         <div class="d-flex justify-content-between align-items-center mt-4">
                             <button type="submit" class="btn btn-primary px-4">

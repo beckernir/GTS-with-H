@@ -82,6 +82,22 @@
                         <dd class="col-sm-8">{{ budget.created_at|date:'Y-m-d H:i' }}</dd>
                     </dl>
 
+                    <h5 class="mt-4">Required Documents</h5>
+                    <div class="row">
+                        {% for doc in budget.documents.all %}
+                        <div class="col-md-6 mb-2">
+                            <strong>{{ doc.get_criteria_display }}:</strong>
+                            {% if doc.document %}
+                            <a href="{{ doc.document.url }}" target="_blank">Download</a>
+                            {% else %}
+                            <span class="text-danger">Not uploaded</span>
+                            {% endif %}
+                        </div>
+                        {% empty %}
+                        <div class="col-12"><span class="text-danger">No documents uploaded.</span></div>
+                        {% endfor %}
+                    </div>
+
                     {% if user_can_edit %}
                     <div class="mt-4 d-flex gap-2">
                         <a href="{% url 'budget:school_budget_edit' budget.budget_id %}" class="btn btn-secondary">

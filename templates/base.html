@@ -105,7 +105,7 @@
                         {% if user.is_school_admin or user.is_reb_officer or user.is_system_admin %}
                         <a class="nav-link {% if 'community' in request.resolver_match.namespace %}active{% endif %}"
                             href="{% url 'community:overview' %}">
-                            <i class="fas fa-users me-2"></i> Community
+                            <i class="fas fa-users me-2"></i> Communication
                         </a>
                         {% endif %}
                         {% if user.is_reb_officer or user.is_system_admin %}

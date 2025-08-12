@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}New Community Message{% endblock %}
+{% block title %}New Communication Message{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
@@ -19,10 +19,10 @@
                             <label for="id_recipients" class="form-label">To</label>
                             {{ form.recipients }}
                             {% if form.recipients.help_text %}
-                                <div class="form-text">{{ form.recipients.help_text }}</div>
+                            <div class="form-text">{{ form.recipients.help_text }}</div>
                             {% endif %}
                             {% for error in form.recipients.errors %}
-                                <div class="text-danger small">{{ error }}</div>
+                            <div class="text-danger small">{{ error }}</div>
                             {% endfor %}
                             <ul id="user-suggestions" class="list-group position-absolute w-100"
                                 style="z-index: 1000; display: none;"></ul>
@@ -32,7 +32,7 @@
                             <label for="id_subject" class="form-label">Subject</label>
                             {{ form.subject }}
                             {% for error in form.subject.errors %}
-                                <div class="text-danger small">{{ error }}</div>
+                            <div class="text-danger small">{{ error }}</div>
                             {% endfor %}
                         </div>
 
@@ -40,13 +40,14 @@
                             <label for="id_content" class="form-label">Message</label>
                             {{ form.content }}
                             {% for error in form.content.errors %}
-                                <div class="text-danger small">{{ error }}</div>
+                            <div class="text-danger small">{{ error }}</div>
                             {% endfor %}
                         </div>
 
                         <div class="d-flex justify-content-end">
                             <button type="submit" class="btn btn-primary">Send</button>
-                            <a href="{% url 'community:message_list' %}" class="btn btn-secondary ms-2">Back to Messages</a>
+                            <a href="{% url 'community:message_list' %}" class="btn btn-secondary ms-2">Back to
+                                Messages</a>
                         </div>
                     </form>
                 </div>

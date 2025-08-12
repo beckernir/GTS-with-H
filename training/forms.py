@@ -37,6 +37,13 @@ class TrainingEnrollmentForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('request_user', None)
         super().__init__(*args, **kwargs)
+        
+        # Filter user queryset to exclude admin and REB admin users
+        User = get_user_model()
+        self.fields['user'].queryset = User.objects.exclude(
+            role__in=['system_admin', 'reb_officer']
+        ).filter(status='active')
+        
         if not (user and (user.is_staff or (hasattr(user, 'is_school_admin') and user.is_school_admin()))):
             self.fields['user'].widget = forms.HiddenInput()
 

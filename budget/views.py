@@ -1,12 +1,11 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse, HttpResponseForbidden
 from django.contrib.auth.decorators import login_required, user_passes_test
-from .models import SchoolBudget, BudgetLineItem, BudgetPeriod, BudgetCategory, BudgetTransfer
-from .forms import SchoolBudgetForm, BudgetLineItemForm, BudgetPeriodForm, BudgetTransferForm
+from .models import SchoolBudget, BudgetLineItem, BudgetPeriod, BudgetCategory, BudgetTransfer, BudgetDocument
+from .forms import SchoolBudgetForm, BudgetLineItemForm, BudgetPeriodForm, BudgetTransferForm, BudgetDocumentFormSet
 from django.contrib import messages
 from django.urls import reverse
 from django.views.decorators.http import require_POST
-from core.models import School
 import csv
 from reportlab.pdfgen import canvas
 from io import BytesIO
@@ -161,7 +160,8 @@ def school_budget_create_view(request):
     is_sys_admin = hasattr(user, 'is_system_admin') and user.is_system_admin()
     if request.method == 'POST':
         form = SchoolBudgetForm(request.POST)
-        if form.is_valid():
+        formset = BudgetDocumentFormSet(request.POST, request.FILES, queryset=BudgetDocument.objects.none())
+        if form.is_valid() and formset.is_valid():
             budget = form.save(commit=False)
             budget.created_by = user
             if not is_sys_admin:
@@ -169,10 +169,29 @@ def school_budget_create_view(request):
                 if school_assignment:
                     budget.school = school_assignment.school
             budget.save()
+            # Save documents
+            for doc_form in formset:
+                doc = doc_form.save(commit=False)
+                doc.school_budget = budget
+                doc.save()
+                print(f"Saved document for criteria: {doc.criteria}, file: {doc.document}")
+            # Validate all 5 criteria present
+            if budget.documents.count() == 5:
+                messages.success(request, 'School budget and all required documents submitted!')
+            else:
+                messages.warning(request, 'Budget created, but not all required documents were uploaded.')
             return redirect('budget:school_budget_list')
+        else:
+            print('SchoolBudgetForm errors:', form.errors)
+            print('BudgetDocumentFormSet errors:', formset.errors)
     else:
         form = SchoolBudgetForm()
-    return render(request, "budget/school_budget_create.html", {'form': form, 'is_sys_admin': is_sys_admin})
+        # Prepopulate formset for 5 criteria
+        initial = [
+            {'criteria': c[0]} for c in BudgetDocument.CRITERIA_CHOICES
+        ]
+        formset = BudgetDocumentFormSet(queryset=BudgetDocument.objects.none(), initial=initial)
+    return render(request, "budget/school_budget_create.html", {'form': form, 'formset': formset, 'is_sys_admin': is_sys_admin})
 
 def school_budget_detail_view(request, budget_id):
     budget = get_object_or_404(SchoolBudget, budget_id=budget_id)
@@ -216,12 +235,31 @@ def school_budget_edit_view(request, budget_id):
         return HttpResponseForbidden()
     if request.method == 'POST':
         form = SchoolBudgetForm(request.POST, instance=budget)
-        if form.is_valid():
+        formset = BudgetDocumentFormSet(request.POST, request.FILES, queryset=budget.documents.all())
+        if form.is_valid() and formset.is_valid():
             form.save()
+            for doc_form in formset:
+                doc = doc_form.save(commit=False)
+                doc.school_budget = budget
+                if not doc_form.cleaned_data.get('document') and doc.pk:
+                    # No new file uploaded, keep the old one
+                    doc.document = BudgetDocument.objects.get(pk=doc.pk).document
+                doc.save()
+                print(f"Saved document for criteria: {doc.criteria}, file: {doc.document}")
             return redirect('budget:school_budget_detail', budget_id=budget.budget_id)
+        else:
+            print('SchoolBudgetForm errors:', form.errors)
+            print('BudgetDocumentFormSet errors:', formset.errors)
     else:
         form = SchoolBudgetForm(instance=budget)
-    return render(request, "budget/school_budget_edit.html", {'form': form, 'budget': budget, 'is_sys_admin': is_sys_admin})
+        # Prepopulate formset for 5 criteria, filling with existing docs if present
+        initial = []
+        existing_criteria = set(budget.documents.values_list('criteria', flat=True))
+        for c in BudgetDocument.CRITERIA_CHOICES:
+            if c[0] not in existing_criteria:
+                initial.append({'criteria': c[0]})
+        formset = BudgetDocumentFormSet(queryset=budget.documents.all(), initial=initial)
+    return render(request, "budget/school_budget_edit.html", {'form': form, 'formset': formset, 'budget': budget, 'is_sys_admin': is_sys_admin})
 
 def category_list_view(request):
     return render(request, "budget/category_list.html")

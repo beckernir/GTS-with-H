@@ -15,15 +15,22 @@
         <select name="school" id="school" class="form-select" style="width:auto;display:inline-block;">
             <option value="">-- All My Schools --</option>
             {% for school in schools %}
-                <option value="{{ school.id }}" {% if school.id|stringformat:"s" == selected_school_id %}selected{% endif %}>{{ school.school_name }}</option>
+            <option value="{{ school.id }}" {% ifequal school.id|stringformat:"s" selected_school_id %}selected{%
+                endifequal %}>
+                {{ school.school_name }}
+            </option>
             {% endfor %}
         </select>
-        <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+        <button type="submit" class="btn btn-primary btn-sm">
+            <i class="fas fa-filter me-1"></i>Filter
+        </button>
     </form>
     {% endif %}
 
     {% if user.is_school_admin or user.is_system_admin %}
-    <a href="{% url 'grants:proposal_create' %}" class="btn btn-primary mb-3">Create Grant Proposal</a>
+    <a href="{% url 'grants:proposal_create' %}" class="btn btn-primary mb-3">
+        <i class="fas fa-plus me-2"></i>Create Grant Proposal
+    </a>
     {% endif %}
 
     {% if proposals %}
@@ -39,9 +46,7 @@
                     <th>Status</th>
                     <th>Created</th>
                     <th>ML Score</th>
-                    {% if user.is_school_admin or user.is_reb_officer or user.is_system_admin %}
                     <th>Actions</th>
-                    {% endif %}
                 </tr>
             </thead>
             <tbody>
@@ -60,20 +65,32 @@
                         <span class="badge bg-success">Recommended</span>
                         {% endif %}
                     </td>
-                    {% if user.is_school_admin or user.is_reb_officer or user.is_system_admin %}
                     <td>
+                        <a href="{% url 'grants:proposal_detail' proposal.proposal_id %}"
+                            class="btn btn-sm btn-outline-info" title="View Details">
+                            <i class="fas fa-eye"></i>
+                        </a>
                         {% if user.is_school_admin or user.is_system_admin %}
-                        <a href="{% url 'grants:proposal_edit' proposal.proposal_id %}" class="btn btn-sm btn-outline-primary">Edit</a>
-                        <a href="{% url 'grants:proposal_delete' proposal.proposal_id %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                        <a href="{% url 'grants:proposal_edit' proposal.proposal_id %}"
+                            class="btn btn-sm btn-outline-primary" title="Edit Proposal">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <a href="{% url 'grants:proposal_delete' proposal.proposal_id %}"
+                            class="btn btn-sm btn-outline-danger" title="Delete Proposal">
+                            <i class="fas fa-trash"></i>
+                        </a>
                         {% endif %}
                         {% if user.is_reb_officer or user.is_system_admin %}
-                        <a href="{% url 'grants:proposal_approve' proposal.proposal_id %}" class="btn btn-sm btn-outline-success">Approve</a>
-                        <a href="{% url 'grants:proposal_reject' proposal.proposal_id %}" class="btn btn-sm btn-outline-warning">Reject</a>
-                        {% elif user.is_reb_officer %}
-                        <a href="#" class="btn btn-sm btn-outline-primary">Review</a>
+                        <a href="{% url 'grants:proposal_approve' proposal.proposal_id %}"
+                            class="btn btn-sm btn-outline-success" title="Approve Proposal">
+                            <i class="fas fa-check"></i>
+                        </a>
+                        <a href="{% url 'grants:proposal_reject' proposal.proposal_id %}"
+                            class="btn btn-sm btn-outline-warning" title="Reject Proposal">
+                            <i class="fas fa-times"></i>
+                        </a>
                         {% endif %}
                     </td>
-                    {% endif %}
                 </tr>
                 {% endfor %}
             </tbody>

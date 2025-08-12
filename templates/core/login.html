@@ -5,71 +5,219 @@
 {% block auth_content %}
 <style>
     body {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: #f0f2f5;
         min-height: 100vh;
+        margin: 0;
+        font-family: Arial, sans-serif;
+    }
+
+    .fb-container {
         display: flex;
         align-items: center;
         justify-content: center;
+        min-height: 100vh;
     }
 
-    .login-card {
-        background: white;
-        border-radius: 15px;
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-        padding: 2rem;
-        width: 100%;
-        max-width: 400px;
+    .fb-left {
+        flex: 1;
+        max-width: 500px;
+        margin-right: 40px;
     }
 
-    .logo {
-        text-align: center;
-        margin-bottom: 2rem;
-    }
-
-    .logo h1 {
+    .fb-logo {
         color: #667eea;
+        font-size: 56px;
         font-weight: bold;
+        letter-spacing: -2px;
+        margin-bottom: 10px;
+    }
+
+    .fb-tagline {
+        font-size: 24px;
+        color: #1c1e21;
+        margin-bottom: 0;
+    }
+
+    .fb-right {
+        flex: 1;
+        max-width: 400px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .fb-login-card {
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        padding: 24px 24px 16px 24px;
+        width: 100%;
+        margin-bottom: 20px;
+    }
+
+    .fb-login-card input[type="text"],
+    .fb-login-card input[type="password"] {
+        width: 100%;
+        padding: 14px;
+        margin-bottom: 12px;
+        border: 1px solid #dddfe2;
+        border-radius: 6px;
+        font-size: 17px;
+        background: #f5f6f7;
+    }
+
+    .fb-login-card .password-wrapper {
+        position: relative;
+    }
+
+    .fb-login-card .toggle-password {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 18px;
+        color: #65676b;
+    }
+
+    .fb-login-card button[type="submit"] {
+        width: 100%;
+        background: #667eea;
+        color: #fff;
+        font-size: 20px;
+        font-weight: bold;
+        border: none;
+        border-radius: 6px;
+        padding: 12px 0;
+        margin-bottom: 12px;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .fb-login-card button[type="submit"]:hover {
+        background: #5a6fd8;
+    }
+
+    .fb-login-card .forgot {
+        display: block;
+        text-align: center;
+        color: #667eea;
+        text-decoration: none;
+        margin-bottom: 16px;
+        font-size: 15px;
+    }
+
+    .fb-login-card .forgot:hover {
+        text-decoration: underline;
+    }
+
+    .fb-login-card .divider {
+        border-bottom: 1px solid #dadde1;
+        margin: 16px 0;
+    }
+
+    .fb-login-card .create-account-btn {
+        width: 60%;
+        background: #42b72a;
+        color: #fff;
+        font-size: 17px;
+        font-weight: bold;
+        border: none;
+        border-radius: 6px;
+        padding: 10px 0;
+        margin: 0 auto;
+        display: block;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .fb-login-card .create-account-btn:hover {
+        background: #36a420;
+    }
+
+    .fb-create-page {
+        text-align: center;
+        margin-top: 24px;
+        font-size: 14px;
+        color: #1c1e21;
+    }
+
+    .fb-create-page a {
+        color: #1c1e21;
+        font-weight: bold;
+        text-decoration: none;
+    }
+
+    .fb-create-page a:hover {
+        text-decoration: underline;
+    }
+
+    @media (max-width: 900px) {
+        .fb-container {
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 40px 10px;
+        }
+
+        .fb-left,
+        .fb-right {
+            max-width: 100%;
+            margin: 0 0 30px 0;
+        }
     }
 </style>
 
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-4">
-            <div class="login-card">
-                <div class="logo">
-                    <h1>GrantTracker</h1>
-                    <p class="text-muted">Rwanda Education Board</p>
-                </div>
-
-                {% if messages %}
-                {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-                {% endfor %}
-                {% endif %}
-
-                <form method="post">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        <label for="username" class="form-label">Username</label>
-                        <input type="text" class="form-control" id="username" name="username" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="password" name="password" required>
-                    </div>
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">Login</button>
-                    </div>
-                </form>
-
-                <div class="text-center mt-3">
-                    <a href="{% url 'core:register' %}" class="text-decoration-none">Don't have an account? Register</a>
-                </div>
+<div class="fb-container">
+    <div class="fb-left">
+        <div class="fb-logo">GrantTracker</div>
+        <div class="fb-tagline">Manage grants, budgets, and education resources efficiently with Rwanda Education Board.
+        </div>
+    </div>
+    <div class="fb-right">
+        <div class="fb-login-card">
+            {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
+            {% endfor %}
+            {% endif %}
+            <form method="post">
+                {% csrf_token %}
+                <input type="text" name="username" placeholder="Username or email address" required>
+                <div class="password-wrapper">
+                    <input type="password" name="password" id="password" placeholder="Password" required>
+                    <button type="button" class="toggle-password" onclick="togglePassword()" tabindex="-1"
+                        aria-label="Show password">
+                        <span id="eye-icon">&#128065;</span>
+                    </button>
+                </div>
+                <button type="submit">Login</button>
+                <a href="#" class="forgot">Forgot password?</a>
+                <div class="divider"></div>
+                <button type="button" class="create-account-btn"
+                    onclick="window.location.href='{% url 'core:register' %}'">Create new account</button>
+            </form>
+        </div>
+        <div class="fb-create-page">
+            <span><a href="#">Create a School</a> for educational institution management.</span>
         </div>
     </div>
 </div>
+<script>
+    function togglePassword() {
+        var pwd = document.getElementById('password');
+        var icon = document.getElementById('eye-icon');
+        if (pwd.type === 'password') {
+            pwd.type = 'text';
+            icon.textContent = '\u{1F441}'; // eye
+        } else {
+            pwd.type = 'password';
+            icon.textContent = '\u{1F441}'; // eye
+        }
+    }
+</script>
 {% endblock %}

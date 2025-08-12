@@ -1,11 +1,11 @@
 from django import forms
-from .models import SchoolBudget, BudgetLineItem, BudgetPeriod, BudgetTransfer
+from .models import SchoolBudget, BudgetLineItem, BudgetPeriod, BudgetTransfer, BudgetDocument
 
 class SchoolBudgetForm(forms.ModelForm):
     class Meta:
         model = SchoolBudget
         fields = [
-            'school', 'budget_period', 'budget_title', 'description', 'total_budget_amount', 'status'
+            'school', 'budget_period', 'budget_title', 'description', 'total_budget_amount', 'requesting_amount', 'status'
         ]
         widgets = {
             'school': forms.Select(attrs={'class': 'form-select'}),
@@ -13,6 +13,7 @@ class SchoolBudgetForm(forms.ModelForm):
             'budget_title': forms.TextInput(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
             'total_budget_amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
+            'requesting_amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
             'status': forms.Select(attrs={'class': 'form-select'}),
         }
 
@@ -54,4 +55,24 @@ class BudgetTransferForm(forms.ModelForm):
             'transfer_amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
             'transfer_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'reason': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
-        } 
+        }
+
+class BudgetDocumentForm(forms.ModelForm):
+    class Meta:
+        model = BudgetDocument
+        fields = ['criteria', 'document']
+        widgets = {
+            'criteria': forms.Select(attrs={'class': 'form-select'}),
+            'document': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+        }
+
+BudgetDocumentFormSet = forms.modelformset_factory(
+    BudgetDocument,
+    form=BudgetDocumentForm,
+    extra=0,
+    min_num=5,
+    max_num=5,
+    validate_min=True,
+    validate_max=True,
+    can_delete=False,
+) 

@@ -6,6 +6,7 @@ GrantTracker is a comprehensive Django-based platform for managing grants, budge
 ---
 
 ## Table of Contents
+- [Technologies Used](#technologies-used)
 - [Features](#features)
 - [Module Overview](#module-overview)
 - [Setup Instructions](#setup-instructions)
@@ -25,6 +26,56 @@ GrantTracker is a comprehensive Django-based platform for managing grants, budge
 - [Demo User Credentials](#granttracker-demo-user-credentials)
 - [License](#license)
 - [Acknowledgements](#acknowledgements)
+
+---
+
+## Technologies Used
+
+### **Backend Technologies**
+- **Django 4.2+** - Main web framework for rapid development and clean design
+- **Python 3.10+** - High-level programming language
+- **MariaDB/MySQL** - Relational database management system (via mysqlclient)
+- **Django REST Framework** - Powerful toolkit for building Web APIs
+
+### **Frontend Technologies**
+- **HTML5** - Semantic markup language
+- **CSS3** - Advanced styling with custom CSS
+- **Bootstrap 5.1.3** - Responsive CSS framework for mobile-first design
+- **JavaScript** - Client-side scripting and interactivity
+- **Chart.js** - Data visualization and charting library
+- **Font Awesome 6.0.0** - Comprehensive icon library
+
+### **AI/ML Technologies**
+- **scikit-learn** - Machine learning library for predictive modeling
+- **pandas** - Data manipulation and analysis toolkit
+- **numpy** - Numerical computing and array operations
+- **joblib** - Model persistence and parallel computing
+- **pytesseract** - OCR (Optical Character Recognition) for document processing
+
+### **Document Processing**
+- **Pillow (PIL)** - Python Imaging Library for image processing
+- **PyPDF2** - PDF manipulation and text extraction
+- **openpyxl** - Excel file reading, writing, and manipulation
+
+### **Reporting & Export**
+- **reportlab** - PDF generation and report creation
+- **django-widget-tweaks** - Form enhancement and customization
+- **django.contrib.humanize** - Human-readable data formatting
+
+### **Development & Deployment**
+- **XAMPP** - Local development environment with Apache, MySQL, and PHP
+- **Git** - Distributed version control system
+- **Virtual Environment (venv)** - Python dependency isolation
+
+### **Key Technical Features**
+- **OCR Processing** - Automated document text extraction
+- **Machine Learning Pipeline** - Intelligent grant proposal scoring and recommendations
+- **Role-based Access Control** - Secure user management with granular permissions
+- **Responsive Web Design** - Mobile-friendly, cross-device compatibility
+- **Real-time Data Processing** - Dynamic content updates and live data
+- **Multi-format Export** - PDF, Excel, and custom report generation
+- **RESTful API** - Programmatic access to system data
+- **Database Optimization** - Custom database backend for performance
 
 ---
 
