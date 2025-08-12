@@ -32,6 +32,8 @@ urlpatterns = [
     path('users/<uuid:user_id>/deactivate/', views.user_deactivate_view, name='user_deactivate'),
     path('users/<uuid:user_id>/delete/', views.user_delete_view, name='user_delete'),
     path('users/add/', views.user_create_view, name='user_add'),
+    path('users/<uuid:user_id>/assign-school/', views.school_assignment_view, name='school_assignment'),
+    path('school-assignment/<int:assignment_id>/remove/', views.remove_school_assignment_view, name='remove_school_assignment'),
     
     # System configuration
     path('settings/', views.settings_view, name='settings'),

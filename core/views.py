@@ -22,6 +22,7 @@ from .forms import SchoolForm
 from ai_engine.models import ProposalPrediction, ProposalAnomaly, AIModelStatus
 from .forms import UserCreateForm
 from .forms import SupplierRegistrationWithCriteriaForm
+from .forms import SchoolAssignmentForm
 from reporting.models import SupplierCriterionResponse
 
 
@@ -522,10 +523,36 @@ def school_edit_view(request, school_id):
 
 
 @login_required
-@user_passes_test(lambda u: u.is_reb_officer() or u.is_system_admin() or u.is_superuser)
+@user_passes_test(lambda u: u.is_reb_officer() or u.is_system_admin() or u.is_superuser or u.is_school_admin())
 def user_list_view(request):
-    """User list view for REB officers and system admins."""
-    users = User.objects.all().order_by('-created_at')
+    """User list view for REB officers, system admins, and school admins."""
+    user = request.user
+    
+    # Filter users based on user role
+    if user.is_school_admin():
+        # School admins can only see users assigned to their schools
+        user_schools = School.objects.filter(
+            user_assignments__user=user,
+            user_assignments__is_active=True
+        ).distinct()
+        
+        # Get users assigned to these schools (no additional filtering needed)
+        users = User.objects.filter(
+            user_assignments__school__in=user_schools,
+            user_assignments__is_active=True
+        ).distinct().order_by('-created_at')
+        
+        # School admins don't need school filtering - they only see their assigned schools
+        school_filter = ''
+            
+    else:
+        # REB officers and system admins can see all users
+        users = User.objects.all().order_by('-created_at')
+        
+        # Add school filter for REB officers and system admins
+        school_filter = request.GET.get('school', '')
+        if school_filter:
+            users = users.filter(user_assignments__school_id=school_filter)
     
     # Add search and filter functionality
     search_query = request.GET.get('search', '')
@@ -549,21 +576,47 @@ def user_list_view(request):
     if status_filter:
         users = users.filter(status=status_filter)
     
+    # Get available schools for filtering (only for REB officers and system admins)
+    available_schools = []
+    if user.is_reb_officer() or user.is_system_admin():
+        available_schools = School.objects.filter(status='active').order_by('school_name')
+    
     context = {
         'users': users,
         'search_query': search_query,
         'role_filter': role_filter,
         'status_filter': status_filter,
+        'school_filter': school_filter,
+        'available_schools': available_schools,
     }
     
     return render(request, 'core/user_list.html', context)
 
 
 @login_required
-@user_passes_test(lambda u: u.is_reb_officer() or u.is_system_admin() or u.is_superuser)
+@user_passes_test(lambda u: u.is_reb_officer() or u.is_system_admin() or u.is_superuser or u.is_school_admin())
 def user_detail_view(request, user_id):
     """User detail view."""
     user_detail = get_object_or_404(User, user_id=user_id)
+    user = request.user
+    
+    # Check if school admin has access to this user
+    if user.is_school_admin():
+        user_schools = School.objects.filter(
+            user_assignments__user=user,
+            user_assignments__is_active=True
+        ).distinct()
+        
+        # Check if the user being viewed is assigned to any of the school admin's schools
+        user_has_access = SchoolUser.objects.filter(
+            user=user_detail,
+            school__in=user_schools,
+            is_active=True
+        ).exists()
+        
+        if not user_has_access:
+            messages.error(request, 'You do not have access to view this user.')
+            return redirect('core:user_list')
     
     context = {
         'user_detail': user_detail,
@@ -688,6 +741,109 @@ def school_create_view(request):
     else:
         form = SchoolForm()
     return render(request, 'core/school_form.html', {'form': form, 'action': 'Create'})
+
+
+@login_required
+@user_passes_test(lambda u: u.is_reb_officer() or u.is_system_admin() or u.is_superuser or u.is_school_admin())
+def school_assignment_view(request, user_id):
+    """View for assigning schools to users (primarily school admins)."""
+    user_detail = get_object_or_404(User, user_id=user_id)
+    
+    # Only allow assignment to school admins and teachers
+    if user_detail.role not in ['school_admin', 'teacher']:
+        messages.error(request, 'Schools can only be assigned to school administrators and teachers.')
+        return redirect('core:user_detail', user_id=user_id)
+    
+    if request.method == 'POST':
+        form = SchoolAssignmentForm(request.POST, user=request.user)
+        if form.is_valid():
+            school_assignment = form.save(commit=False)
+            school_assignment.user = user_detail
+            school_assignment.assigned_by = request.user
+            
+            # Security check: School admins can only assign to schools they have access to
+            if request.user.is_school_admin():
+                user_schools = School.objects.filter(
+                    user_assignments__user=request.user,
+                    user_assignments__is_active=True
+                ).distinct()
+                if school_assignment.school not in user_schools:
+                    messages.error(request, 'You can only assign users to schools you are currently assigned to.')
+                    return redirect('core:school_assignment', user_id=user_id)
+            
+            # Check if there's already an active assignment for this user-school combination
+            existing_assignment = SchoolUser.objects.filter(
+                user=user_detail,
+                school=school_assignment.school,
+                is_active=True
+            ).first()
+            
+            if existing_assignment:
+                # Update existing assignment
+                existing_assignment.school_role = school_assignment.school_role
+                existing_assignment.start_date = school_assignment.start_date
+                existing_assignment.end_date = school_assignment.end_date
+                existing_assignment.can_submit_proposals = school_assignment.can_submit_proposals
+                existing_assignment.can_manage_budget = school_assignment.can_manage_budget
+                existing_assignment.can_view_reports = school_assignment.can_view_reports
+                existing_assignment.can_manage_users = school_assignment.can_manage_users
+                existing_assignment.assigned_by = request.user
+                existing_assignment.save()
+                messages.success(request, f'School assignment updated successfully for {user_detail.get_full_name()}.')
+            else:
+                # Create new assignment
+                school_assignment.save()
+                messages.success(request, f'School assigned successfully to {user_detail.get_full_name()}.')
+            
+            return redirect('core:user_detail', user_id=user_id)
+    else:
+        form = SchoolAssignmentForm(user=request.user)
+    
+    # Get existing school assignments for this user
+    existing_assignments = SchoolUser.objects.filter(user=user_detail).select_related('school')
+    
+    context = {
+        'user_detail': user_detail,
+        'form': form,
+        'existing_assignments': existing_assignments,
+    }
+    
+    return render(request, 'core/school_assignment.html', context)
+
+
+@login_required
+@user_passes_test(lambda u: u.is_reb_officer() or u.is_system_admin() or u.is_superuser or u.is_school_admin())
+def remove_school_assignment_view(request, assignment_id):
+    """View for removing school assignments from users."""
+    assignment = get_object_or_404(SchoolUser, id=assignment_id)
+    user_id = assignment.user.user_id
+    
+    # Security check: School admins can only remove assignments from schools they have access to
+    if request.user.is_school_admin():
+        user_schools = School.objects.filter(
+            user_assignments__user=request.user,
+            user_assignments__is_active=True
+        ).distinct()
+        if assignment.school not in user_schools:
+            messages.error(request, 'You can only remove assignments from schools you are currently assigned to.')
+            return redirect('core:user_detail', user_id=user_id)
+    
+    if request.method == 'POST':
+        # Soft delete by setting end date to today
+        from django.utils import timezone
+        assignment.end_date = timezone.now().date()
+        assignment.is_active = False
+        assignment.save()
+        
+        messages.success(request, f'School assignment removed successfully from {assignment.user.get_full_name()}.')
+        return redirect('core:user_detail', user_id=user_id)
+    
+    context = {
+        'assignment': assignment,
+        'user_detail': assignment.user,
+    }
+    
+    return render(request, 'core/remove_school_assignment.html', context)
 
 
 def custom_404(request, exception=None):

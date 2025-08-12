@@ -10,10 +10,15 @@
     <h1>Grant Proposals</h1>
 
     {% if user.is_school_admin %}
+    <div class="alert alert-info mb-3">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>School Administrator View:</strong> Showing grant proposals from your assigned schools only.
+    </div>
+    {% elif user.is_reb_officer or user.is_system_admin %}
     <form method="get" class="mb-3">
         <label for="school">Filter by School:</label>
         <select name="school" id="school" class="form-select" style="width:auto;display:inline-block;">
-            <option value="">-- All My Schools --</option>
+            <option value="">-- All Schools --</option>
             {% for school in schools %}
             <option value="{{ school.id }}" {% if school.id|stringformat:"s" == selected_school_id %}selected{% endif %}>
                 {{ school.school_name }}
@@ -134,4 +139,6 @@
 
 <!-- Table will be automatically filtered by the universal table filter system -->
 {% endblock %}
+
+
 

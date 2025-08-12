@@ -1,15 +1,269 @@
 {% extends 'base.html' %}
+{% load core_extras %}
+
+{% block title %}User Details - {{ user_detail.get_full_name }}{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-    <h2>User Details</h2>
-    <div class="card mt-3">
-        <div class="card-body">
-            <h5 class="card-title">{{ user.username }}</h5>
-            <p class="card-text"><strong>Email:</strong> {{ user.email }}</p>
-            <p class="card-text"><strong>Role:</strong> {{ user.role }}</p>
-            <p class="card-text"><strong>Status:</strong> {{ user.status }}</p>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header with Actions -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1>User Details</h1>
+                    {% if request.user.is_school_admin %}
+                        <p class="text-muted mb-0">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Viewing user from your assigned schools
+                        </p>
+                    {% endif %}
+                </div>
+                <div class="btn-group">
+                    {% if request.user.is_reb_officer or request.user.is_system_admin %}
+                    <a href="{% url 'core:user_edit' user_detail.user_id %}" class="btn btn-outline-primary">
+                        <i class="fas fa-edit me-2"></i>Edit User
+                    </a>
+                    {% endif %}
+
+                    {% if user_detail.role in 'school_admin,teacher' and request.user.is_reb_officer or request.user.is_system_admin or request.user.is_school_admin %}
+                    <a href="{% url 'core:school_assignment' user_detail.user_id %}" class="btn btn-outline-success">
+                        <i class="fas fa-school me-2"></i>Assign School
+                    </a>
+                    {% endif %}
+
+                    {% if request.user.is_reb_officer or request.user.is_system_admin %}
+                    <div class="btn-group">
+                        {% if user_detail.status == 'active' %}
+                        <a href="{% url 'core:user_deactivate' user_detail.user_id %}" class="btn btn-outline-warning"
+                            onclick="return confirm('Are you sure you want to deactivate this user?')">
+                            <i class="fas fa-user-slash me-2"></i>Deactivate
+                        </a>
+                        {% else %}
+                        <a href="{% url 'core:user_activate' user_detail.user_id %}" class="btn btn-outline-success">
+                            <i class="fas fa-user-check me-2"></i>Activate
+                        </a>
+                        {% endif %}
+
+                        <a href="{% url 'core:user_delete' user_detail.user_id %}" class="btn btn-outline-danger"
+                            onclick="return confirm('Are you sure you want to delete this user? This action cannot be undone.')">
+                            <i class="fas fa-trash me-2"></i>Delete
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- User Information Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user me-2"></i>Basic Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="row mb-3">
+                                <div class="col-sm-4"><strong>Full Name:</strong></div>
+                                <div class="col-sm-8">{{ user_detail.get_full_name }}</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-sm-4"><strong>Username:</strong></div>
+                                <div class="col-sm-8">{{ user_detail.username }}</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-sm-4"><strong>Email:</strong></div>
+                                <div class="col-sm-8">{{ user_detail.email }}</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-sm-4"><strong>Phone:</strong></div>
+                                <div class="col-sm-8">{{ user_detail.phone_number|default:"Not provided" }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="row mb-3">
+                                <div class="col-sm-4"><strong>Role:</strong></div>
+                                <div class="col-sm-8">
+                                    <span class="badge bg-primary fs-6">{{ user_detail.get_role_display }}</span>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-sm-4"><strong>Status:</strong></div>
+                                <div class="col-sm-8">
+                                    <span class="badge bg-{% if user_detail.status == 'active' %}success{% elif user_detail.status == 'inactive' %}danger{% else %}warning{% endif %} fs-6">
+                                        {{ user_detail.get_status_display }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-sm-4"><strong>Date of Birth:</strong></div>
+                                <div class="col-sm-8">{{ user_detail.date_of_birth|date:"M d, Y"|default:"Not provided" }}</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-sm-4"><strong>Emergency Contact:</strong></div>
+                                <div class="col-sm-8">{{ user_detail.emergency_contact|default:"Not provided" }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if user_detail.address %}
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <strong>Address:</strong><br>
+                            {{ user_detail.address }}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Profile Picture -->
+            {% if user_detail.profile_picture %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-image me-2"></i>Profile Picture
+                    </h5>
+                </div>
+                <div class="card-body text-center">
+                    <img src="{{ user_detail.profile_picture.url }}" alt="Profile Picture" class="img-fluid rounded"
+                        style="max-width: 200px;">
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- School Assignments -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-school me-2"></i>School Assignments
+                    </h5>
+                    {% if user_detail.role in 'school_admin,teacher' and request.user.is_reb_officer or request.user.is_system_admin or request.user.is_school_admin %}
+                    <a href="{% url 'core:school_assignment' user_detail.user_id %}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-plus me-1"></i>Assign School
+                    </a>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if school_assignments %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>School</th>
+                                    <th>Role</th>
+                                    <th>Start Date</th>
+                                    <th>End Date</th>
+                                    <th>Status</th>
+                                    <th>Permissions</th>
+                                    {% if request.user.is_reb_officer or request.user.is_system_admin or request.user.is_school_admin %}
+                                    <th>Actions</th>
+                                    {% endif %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for assignment in school_assignments %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ assignment.school.school_name }}</strong><br>
+                                        <small class="text-muted">{{ assignment.school.district }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ assignment.get_school_role_display }}</span>
+                                    </td>
+                                    <td>{{ assignment.start_date|date:"M d, Y" }}</td>
+                                    <td>
+                                        {% if assignment.end_date %}
+                                        {{ assignment.end_date|date:"M d, Y" }}
+                                        {% else %}
+                                        <span class="text-muted">No end date</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if assignment.is_current_assignment %}
+                                        <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="d-flex flex-column gap-1">
+                                            {% if assignment.can_submit_proposals %}
+                                            <span class="badge bg-success">Proposals</span>
+                                            {% endif %}
+                                            {% if assignment.can_manage_budget %}
+                                            <span class="badge bg-success">Budget</span>
+                                            {% endif %}
+                                            {% if assignment.can_view_reports %}
+                                            <span class="badge bg-success">Reports</span>
+                                            {% endif %}
+                                            {% if assignment.can_manage_users %}
+                                            <span class="badge bg-success">Users</span>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    {% if request.user.is_reb_officer or request.user.is_system_admin or request.user.is_school_admin %}
+                                    <td>
+                                        {% if assignment.is_active %}
+                                        <a href="{% url 'core:remove_school_assignment' assignment.id %}"
+                                            class="btn btn-sm btn-outline-danger" title="Remove assignment">
+                                            <i class="fas fa-times"></i>
+                                        </a>
+                                        {% endif %}
+                                    </td>
+                                    {% endif %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-school fa-3x text-muted mb-3"></i>
+                        <h6 class="text-muted">No school assignments</h6>
+                        {% if user_detail.role in 'school_admin,teacher' and request.user.is_reb_officer or request.user.is_system_admin or request.user.is_school_admin %}
+                        <p class="text-muted">This user hasn't been assigned to any schools yet.</p>
+                        <a href="{% url 'core:school_assignment' user_detail.user_id %}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Assign First School
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- System Information -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>System Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>User ID:</strong> {{ user_detail.user_id }}</p>
+                            <p><strong>Date Joined:</strong> {{ user_detail.date_joined|date:"M d, Y H:i" }}</p>
+                            <p><strong>Last Login:</strong> {{ user_detail.last_login|date:"M d, Y H:i"|default:"Never" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Created At:</strong> {{ user_detail.created_at|date:"M d, Y H:i" }}</p>
+                            <p><strong>Updated At:</strong> {{ user_detail.updated_at|date:"M d, Y H:i" }}</p>
+                            {% if user_detail.last_login_ip %}
+                            <p><strong>Last Login IP:</strong> {{ user_detail.last_login_ip }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Back Button -->
+            <div class="text-center mb-4">
+                <a href="{% url 'core:user_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to User List
+                </a>
+            </div>
         </div>
     </div>
-    <a href="{% url 'core:user_list' %}" class="btn btn-secondary mt-3">Back to User List</a>
 </div>
 {% endblock %}

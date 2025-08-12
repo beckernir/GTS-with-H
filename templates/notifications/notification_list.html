@@ -22,11 +22,10 @@
                     <div class="mb-3">
                         <label for="status" class="form-label">Status</label>
                         <select name="status" id="status" class="form-select">
-                            <option value="all" {% if status_filter=='all' %}selected{% endif %}>All</option>
-                            <option value="unread" {% if status_filter=='unread' %}selected{% endif %}>Unread</option>
-                            <option value="read" {% if status_filter=='read' %}selected{% endif %}>Read</option>
-                            <option value="archived" {% if status_filter=='archived' %}selected{% endif %}>Archived
-                            </option>
+                            <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All</option>
+                            <option value="unread" {% if status_filter == 'unread' %}selected{% endif %}>Unread</option>
+                            <option value="read" {% if status_filter == 'read' %}selected{% endif %}>Read</option>
+                            <option value="archived" {% if status_filter == 'archived' %}selected{% endif %}>Archived</option>
                         </select>
                     </div>
 
@@ -34,10 +33,9 @@
                     <div class="mb-3">
                         <label for="type" class="form-label">Type</label>
                         <select name="type" id="type" class="form-select">
-                            <option value="all" {% if type_filter=='all' %}selected{% endif %}>All Types</option>
+                            <option value="all" {% if type_filter == 'all' %}selected{% endif %}>All Types</option>
                             {% for value, label in notification_types %}
-                            <option value="{{ value }}" {% if type_filter==value %}selected{% endif %}>{{ label }}
-                            </option>
+                            <option value="{{ value }}" {% if type_filter == value %}selected{% endif %}>{{ label }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -46,11 +44,9 @@
                     <div class="mb-3">
                         <label for="priority" class="form-label">Priority</label>
                         <select name="priority" id="priority" class="form-select">
-                            <option value="all" {% if priority_filter=='all' %}selected{% endif %}>All Priorities
-                            </option>
+                            <option value="all" {% if priority_filter == 'all' %}selected{% endif %}>All Priorities</option>
                             {% for value, label in priority_choices %}
-                            <option value="{{ value }}" {% if priority_filter==value %}selected{% endif %}>{{ label }}
-                            </option>
+                            <option value="{{ value }}" {% if priority_filter == value %}selected{% endif %}>{{ label }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -71,8 +67,7 @@
                 <div class="d-grid gap-2">
                     <form method="post" action="{% url 'notifications:mark_all_as_read' %}" style="display: inline;">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-outline-success w-100" {% if unread_count==0 %}disabled{%
-                            endif %}>
+                        <button type="submit" class="btn btn-outline-success w-100" {% if unread_count == 0 %}disabled{% endif %}>
                             <i class="fas fa-check-double me-2"></i>Mark All Read
                         </button>
                     </form>
@@ -100,8 +95,7 @@
                 {% if page_obj %}
                 <div class="list-group list-group-flush">
                     {% for user_notification in page_obj %}
-                    <div
-                        class="list-group-item {% if not user_notification.is_read %}list-group-item-warning{% endif %}">
+                    <div class="list-group-item {% if not user_notification.is_read %}list-group-item-warning{% endif %}">
                         <div class="d-flex justify-content-between align-items-start">
                             <div class="flex-grow-1">
                                 <div class="d-flex align-items-center mb-1">
@@ -118,8 +112,7 @@
                                         {{ user_notification.notification.get_notification_type_display }}
                                     </span>
                                 </div>
-                                <p class="text-muted mb-2">{{ user_notification.notification.message|truncatewords:30 }}
-                                </p>
+                                <p class="text-muted mb-2">{{ user_notification.notification.message|truncatewords:30 }}</p>
                                 <div class="d-flex justify-content-between align-items-center">
                                     <small class="text-muted">
                                         <i class="fas fa-clock me-1"></i>
@@ -196,29 +189,30 @@
                             <li class="page-item active">
                                 <span class="page-link">{{ num }}</span>
                             </li>
-                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %} <li
-                                class="page-item">
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
                                 <a class="page-link"
-                                    href="?page={{ num }}{% if status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if type_filter != 'all' %}&type={{ type_filter }}{% endif %}{% if priority_filter != 'all' %}&priority={{ priority_filter }}{% endif %}">{{
-                                    num }}</a>
-                                </li>
-                                {% endif %}
-                                {% endfor %}
+                                    href="?page={{ num }}{% if status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if type_filter != 'all' %}&type={{ type_filter }}{% endif %}{% if priority_filter != 'all' %}&priority={{ priority_filter }}{% endif %}">
+                                    {{ num }}
+                                </a>
+                            </li>
+                            {% endif %}
+                            {% endfor %}
 
-                                {% if page_obj.has_next %}
-                                <li class="page-item">
-                                    <a class="page-link"
-                                        href="?page={{ page_obj.next_page_number }}{% if status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if type_filter != 'all' %}&type={{ type_filter }}{% endif %}{% if priority_filter != 'all' %}&priority={{ priority_filter }}{% endif %}">
-                                        <i class="fas fa-angle-right"></i>
-                                    </a>
-                                </li>
-                                <li class="page-item">
-                                    <a class="page-link"
-                                        href="?page={{ page_obj.paginator.num_pages }}{% if status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if type_filter != 'all' %}&type={{ type_filter }}{% endif %}{% if priority_filter != 'all' %}&priority={{ priority_filter }}{% endif %}">
-                                        <i class="fas fa-angle-double-right"></i>
-                                    </a>
-                                </li>
-                                {% endif %}
+                            {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link"
+                                    href="?page={{ page_obj.next_page_number }}{% if status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if type_filter != 'all' %}&type={{ type_filter }}{% endif %}{% if priority_filter != 'all' %}&priority={{ priority_filter }}{% endif %}">
+                                    <i class="fas fa-angle-right"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link"
+                                    href="?page={{ page_obj.paginator.num_pages }}{% if status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if type_filter != 'all' %}&type={{ type_filter }}{% endif %}{% if priority_filter != 'all' %}&priority={{ priority_filter }}{% endif %}">
+                                    <i class="fas fa-angle-double-right"></i>
+                                </a>
+                            </li>
+                            {% endif %}
                         </ul>
                     </nav>
                 </div>

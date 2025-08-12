@@ -1,6 +1,7 @@
 from django import forms
 from .models import School
 from .models import User
+from .models import SchoolUser
 from reporting.models import SupplierCriterion
 
 class SchoolForm(forms.ModelForm):
@@ -104,3 +105,62 @@ class SupplierRegistrationWithCriteriaForm(UserCreateForm):
                     help_text=criterion.description,
                 )
             self.fields[field_name].criterion_obj = criterion 
+
+class SchoolAssignmentForm(forms.ModelForm):
+    """Form for assigning schools to users (primarily school admins)."""
+    
+    class Meta:
+        model = SchoolUser
+        fields = ['school', 'school_role', 'start_date', 'end_date', 'can_submit_proposals', 
+                 'can_manage_budget', 'can_view_reports', 'can_manage_users']
+        widgets = {
+            'school': forms.Select(attrs={'class': 'form-select'}),
+            'school_role': forms.Select(attrs={'class': 'form-select'}),
+            'start_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'end_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'can_submit_proposals': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'can_manage_budget': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'can_view_reports': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'can_manage_users': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        
+        # Filter schools based on user permissions
+        if user:
+            if user.is_system_admin():
+                # System admins can assign to any school
+                self.fields['school'].queryset = School.objects.filter(status='active')
+            elif user.is_reb_officer():
+                # REB officers can assign to schools in their district (if district-based)
+                # For now, allow all active schools
+                self.fields['school'].queryset = School.objects.filter(status='active')
+            elif user.is_school_admin():
+                # School admins can only assign to schools they are currently assigned to
+                self.fields['school'].queryset = School.objects.filter(
+                    user_assignments__user=user,
+                    user_assignments__is_active=True
+                ).distinct()
+            else:
+                # Other users can only see schools they're assigned to
+                self.fields['school'].queryset = School.objects.filter(
+                    user_assignments__user=user,
+                    user_assignments__is_active=True
+                ).distinct()
+        
+        # Set default start date to today
+        if not self.instance.pk:
+            from django.utils import timezone
+            self.fields['start_date'].initial = timezone.now().date()
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        start_date = cleaned_data.get('start_date')
+        end_date = cleaned_data.get('end_date')
+        
+        if start_date and end_date and start_date >= end_date:
+            raise forms.ValidationError("End date must be after start date.")
+        
+        return cleaned_data 

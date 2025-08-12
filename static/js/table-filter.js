@@ -206,3 +206,5 @@ document.addEventListener('DOMContentLoaded', function () {
 
 // Export for manual initialization
 window.TableFilter = TableFilter;
+
+

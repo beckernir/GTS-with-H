@@ -53,23 +53,42 @@ def proposal_list_view(request):
     """Display a list of all grant proposals."""
     user = request.user
     selected_school_id = request.GET.get('school')
-    schools = School.objects.filter(status='active').order_by('school_name')
+    
+    # Filter schools based on user permissions
     if user.is_authenticated:
         if hasattr(user, 'is_reb_officer') and (user.is_reb_officer() or user.is_system_admin()):
+            # REB officers and system admins can see all schools
+            schools = School.objects.filter(status='active').order_by('school_name')
             proposals = GrantProposal.objects.all().order_by('-created_at')
         elif hasattr(user, 'is_school_admin') and user.is_school_admin():
+            # School admins can only see their assigned schools
+            user_schools = School.objects.filter(
+                user_assignments__user=user,
+                user_assignments__is_active=True
+            ).distinct()
+            schools = user_schools.order_by('school_name')
+            
+            # School admins can only see proposals from their assigned schools
             from django.db.models import Q
-            if selected_school_id:
-                proposals = GrantProposal.objects.filter(school_id=selected_school_id).order_by('-created_at')
-            else:
-                proposals = GrantProposal.objects.filter(
-                    Q(school__user_assignments__user=user) | Q(created_by=user)
-                ).distinct().order_by('-created_at')
+            proposals = GrantProposal.objects.filter(
+                Q(school__in=user_schools) | Q(created_by=user)
+            ).distinct().order_by('-created_at')
+            
+            # Ignore any school filter parameter for school admins - they only see their schools
+            selected_school_id = None
+            
         elif hasattr(user, 'is_teacher') and user.is_teacher():
+            # Teachers can only see their own proposals
+            schools = School.objects.filter(
+                user_assignments__user=user,
+                user_assignments__is_active=True
+            ).distinct().order_by('school_name')
             proposals = GrantProposal.objects.filter(created_by=user).order_by('-created_at')
         else:
+            schools = School.objects.none()
             proposals = GrantProposal.objects.none()
     else:
+        schools = School.objects.none()
         proposals = GrantProposal.objects.none()
     categories = GrantCategory.objects.filter(is_active=True)
     
@@ -238,9 +257,37 @@ def proposal_create_view(request):
     )
     return render(request, "grants/proposal_create.html", {'form': form, 'is_system_admin': is_system_admin})
 
+@login_required
 def proposal_detail_view(request, proposal_id):
     """Display detailed information about a specific grant proposal."""
     proposal = get_object_or_404(GrantProposal, proposal_id=proposal_id)
+    user = request.user
+    
+    # Check access permissions
+    if hasattr(user, 'is_system_admin') and user.is_system_admin():
+        # System admins can view all proposals
+        pass
+    elif hasattr(user, 'is_reb_officer') and user.is_reb_officer():
+        # REB officers can view all proposals
+        pass
+    elif hasattr(user, 'is_school_admin') and user.is_school_admin():
+        # School admins can only view proposals from their assigned schools
+        user_schools = School.objects.filter(
+            user_assignments__user=user,
+            user_assignments__is_active=True
+        ).distinct()
+        if proposal.school not in user_schools:
+            messages.error(request, 'You do not have access to view this proposal.')
+            return redirect('grants:proposal_list')
+    elif hasattr(user, 'is_teacher') and user.is_teacher():
+        # Teachers can only view their own proposals
+        if proposal.created_by != user:
+            messages.error(request, 'You can only view your own proposals.')
+            return redirect('grants:proposal_list')
+    else:
+        # Other users cannot view proposals
+        messages.error(request, 'You do not have permission to view proposals.')
+        return redirect('grants:proposal_list')
     
     context = {
         'proposal': proposal,
