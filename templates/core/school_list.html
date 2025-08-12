@@ -2,7 +2,7 @@
 {% block content %}
 <div class="container mt-4">
     <h2>School List</h2>
-    <table class="table table-bordered">
+    <table id="schoolsTable" class="table table-bordered" data-table-filter='{"searchPlaceholder": "Search schools..."}'>
         <thead>
             <tr>
                 <th>Name</th>
@@ -16,7 +16,9 @@
                 <td>{{ school.school_name }}</td>
                 <td>{{ school.get_full_address }}</td>
                 <td>
-                    <a href="{% url 'core:school_detail' school.school_id %}" class="btn btn-sm btn-primary">View</a>
+                    <a href="{% url 'core:school_detail' school.school_id %}" class="btn btn-sm btn-primary" title="View School">
+                        <i class="fas fa-eye"></i>
+                    </a>
                 </td>
             </tr>
             {% empty %}

@@ -6,7 +6,7 @@
     {% if can_manage_criteria %}
     <a href="{% url 'reporting:supplier_criterion_add' %}" class="btn btn-primary mb-3">Add Criterion</a>
     {% endif %}
-    <table class="table table-bordered table-striped">
+    <table id="supplierCriteriaTable" class="table table-bordered table-striped" data-table-filter='{"searchPlaceholder": "Search criteria...", "filters": [{"column": "type", "label": "Types", "columnIndex": 3, "options": [{"value": "Text", "label": "Text"}, {"value": "Number", "label": "Number"}, {"value": "Boolean", "label": "Boolean"}, {"value": "Choice", "label": "Choice"}]}, {"column": "required", "label": "Required", "columnIndex": 4, "options": [{"value": "Yes", "label": "Yes"}, {"value": "No", "label": "No"}]}, {"column": "active", "label": "Active", "columnIndex": 5, "options": [{"value": "Yes", "label": "Yes"}, {"value": "No", "label": "No"}]}]}'>
         <thead>
             <tr>
                 <th>Order</th>
@@ -27,9 +27,13 @@
                 <td>{{ c.active|yesno:"Yes,No" }}</td>
                 <td>
                     {% if can_manage_criteria %}
-                    <a href="{% url 'reporting:supplier_criterion_edit' c.pk %}" class="btn btn-sm btn-warning">Edit</a>
+                    <a href="{% url 'reporting:supplier_criterion_edit' c.pk %}" class="btn btn-sm btn-warning" title="Edit Criterion">
+                        <i class="fas fa-edit"></i>
+                    </a>
                     <a href="{% url 'reporting:supplier_criterion_delete' c.pk %}"
-                        class="btn btn-sm btn-danger">Delete</a>
+                        class="btn btn-sm btn-danger" title="Delete Criterion">
+                        <i class="fas fa-trash"></i>
+                    </a>
                     {% endif %}
                 </td>
             </tr>

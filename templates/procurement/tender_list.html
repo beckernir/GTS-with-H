@@ -10,7 +10,7 @@
         <a href="{% url 'procurement:tender_create' %}" class="btn btn-lg btn-primary">+ Create New Tender</a>
         {% endif %}
     </div>
-    <table class="table table-bordered table-hover">
+    <table id="tendersTable" class="table table-bordered table-hover" data-table-filter='{"searchPlaceholder": "Search tenders...", "filters": [{"column": "status", "label": "Status", "columnIndex": 2, "options": [{"value": "Open", "label": "Open"}, {"value": "Closed", "label": "Closed"}, {"value": "Awarded", "label": "Awarded"}, {"value": "Cancelled", "label": "Cancelled"}]}]}'>
         <thead class="table-light">
             <tr>
                 <th>Title</th>
@@ -29,10 +29,14 @@
                 <td>{{ tender.created_by.get_full_name|default:'-' }}</td>
                 <td>
                     <a href="{% url 'procurement:tender_detail' tender.tender_id %}"
-                        class="btn btn-sm btn-outline-primary me-1">View Details</a>
+                        class="btn btn-sm btn-outline-primary me-1" title="View Details">
+                        <i class="fas fa-eye"></i>
+                    </a>
                     {% if user.is_authenticated and user.is_supplier and tender.status == 'open' %}
                     <a href="{% url 'procurement:bid_submit' tender.tender_id %}" class="btn btn-sm btn-success"
-                        title="Submit a bid for this tender">Submit Bid</a>
+                        title="Submit a bid for this tender">
+                        <i class="fas fa-gavel"></i>
+                    </a>
                     {% endif %}
                 </td>
             </tr>

@@ -15,7 +15,7 @@
     <div class="card">
         <div class="card-body">
             {% if forums %}
-            <table class="table table-hover">
+            <table id="forumsTable" class="table table-hover" data-table-filter='{"searchPlaceholder": "Search forums...", "filters": [{"column": "type", "label": "Types", "columnIndex": 2, "options": [{"value": "General", "label": "General"}, {"value": "Academic", "label": "Academic"}, {"value": "Administrative", "label": "Administrative"}]}, {"column": "status", "label": "Status", "columnIndex": 4, "options": [{"value": "Active", "label": "Active"}, {"value": "Inactive", "label": "Inactive"}]}]}'>
                 <thead>
                     <tr>
                         <th>Name</th>
@@ -40,11 +40,15 @@
                         </td>
                         <td>
                             <a href="{% url 'community:forum_detail' forum.forum_id %}"
-                                class="btn btn-sm btn-info">View</a>
+                                class="btn btn-sm btn-info" title="View Forum">
+                                <i class="fas fa-eye"></i>
+                            </a>
                             {% if user.is_authenticated %}
                             {% if user.is_school_admin or user.is_reb_officer or user.is_system_admin %}
                             <a href="{% url 'community:forum_edit' forum.forum_id %}"
-                                class="btn btn-sm btn-warning">Edit</a>
+                                class="btn btn-sm btn-warning" title="Edit Forum">
+                                <i class="fas fa-edit"></i>
+                            </a>
                             {% endif %}
                             {% endif %}
                         </td>

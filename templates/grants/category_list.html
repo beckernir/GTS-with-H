@@ -17,7 +17,7 @@
     </div>
     <div class="card shadow-sm">
         <div class="card-body p-0">
-            <table class="table table-striped mb-0">
+            <table id="categoriesTable" class="table table-striped mb-0" data-table-filter='{"searchPlaceholder": "Search categories...", "filters": [{"column": "type", "label": "Types", "columnIndex": 2, "options": [{"value": "Infrastructure", "label": "Infrastructure"}, {"value": "Academic", "label": "Academic"}, {"value": "Technology", "label": "Technology"}, {"value": "Sports", "label": "Sports"}, {"value": "Arts", "label": "Arts"}]}, {"column": "status", "label": "Status", "columnIndex": 7, "options": [{"value": "Active", "label": "Active"}, {"value": "Inactive", "label": "Inactive"}]}]}'>
                 <thead>
                     <tr>
                         <th>Name</th>
@@ -48,9 +48,13 @@
                         </td>
                         <td>
                             <a href="{% url 'grants:category_edit' category.category_id %}"
-                                class="btn btn-sm btn-outline-primary">Edit</a>
+                                class="btn btn-sm btn-outline-primary" title="Edit Category">
+                                <i class="fas fa-edit"></i>
+                            </a>
                             <a href="{% url 'grants:category_delete' category.category_id %}"
-                                class="btn btn-sm btn-outline-danger">Delete</a>
+                                class="btn btn-sm btn-outline-danger" title="Delete Category">
+                                <i class="fas fa-trash"></i>
+                            </a>
                         </td>
                     </tr>
                     {% empty %}

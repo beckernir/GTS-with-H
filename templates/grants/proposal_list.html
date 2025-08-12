@@ -15,8 +15,7 @@
         <select name="school" id="school" class="form-select" style="width:auto;display:inline-block;">
             <option value="">-- All My Schools --</option>
             {% for school in schools %}
-            <option value="{{ school.id }}" {% ifequal school.id|stringformat:"s" selected_school_id %}selected{%
-                endifequal %}>
+            <option value="{{ school.id }}" {% if school.id|stringformat:"s" == selected_school_id %}selected{% endif %}>
                 {{ school.school_name }}
             </option>
             {% endfor %}
@@ -35,7 +34,37 @@
 
     {% if proposals %}
     <div class="table-responsive">
-        <table class="table table-striped">
+        <table id="proposalsTable" class="table table-striped"
+            data-table-filter='{
+                "searchPlaceholder": "Search proposals...", 
+                "filters": [
+                    {
+                        "column": "status", 
+                        "label": "Statuses", 
+                        "columnIndex": 6, 
+                        "options": [
+                            {"value": "Draft", "label": "Draft"},
+                            {"value": "Submitted for Review", "label": "Submitted for Review"},
+                            {"value": "Under Review", "label": "Under Review"},
+                            {"value": "Approved", "label": "Approved"},
+                            {"value": "Rejected", "label": "Rejected"},
+                            {"value": "Funded", "label": "Funded"},
+                            {"value": "Completed", "label": "Completed"},
+                            {"value": "Cancelled", "label": "Cancelled"}
+                        ]
+                    },
+                    {
+                        "column": "category", 
+                        "label": "Categories", 
+                        "columnIndex": 4, 
+                        "options": [
+                            {% for category in categories %}
+                                {"value": "{{ category.category_name }}", "label": "{{ category.category_name }}"}{% if not forloop.last %},{% endif %}
+                            {% endfor %}
+                        ]
+                    }
+                ]
+            }'>
             <thead>
                 <tr>
                     <th>Code</th>
@@ -102,4 +131,7 @@
     </div>
     {% endif %}
 </div>
+
+<!-- Table will be automatically filtered by the universal table filter system -->
 {% endblock %}
+

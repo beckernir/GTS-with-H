@@ -19,7 +19,7 @@
         AI has distributed <strong>{{ total_amount|floatformat:0 }} RWF</strong> among the schools below.
     </div>
     {% endif %}
-    <table class="table table-bordered table-striped">
+    <table id="schoolGrantTotalsTable" class="table table-bordered table-striped" data-table-filter='{"searchPlaceholder": "Search schools..."}'>
         <thead>
             <tr>
                 <th>School</th>

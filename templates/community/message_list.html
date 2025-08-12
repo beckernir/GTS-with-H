@@ -14,7 +14,7 @@
                 <div class="card-header">Received Messages</div>
                 <div class="card-body">
                     {% if received %}
-                    <table class="table table-hover">
+                    <table id="receivedMessagesTable" class="table table-hover" data-table-filter='{"searchPlaceholder": "Search received messages..."}'>
                         <thead>
                             <tr>
                                 <th>From</th>
@@ -30,7 +30,9 @@
                                 <td>{{ msg.subject|default:"(No Subject)" }}</td>
                                 <td>{{ msg.created_at|date:"Y-m-d H:i" }}</td>
                                 <td><a href="{% url 'community:message_detail' msg.message_id %}"
-                                        class="btn btn-sm btn-info">View</a></td>
+                                        class="btn btn-sm btn-info" title="View Message">
+                                        <i class="fas fa-eye"></i>
+                                    </a></td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -46,7 +48,7 @@
                 <div class="card-header">Sent Messages</div>
                 <div class="card-body">
                     {% if sent %}
-                    <table class="table table-hover">
+                    <table id="sentMessagesTable" class="table table-hover" data-table-filter='{"searchPlaceholder": "Search sent messages..."}'>
                         <thead>
                             <tr>
                                 <th>To</th>
@@ -66,7 +68,9 @@
                                 <td>{{ msg.subject|default:"(No Subject)" }}</td>
                                 <td>{{ msg.created_at|date:"Y-m-d H:i" }}</td>
                                 <td><a href="{% url 'community:message_detail' msg.message_id %}"
-                                        class="btn btn-sm btn-info">View</a></td>
+                                        class="btn btn-sm btn-info" title="View Message">
+                                        <i class="fas fa-eye"></i>
+                                    </a></td>
                             </tr>
                             {% endfor %}
                         </tbody>
