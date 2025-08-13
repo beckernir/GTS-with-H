@@ -41,10 +41,11 @@
                             <label for="id_status" class="form-label">Status</label>
                             <select name="status" id="id_status" class="form-select">
                                 {% for value, label in form.fields.status.choices %}
-                                <option value="{{ value }}" {% if
-                                    value|stringformat:'s'==form.initial.status|stringformat:'s' %}selected{% endif %}>
-                                    {{ label }}
-                                </option>
+                                <option value="{{ value }}"
+                                {% if value|stringformat:'s' == form.initial.status|stringformat:'s' %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                            
                                 {% endfor %}
                             </select>
                         </div>

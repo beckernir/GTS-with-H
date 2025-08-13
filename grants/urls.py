@@ -13,6 +13,8 @@ urlpatterns = [
     path('<uuid:proposal_id>/delete/', views.proposal_delete_view, name='proposal_delete'),
     path('<uuid:proposal_id>/approve/', views.proposal_approve_view, name='proposal_approve'),
     path('<uuid:proposal_id>/reject/', views.proposal_reject_view, name='proposal_reject'),
+    path('<uuid:proposal_id>/request-changes/', views.proposal_request_changes_view, name='proposal_request_changes'),
+    path('<uuid:proposal_id>/resubmit/', views.proposal_resubmit_view, name='proposal_resubmit'),
     path('<uuid:proposal_id>/fund/', views.proposal_fund_view, name='proposal_fund'),
     path('<uuid:proposal_id>/allocate/', views.proposal_allocate_view, name='proposal_allocate'),
     

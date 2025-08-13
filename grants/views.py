@@ -344,10 +344,30 @@ def proposal_detail_view(request, proposal_id):
         messages.error(request, 'You do not have permission to view proposals.')
         return redirect('grants:proposal_list')
     
+    # Get both regular documents and criteria documents
+    regular_documents = proposal.documents.all()
+    criteria_documents = []
+    
+    # Get documents from criteria responses
+    for response in proposal.criterion_responses.filter(criterion__type='file', value_file__isnull=False):
+        if response.value_file:
+            criteria_documents.append({
+                'document_title': f"{response.criterion.name}",
+                'document_type': 'supporting',
+                'document_file': response.value_file,
+                'uploaded_by': response.proposal.created_by,
+                'uploaded_at': response.submitted_at,
+                'is_criteria': True,
+                'criterion_name': response.criterion.name,
+            })
+    
+    # Combine both types of documents
+    all_documents = list(regular_documents) + criteria_documents
+    
     context = {
         'proposal': proposal,
         'budget_items': proposal.budget_items.all(),
-        'documents': proposal.documents.all(),
+        'documents': all_documents,
         'allocations': proposal.fund_allocations.all(),
         'reviews': proposal.reviews.all(),
     }
@@ -864,3 +884,77 @@ def total_grant_allocation_dashboard_view(request):
         'disbursement_percentage': (total_disbursed / total_budget * 100) if total_budget > 0 else 0,
     }
     return render(request, 'grants/total_grant_allocation_dashboard.html', context) 
+
+@login_required
+@user_passes_test(lambda u: u.is_reb_officer() or u.is_system_admin())
+def proposal_request_changes_view(request, proposal_id):
+    """Allow REB officers and system admins to request changes to proposals."""
+    try:
+        proposal = get_object_or_404(GrantProposal, proposal_id=proposal_id)
+        
+        # Only allow requesting changes for proposals that are under review or submitted
+        if proposal.status not in ['submitted', 'under_review']:
+            messages.warning(request, 'Only submitted or under review proposals can have changes requested.')
+            return redirect('grants:proposal_detail', proposal_id=proposal_id)
+        
+        if request.method == 'POST':
+            change_comments = request.POST.get('change_request_comments', '').strip()
+            
+            if not change_comments:
+                messages.error(request, 'Please provide comments explaining what changes are needed.')
+                return render(request, 'grants/proposal_request_changes.html', {'proposal': proposal})
+            
+            # Update proposal with change request
+            proposal.status = 'changes_requested'
+            proposal.change_request_comments = change_comments
+            proposal.change_request_date = timezone.now()
+            proposal.change_requested_by = request.user
+            proposal.save()
+            
+            messages.success(request, 'Change request sent successfully! The school admin will be notified.')
+            return redirect('grants:proposal_detail', proposal_id=proposal_id)
+        
+        return render(request, 'grants/proposal_request_changes.html', {'proposal': proposal})
+    except Exception as e:
+        import traceback
+        print(f"Error in proposal_request_changes_view: {e}")
+        print(f"Traceback: {traceback.format_exc()}")
+        messages.error(request, f'An error occurred: {str(e)}')
+        return redirect('grants:proposal_list')
+
+@login_required
+def proposal_resubmit_view(request, proposal_id):
+    """Allow school admins to resubmit proposals after changes have been made."""
+    try:
+        proposal = get_object_or_404(GrantProposal, proposal_id=proposal_id)
+        
+        # Only allow resubmission for proposals that have changes requested
+        if proposal.status != 'changes_requested':
+            messages.warning(request, 'Only proposals with requested changes can be resubmitted.')
+            return redirect('grants:proposal_detail', proposal_id=proposal_id)
+        
+        # Check if user is the creator of the proposal or has permission
+        if not (request.user == proposal.created_by or request.user.is_system_admin()):
+            messages.error(request, 'You do not have permission to resubmit this proposal.')
+            return redirect('grants:proposal_detail', proposal_id=proposal_id)
+        
+        if request.method == 'POST':
+            # Update proposal status to submitted
+            proposal.status = 'submitted'
+            proposal.submission_date = timezone.now()
+            # Clear change request fields
+            proposal.change_request_comments = ''
+            proposal.change_request_date = None
+            proposal.change_requested_by = None
+            proposal.save()
+            
+            messages.success(request, 'Proposal resubmitted successfully! It will be reviewed again.')
+            return redirect('grants:proposal_detail', proposal_id=proposal_id)
+        
+        return render(request, 'grants/proposal_resubmit.html', {'proposal': proposal})
+    except Exception as e:
+        import traceback
+        print(f"Error in proposal_resubmit_view: {e}")
+        print(f"Traceback: {traceback.format_exc()}")
+        messages.error(request, f'An error occurred: {str(e)}')
+        return redirect('grants:proposal_list') 

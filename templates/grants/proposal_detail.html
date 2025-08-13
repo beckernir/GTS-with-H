@@ -101,6 +101,81 @@
         </div>
         {% endif %}
 
+        <!-- Documents -->
+        {% if documents %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Supporting Documents</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Document Title</th>
+                                <th>Type</th>
+                                <th>Uploaded By</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for document in documents %}
+                            <tr>
+                                <td>
+                                    {{ document.document_title }}
+                                    {% if document.is_criteria %}
+                                    <br><small class="text-muted">Criteria: {{ document.criterion_name }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if document.is_criteria %}
+                                    <span class="badge bg-info">Criteria Document</span>
+                                    {% else %}
+                                    <span class="badge bg-{{ document.get_document_type_color }}">
+                                        {{ document.get_document_type_display }}
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if document.is_criteria %}
+                                    {{ document.uploaded_by.get_full_name|default:document.uploaded_by.username }}
+                                    {% else %}
+                                    {{ document.uploaded_by.get_full_name|default:document.uploaded_by.username }}
+                                    {% endif %}
+                                </td>
+                                <td>{{ document.uploaded_at|date:"M d, Y" }}</td>
+                                <td>
+                                    <a href="{{ document.document_file.url }}" class="btn btn-sm btn-outline-primary"
+                                        target="_blank" title="View Document">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ document.document_file.url }}" class="btn btn-sm btn-outline-success"
+                                        download title="Download Document">
+                                        <i class="fas fa-download"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Supporting Documents</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    No supporting documents have been uploaded for this proposal.
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
         {% if recommended_amount %}
         <div class="alert alert-info">
             <strong>AI Recommendation:</strong> {{ recommended_amount }} RWF
@@ -179,9 +254,12 @@
             <div class="card-body">
                 <div class="d-grid gap-2">
                     {% if user.is_reb_officer or user.is_system_admin %}
-                    {% if proposal.status == 'submitted' %}
+                    {% if proposal.status == 'submitted' or proposal.status == 'under_review' %}
                     <a href="{% url 'grants:proposal_review' proposal.proposal_id %}" class="btn btn-primary">
                         <i class="fas fa-check-circle me-2"></i>Review Proposal
+                    </a>
+                    <a href="{% url 'grants:proposal_request_changes' proposal.proposal_id %}" class="btn btn-warning">
+                        <i class="fas fa-edit me-2"></i>Request Changes
                     </a>
                     {% endif %}
                     {% if proposal.status == 'approved' %}
@@ -190,7 +268,7 @@
                     </a>
                     {% endif %}
                     {% endif %}
-                    
+
                     {% if user.is_system_admin and proposal.status == 'approved' %}
                     <a href="{% url 'grants:proposal_fund' proposal.proposal_id %}" class="btn btn-info">
                         <i class="fas fa-money-bill-wave me-2"></i>Mark as Funded
@@ -223,6 +301,12 @@
                         </button>
                     </form>
                     {% endif %}
+
+                    {% if proposal.status == 'changes_requested' and user == proposal.created_by %}
+                    <a href="{% url 'grants:proposal_resubmit' proposal.proposal_id %}" class="btn btn-success">
+                        <i class="fas fa-upload me-2"></i>Resubmit Proposal
+                    </a>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -254,6 +338,25 @@
                 <div class="mb-3">
                     <label class="form-label">Review Notes</label>
                     <p class="mb-0">{{ proposal.review_notes }}</p>
+                </div>
+                {% endif %}
+
+                {% if proposal.status == 'changes_requested' and proposal.change_request_comments %}
+                <div class="mb-3">
+                    <label class="form-label">Change Request Comments</label>
+                    <div class="alert alert-warning">
+                        <p class="mb-1"><strong>Requested by:</strong>
+                            {% if proposal.change_requested_by %}
+                            {{ proposal.change_requested_by.get_full_name|default:proposal.change_requested_by.username
+                            }}
+                            {% else %}
+                            Unknown User
+                            {% endif %}
+                        </p>
+                        <p class="mb-1"><strong>Date:</strong> {{ proposal.change_request_date|date:"F j, Y H:i" }}</p>
+                        <hr class="my-2">
+                        <p class="mb-0">{{ proposal.change_request_comments|linebreaks }}</p>
+                    </div>
                 </div>
                 {% endif %}
             </div>

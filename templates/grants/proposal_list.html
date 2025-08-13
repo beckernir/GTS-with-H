@@ -33,20 +33,17 @@
     </div>
     {% elif user.is_reb_officer or user.is_system_admin %}
     <form method="get" class="mb-3">
-        <label for="school">Filter by S<select name="school" id="school" class="form-select" style="width:auto;display:inline-block;">
-            <option value="">-- All Schools --</option>
-            {% for school in schools %}
-                <option value="{{ school.id }}" {% if school.id == selected_school_id %}selected{% endif %}>
-                    {{ school.school_name }}
-                </option>
-            {% endfor %}
-        </select>
-        
+        <label for="school">Filter by S<option value="{{ school.id }}"
+            {% if school.id|stringformat:"s" == selected_school_id|stringformat:"s" %}selected{% endif %}>
+            {{ school.school_name }}
+        </option>
         
 
-        <button type="submit" class="btn btn-primary btn-sm">
-            <i class="fas fa-filter me-1"></i>Filter
-        </button>
+
+
+            <button type="submit" class="btn btn-primary btn-sm">
+                <i class="fas fa-filter me-1"></i>Filter
+            </button>
     </form>
     {% endif %}
 
@@ -71,6 +68,7 @@
                             {"value": "Draft", "label": "Draft"},
                             {"value": "Submitted for Review", "label": "Submitted for Review"},
                             {"value": "Under Review", "label": "Under Review"},
+                            {"value": "Changes Requested", "label": "Changes Requested"},
                             {"value": "Approved", "label": "Approved"},
                             {"value": "Rejected", "label": "Rejected"},
                             {"value": "Funded", "label": "Funded"},
@@ -115,7 +113,13 @@
                     <td>RWF {{ proposal.effective_total_amount|intcomma }}</td>
                     <td>RWF {{ proposal.current_amount|intcomma }}</td>
                     <td>RWF {{ proposal.requested_amount|intcomma }}</td>
-                    <td>{{ proposal.get_status_display }}</td>
+                    <td>
+                        {{ proposal.get_status_display }}
+                        {% if proposal.status == 'changes_requested' %}
+                        <br><small class="text-warning"><i class="fas fa-exclamation-triangle me-1"></i>Changes
+                            Required</small>
+                        {% endif %}
+                    </td>
                     <td>{{ proposal.created_at|date:"M d, Y" }}</td>
                     <td>
                         <span class="badge bg-info">Score: {{ proposal.ml_score }}</span>
@@ -128,23 +132,29 @@
                             class="btn btn-sm btn-outline-info" title="View Details">
                             <i class="fas fa-eye"></i>
                         </a>
-                        
+
                         {% comment %}Edit and Delete buttons for school admins only{% endcomment %}
                         {% if user.is_school_admin %}
-                            {% if proposal.created_by == user %}
-                            <a href="{% url 'grants:proposal_edit' proposal.proposal_id %}"
-                                class="btn btn-sm btn-outline-primary" title="Edit Proposal">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <a href="{% url 'grants:proposal_delete' proposal.proposal_id %}"
-                                class="btn btn-sm btn-outline-danger" title="Delete Proposal"
-                                onclick="return confirm('Are you sure you want to delete this proposal?')">
-                                <i class="fas fa-trash"></i>
-                            </a>
-                            {% endif %}
+                        {% if proposal.created_by == user %}
+                        <a href="{% url 'grants:proposal_edit' proposal.proposal_id %}"
+                            class="btn btn-sm btn-outline-primary" title="Edit Proposal">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <a href="{% url 'grants:proposal_delete' proposal.proposal_id %}"
+                            class="btn btn-sm btn-outline-danger" title="Delete Proposal"
+                            onclick="return confirm('Are you sure you want to delete this proposal?')">
+                            <i class="fas fa-trash"></i>
+                        </a>
                         {% endif %}
-                        
+                        {% endif %}
+
                         {% if user.is_reb_officer or user.is_system_admin %}
+                        {% if proposal.status == 'submitted' or proposal.status == 'under_review' %}
+                        <a href="{% url 'grants:proposal_request_changes' proposal.proposal_id %}"
+                            class="btn btn-sm btn-outline-warning" title="Request Changes">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        {% endif %}
                         <a href="{% url 'grants:proposal_approve' proposal.proposal_id %}"
                             class="btn btn-sm btn-outline-success" title="Approve Proposal">
                             <i class="fas fa-check"></i>
@@ -154,7 +164,7 @@
                             <i class="fas fa-times"></i>
                         </a>
                         {% endif %}
-                        
+
                         {% if user.is_system_admin and proposal.status == 'approved' %}
                         <a href="{% url 'grants:proposal_fund' proposal.proposal_id %}"
                             class="btn btn-sm btn-outline-info" title="Fund Proposal">

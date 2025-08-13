@@ -65,6 +65,7 @@ class GrantProposal(models.Model):
         ('draft', 'Draft'),
         ('submitted', 'Submitted for Review'),
         ('under_review', 'Under Review'),
+        ('changes_requested', 'Changes Requested'),
         ('approved', 'Approved'),
         ('rejected', 'Rejected'),
         ('funded', 'Funded'),
@@ -116,6 +117,9 @@ class GrantProposal(models.Model):
     # Review and approval
     review_notes = models.TextField(blank=True, null=True)
     rejection_reason = models.TextField(blank=True, null=True)
+    change_request_comments = models.TextField(blank=True, null=True, help_text="Comments from admin requesting changes")
+    change_request_date = models.DateTimeField(blank=True, null=True)
+    change_requested_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='change_requests_made')
     
     # AI allocation scores
     ai_priority_score = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
@@ -169,6 +173,7 @@ class GrantProposal(models.Model):
             'draft': 'secondary',
             'submitted': 'info',
             'under_review': 'warning',
+            'changes_requested': 'warning',
             'approved': 'success',
             'rejected': 'danger',
             'funded': 'primary',
@@ -183,6 +188,7 @@ class GrantProposal(models.Model):
             'draft': 'Proposal is in draft stage and can be edited',
             'submitted': 'Proposal has been submitted for review',
             'under_review': 'Proposal is currently under review',
+            'changes_requested': 'Admin has requested changes to the proposal',
             'approved': 'Proposal has been approved and is ready for funding',
             'rejected': 'Proposal has been rejected',
             'funded': 'Proposal has been funded and implementation can begin',
@@ -256,6 +262,18 @@ class ProposalDocument(models.Model):
     
     def __str__(self):
         return f"{self.document_title} - {self.proposal.proposal_title}"
+    
+    def get_document_type_color(self):
+        """Return Bootstrap color class based on document type."""
+        color_map = {
+            'proposal': 'primary',
+            'budget': 'success',
+            'supporting': 'info',
+            'approval': 'warning',
+            'completion': 'success',
+            'other': 'secondary',
+        }
+        return color_map.get(self.document_type, 'secondary')
 
 
 class ProposalBudget(models.Model):
