@@ -4,6 +4,13 @@
 
 {% block content %}
 <div class="container mt-4">
+    {% if user.is_school_admin %}
+    <style>
+        a[href="{% url 'community:event_create' %}"] {
+            display: none !important;
+        }
+    </style>
+    {% endif %}
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2>Communication Events</h2>
         {% if user.is_authenticated %}
@@ -15,7 +22,8 @@
     <div class="card">
         <div class="card-body">
             {% if events %}
-            <table id="eventsTable" class="table table-hover" data-table-filter='{"searchPlaceholder": "Search events...", "filters": [{"column": "type", "label": "Types", "columnIndex": 2, "options": [{"value": "Meeting", "label": "Meeting"}, {"value": "Workshop", "label": "Workshop"}, {"value": "Conference", "label": "Conference"}, {"value": "Training", "label": "Training"}]}, {"column": "status", "label": "Status", "columnIndex": 3, "options": [{"value": "Upcoming", "label": "Upcoming"}, {"value": "Ongoing", "label": "Ongoing"}, {"value": "Completed", "label": "Completed"}, {"value": "Cancelled", "label": "Cancelled"}]}]}'>
+            <table id="eventsTable" class="table table-hover"
+                data-table-filter='{"searchPlaceholder": "Search events...", "filters": [{"column": "type", "label": "Types", "columnIndex": 2, "options": [{"value": "Meeting", "label": "Meeting"}, {"value": "Workshop", "label": "Workshop"}, {"value": "Conference", "label": "Conference"}, {"value": "Training", "label": "Training"}]}, {"column": "status", "label": "Status", "columnIndex": 3, "options": [{"value": "Upcoming", "label": "Upcoming"}, {"value": "Ongoing", "label": "Ongoing"}, {"value": "Completed", "label": "Completed"}, {"value": "Cancelled", "label": "Cancelled"}]}]}'>
                 <thead>
                     <tr>
                         <th>Title</th>
@@ -31,18 +39,21 @@
                     <tr>
                         <td><a href="{% url 'community:event_detail' event.event_id %}">{{ event.event_title }}</a></td>
                         <td>{{ event.get_event_type_display }}</td>
-                        <td>{{ event.get_status_display }}</td>
+                        <td>
+                            <span class="badge {{ event.status|yesno:'bg-info,bg-secondary' }}">{{
+                                event.get_status_display }}</span>
+                        </td>
                         <td>{{ event.start_date|date:"Y-m-d H:i" }}</td>
                         <td>{{ event.end_date|date:"Y-m-d H:i" }}</td>
                         <td>
-                            <a href="{% url 'community:event_detail' event.event_id %}"
-                                class="btn btn-sm btn-info" title="View Event">
+                            <a href="{% url 'community:event_detail' event.event_id %}" class="btn btn-sm btn-info"
+                                title="View Event">
                                 <i class="fas fa-eye"></i>
                             </a>
                             {% if user.is_authenticated %}
                             {% if user.is_school_admin or user.is_reb_officer or user.is_system_admin %}
-                            <a href="{% url 'community:event_edit' event.event_id %}"
-                                class="btn btn-sm btn-warning" title="Edit Event">
+                            <a href="{% url 'community:event_edit' event.event_id %}" class="btn btn-sm btn-warning"
+                                title="Edit Event">
                                 <i class="fas fa-edit"></i>
                             </a>
                             {% endif %}

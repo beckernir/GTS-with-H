@@ -503,3 +503,19 @@ class CommunityEvent(models.Model):
         if self.max_participants == 0:
             return float('inf')
         return max(0, self.max_participants - self.current_participants)
+
+    def get_time_range_display(self) -> str:
+        """Return a user-friendly time range for the event.
+
+        - Only start time if no end date
+        - HH:MM – HH:MM when same day
+        - HH:MM – Mon dd HH:MM when crossing to another day
+        """
+        if not self.start_date:
+            return ""
+        start_str = self.start_date.strftime('%H:%M')
+        if not self.end_date:
+            return start_str
+        if self.start_date.date() == self.end_date.date():
+            return f"{start_str} – {self.end_date.strftime('%H:%M')}"
+        return f"{start_str} – {self.end_date.strftime('%b %d %H:%M')}"

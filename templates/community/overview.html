@@ -9,6 +9,15 @@
 {% endblock %}
 
 {% block content %}
+{% if user.is_school_admin %}
+<style>
+    a[href="{% url 'community:forum_create' %}"],
+    a[href="{% url 'community:event_create' %}"] {
+        display: none !important;
+    }
+    }
+</style>
+{% endif %}
 <!-- Community Stats -->
 <div class="row mb-4">
     <div class="col-md-3">
@@ -127,7 +136,39 @@
                     {% if not forloop.last %}
                     <hr>{% endif %}
                     {% empty %}
-                    <p class="text-muted">No featured discussions available.</p>
+                    <p class="text-muted mb-3">No featured discussions available.</p>
+                    {% if featured_forums %}
+                    <div class="row">
+                        {% for forum in featured_forums %}
+                        <div class="col-md-6 mb-2">
+                            <div class="p-3 border rounded h-100 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ forum.forum_name }}</strong><br>
+                                    <small class="text-muted">
+                                        {{ forum.get_forum_type_display }} ·
+                                        {% if forum.access_level == 'public' %}
+                                        <span class="badge bg-primary">{{ forum.get_access_level_display }}</span>
+                                        {% elif forum.access_level == 'school_members' %}
+                                        <span class="badge bg-warning text-dark">{{ forum.get_access_level_display
+                                            }}</span>
+                                        {% elif forum.access_level == 'registered_users' %}
+                                        <span class="badge bg-info">{{ forum.get_access_level_display }}</span>
+                                        {% elif forum.access_level == 'moderated' %}
+                                        <span class="badge bg-secondary">{{ forum.get_access_level_display }}</span>
+                                        {% elif forum.access_level == 'private' %}
+                                        <span class="badge bg-dark">{{ forum.get_access_level_display }}</span>
+                                        {% else %}
+                                        {{ forum.get_access_level_display }}
+                                        {% endif %}
+                                    </small>
+                                </div>
+                                <a href="{% url 'community:forum_detail' forum.forum_id %}"
+                                    class="btn btn-sm btn-outline-primary">Open</a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
                     {% endfor %}
                 </div>
 
@@ -157,12 +198,16 @@
                                 <i class="fas fa-map-marker-alt me-1"></i>{{ event.location|default:"TBA" }}
                             </p>
                             <small class="text-muted">
-                                <i class="fas fa-clock me-1"></i>{{ event.start_date|date:"H:i" }} - {{
-                                event.end_date|date:"H:i" }}
+                                <i class="fas fa-clock me-1"></i>{{ event.get_time_range_display }}
                             </small>
                         </div>
-                        <div>
-                            <a href="#" class="btn btn-outline-primary btn-sm">Register</a>
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'community:event_detail' event.event_id %}"
+                                class="btn btn-primary btn-sm">View Full</a>
+                            {% if event.is_registration_open %}
+                            <a href="{% url 'community:event_register' event.event_id %}"
+                                class="btn btn-outline-primary btn-sm">Register</a>
+                            {% endif %}
                         </div>
                     </div>
                     {% empty %}
@@ -250,7 +295,7 @@
         <!-- Community Guidelines -->
         <div class="card">
             <div class="card-header">
-                                    <h5 class="mb-0">Communication Guidelines</h5>
+                <h5 class="mb-0">Communication Guidelines</h5>
             </div>
             <div class="card-body">
                 <ul class="list-unstyled">

@@ -4,6 +4,13 @@
 
 {% block content %}
 <div class="container mt-4">
+    {% if user.is_school_admin %}
+    <style>
+        a[href="{% url 'community:forum_create' %}"] {
+            display: none !important;
+        }
+    </style>
+    {% endif %}
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2>Communication Forums</h2>
         {% if user.is_authenticated %}
@@ -15,7 +22,8 @@
     <div class="card">
         <div class="card-body">
             {% if forums %}
-            <table id="forumsTable" class="table table-hover" data-table-filter='{"searchPlaceholder": "Search forums...", "filters": [{"column": "type", "label": "Types", "columnIndex": 2, "options": [{"value": "General", "label": "General"}, {"value": "Academic", "label": "Academic"}, {"value": "Administrative", "label": "Administrative"}]}, {"column": "status", "label": "Status", "columnIndex": 4, "options": [{"value": "Active", "label": "Active"}, {"value": "Inactive", "label": "Inactive"}]}]}'>
+            <table id="forumsTable" class="table table-hover"
+                data-table-filter='{"searchPlaceholder": "Search forums...", "filters": [{"column": "type", "label": "Types", "columnIndex": 2, "options": [{"value": "General", "label": "General"}, {"value": "Academic", "label": "Academic"}, {"value": "Administrative", "label": "Administrative"}]}, {"column": "status", "label": "Status", "columnIndex": 4, "options": [{"value": "Active", "label": "Active"}, {"value": "Inactive", "label": "Inactive"}]}]}'>
                 <thead>
                     <tr>
                         <th>Name</th>
@@ -30,23 +38,34 @@
                     <tr>
                         <td><a href="{% url 'community:forum_detail' forum.forum_id %}">{{ forum.forum_name }}</a></td>
                         <td>{{ forum.get_forum_type_display }}</td>
-                        <td>{{ forum.get_access_level_display }}</td>
                         <td>
-                            {% if forum.is_active %}
-                            <span class="badge bg-success">Active</span>
+                            {% if forum.access_level == 'public' %}
+                            <span class="badge bg-primary">{{ forum.get_access_level_display }}</span>
+                            {% elif forum.access_level == 'school_members' %}
+                            <span class="badge bg-warning text-dark">{{ forum.get_access_level_display }}</span>
+                            {% elif forum.access_level == 'registered_users' %}
+                            <span class="badge bg-info">{{ forum.get_access_level_display }}</span>
+                            {% elif forum.access_level == 'moderated' %}
+                            <span class="badge bg-secondary">{{ forum.get_access_level_display }}</span>
+                            {% elif forum.access_level == 'private' %}
+                            <span class="badge bg-dark">{{ forum.get_access_level_display }}</span>
                             {% else %}
-                            <span class="badge bg-secondary">Inactive</span>
+                            {{ forum.get_access_level_display }}
                             {% endif %}
                         </td>
                         <td>
-                            <a href="{% url 'community:forum_detail' forum.forum_id %}"
-                                class="btn btn-sm btn-info" title="View Forum">
+                            <span class="badge {{ forum.is_active|yesno:'bg-success,bg-secondary' }}">{{
+                                forum.is_active|yesno:'Active,Inactive' }}</span>
+                        </td>
+                        <td>
+                            <a href="{% url 'community:forum_detail' forum.forum_id %}" class="btn btn-sm btn-info"
+                                title="View Forum">
                                 <i class="fas fa-eye"></i>
                             </a>
                             {% if user.is_authenticated %}
                             {% if user.is_school_admin or user.is_reb_officer or user.is_system_admin %}
-                            <a href="{% url 'community:forum_edit' forum.forum_id %}"
-                                class="btn btn-sm btn-warning" title="Edit Forum">
+                            <a href="{% url 'community:forum_edit' forum.forum_id %}" class="btn btn-sm btn-warning"
+                                title="Edit Forum">
                                 <i class="fas fa-edit"></i>
                             </a>
                             {% endif %}

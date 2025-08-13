@@ -4,6 +4,14 @@
 {% block title %}School Budgets - GrantTracker{% endblock %}
 
 {% block content %}
+{% if user.is_system_admin or user.is_superuser %}
+<style>
+    /* Hide Create School Budget button in header */
+    a[href="{% url 'budget:school_budget_create' %}"] {
+        display: none !important;
+    }
+</style>
+{% endif %}
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">

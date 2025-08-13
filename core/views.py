@@ -9,6 +9,7 @@ from django.utils.decorators import method_decorator
 from django.views.generic import ListView, DetailView, UpdateView, CreateView
 from django.urls import reverse_lazy
 from django.db.models import Count, Sum, Avg
+from django.db import IntegrityError
 from django.utils import timezone
 from datetime import datetime, timedelta
 from collections import Counter
@@ -791,9 +792,21 @@ def school_assignment_view(request, user_id):
                 existing_assignment.save()
                 messages.success(request, f'School assignment updated successfully for {user_detail.get_full_name()}.')
             else:
-                # Create new assignment
-                school_assignment.save()
-                messages.success(request, f'School assigned successfully to {user_detail.get_full_name()}.')
+                # Create new assignment with graceful duplicate handling
+                try:
+                    school_assignment.save()
+                    messages.success(request, f'School assigned successfully to {user_detail.get_full_name()}.')
+                except IntegrityError:
+                    # Likely caused by unique_together constraint (user, school) when an assignment already exists
+                    form.add_error('school', 'This user is already assigned to the selected school.')
+                    messages.error(request, 'This user is already assigned to the selected school.')
+                    existing_assignments = SchoolUser.objects.filter(user=user_detail).select_related('school')
+                    context = {
+                        'user_detail': user_detail,
+                        'form': form,
+                        'existing_assignments': existing_assignments,
+                    }
+                    return render(request, 'core/school_assignment.html', context)
             
             return redirect('core:user_detail', user_id=user_id)
     else:

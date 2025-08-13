@@ -9,6 +9,14 @@
 {% endblock %}
 
 {% block content %}
+{% if user.is_system_admin or user.is_superuser %}
+<style>
+    /* Hide Create School Budget button in Quick Actions */
+    a[href="{% url 'budget:school_budget_create' %}"] {
+        display: none !important;
+    }
+</style>
+{% endif %}
 <!-- Budget Summary Cards -->
 <div class="row mb-4">
     <div class="col-md-3">
@@ -156,6 +164,9 @@
                     </a>
                     <a href="{% url 'budget:school_budget_create' %}" class="btn btn-success">
                         <i class="fas fa-money-bill me-2"></i>Create School Budget
+                    </a>
+                    <a href="{% url 'budget:school_budget_list' %}" class="btn btn-outline-success">
+                        <i class="fas fa-list me-2"></i>View School Budgets
                     </a>
                     <a href="{% url 'budget:report_generate' %}" class="btn btn-info">
                         <i class="fas fa-chart-bar me-2"></i>Generate Report

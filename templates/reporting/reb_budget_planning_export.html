@@ -33,12 +33,12 @@
             <tr>
                 <td>Total Granted to Schools</td>
                 <td>{{ total_granted|floatformat:2 }}</td>
-                <td>{{ total_granted|div:total_grant|mul:100|floatformat:1 }}%</td>
+                <td>{{ utilization_pct|floatformat:1 }}%</td>
             </tr>
             <tr>
                 <td>Remaining Budget</td>
                 <td>{{ remaining|floatformat:2 }}</td>
-                <td>{{ remaining|div:total_grant|mul:100|floatformat:1 }}%</td>
+                <td>{{ remaining_pct|floatformat:1 }}%</td>
             </tr>
         </tbody>
     </table>
@@ -56,17 +56,17 @@
 <div class="content-section">
     <div class="section-title">Budget Analysis</div>
     <div style="padding: 15px; background: #f8f9fa; border-radius: 5px;">
-        <p><strong>Budget Utilization Rate:</strong> {{ total_granted|div:total_grant|mul:100|floatformat:1 }}%</p>
+        <p><strong>Budget Utilization Rate:</strong> {{ utilization_pct|floatformat:1 }}%</p>
         <p><strong>Budget Efficiency:</strong>
-            {% if total_granted|div:total_grant|mul:100 >= 90 %}
+            {% if utilization_pct >= 90 %}
             <span style="color: #155724;">Excellent (≥90%)</span>
-            {% elif total_granted|div:total_grant|mul:100 >= 80 %}
+            {% elif utilization_pct >= 80 %}
             <span style="color: #856404;">Good (80-89%)</span>
-            {% elif total_granted|div:total_grant|mul:100 >= 70 %}
+            {% elif utilization_pct >= 70 %}
             <span style="color: #721c24;">Fair (70-79%)</span>
             {% else %}
-            <span style="color: #721c24;">Needs Improvement (<70%)< /span>
-                    {% endif %}
+            <span style="color: #721c24;">Needs Improvement (&lt;70%)</span>
+            {% endif %}
         </p>
         <p><strong>Remaining Budget:</strong> {{ remaining|floatformat:2 }} RWF</p>
         <p><strong>Report Generated:</strong> {{ now|date:"F d, Y at H:i" }}</p>
@@ -75,7 +75,3 @@
 {% endblock %}
 
 {% block report_format %}PDF{% endblock %}
-
-
-
-

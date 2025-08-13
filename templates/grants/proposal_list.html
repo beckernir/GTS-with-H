@@ -6,6 +6,24 @@
 {% load core_extras %}
 {% load humanize %}
 
+{% comment %}
+Optional: Hide create/edit/delete for non-admins only
+{% endcomment %}
+{% if not user.is_school_admin and not user.is_system_admin %}
+<style>
+    /* Hide Create Grant Proposal button */
+    a[href="{% url 'grants:proposal_create' %}"] {
+        display: none !important;
+    }
+
+    /* Hide Edit and Delete icons */
+    a[title="Edit Proposal"],
+    a[title="Delete Proposal"] {
+        display: none !important;
+    }
+</style>
+{% endif %}
+
 <div class="container-fluid">
     <h1>Grant Proposals</h1>
 
@@ -20,7 +38,7 @@
         <select name="school" id="school" class="form-select" style="width:auto;display:inline-block;">
             <option value="">-- All Schools --</option>
             {% for school in schools %}
-            <option value="{{ school.id }}" {% if school.id|stringformat:"s" == selected_school_id %}selected{% endif %}>
+            <option value="{{ school.id }}" {% if school.id|stringformat:"s" == selected_school_id|stringformat:"s" %}selected{% endif %}>
                 {{ school.school_name }}
             </option>
             {% endfor %}
@@ -45,7 +63,7 @@
                     {
                         "column": "status", 
                         "label": "Statuses", 
-                        "columnIndex": 8, 
+                        "columnIndex": 7, 
                         "options": [
                             {"value": "Draft", "label": "Draft"},
                             {"value": "Submitted for Review", "label": "Submitted for Review"},
@@ -60,7 +78,7 @@
                     {
                         "column": "category", 
                         "label": "Categories", 
-                        "columnIndex": 4, 
+                        "columnIndex": 3, 
                         "options": [
                             {% for category in categories %}
                                 {"value": "{{ category.category_name }}", "label": "{{ category.category_name }}"}{% if not forloop.last %},{% endif %}
@@ -140,5 +158,4 @@
     {% endif %}
 </div>
 
-<!-- Table will be automatically filtered by the universal table filter system -->
 {% endblock %}

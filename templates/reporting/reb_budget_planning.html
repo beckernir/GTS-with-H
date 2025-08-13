@@ -2,6 +2,11 @@
 {% block title %}REB Budget Planning{% endblock %}
 {% block content %}
 <div class="container mt-4">
+    <style>
+        a[href="{% url 'reporting:reb_budget_edit' %}"] {
+            display: none !important;
+        }
+    </style>
     <h2>REB Budget Planning{% if year %} ({{ year }}){% endif %}</h2>
     <div class="row mb-4">
         <div class="col-md-4">

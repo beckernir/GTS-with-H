@@ -3,7 +3,7 @@ from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
 from django.contrib.auth.decorators import login_required, user_passes_test
 from .models import CommunityForum, ForumTopic, ForumPost, Announcement, CommunityEvent, CommunityMessage
 from .forms import CommunityForumForm, ForumTopicForm, ForumPostForm, AnnouncementForm, CommunityEventForm, CommunityMessageForm
-from django.db.models import Count
+from django.db.models import Count, Q
 from core.models import User
 from datetime import datetime
 from django.views.decorators.http import require_GET
@@ -18,11 +18,46 @@ def community_overview_view(request):
     now = datetime.now()
     events_this_month = CommunityEvent.objects.filter(start_date__year=now.year, start_date__month=now.month).count()
 
-    # Featured discussions: 3 most recent active topics
-    featured_discussions = ForumTopic.objects.filter(status='active').order_by('-last_activity')[:3]
+    # Featured discussions: role-aware selection of recent active topics
+    user = request.user if request.user.is_authenticated else None
+    topic_qs = ForumTopic.objects.filter(status='active')
+    if user and hasattr(user, 'is_school_admin') and user.is_school_admin():
+        topic_qs = topic_qs.filter(
+            Q(forum__school__user_assignments__user=user, forum__school__user_assignments__is_active=True)
+        ) | topic_qs.filter(
+            Q(forum__access_level__in=['public', 'registered_users'])
+        )
+        topic_qs = topic_qs.distinct()
+    featured_discussions = topic_qs.order_by('-last_activity')[:3]
+    if not featured_discussions:
+        # Fallback to most recent topics regardless of status to avoid empty UI
+        featured_discussions = ForumTopic.objects.all().order_by('-last_activity')[:3]
 
-    # Upcoming events: 3 soonest upcoming events
-    upcoming_events = CommunityEvent.objects.filter(start_date__gte=now).order_by('start_date')[:3]
+    # Featured forums as secondary fallback/companion list
+    forum_qs = CommunityForum.objects.filter(is_active=True)
+    if user and hasattr(user, 'is_school_admin') and user.is_school_admin():
+        forum_qs = forum_qs.filter(
+            Q(school__user_assignments__user=user, school__user_assignments__is_active=True)
+        ) | forum_qs.filter(Q(access_level__in=['public', 'registered_users']))
+        forum_qs = forum_qs.distinct()
+    featured_forums = forum_qs.order_by('forum_type', 'forum_name')[:3]
+
+    # Upcoming events: role-aware, published/active states
+    event_qs = CommunityEvent.objects.filter(
+        start_date__gte=now,
+        status__in=['published', 'registration_open', 'in_progress']
+    )
+    if user and hasattr(user, 'is_school_admin') and user.is_school_admin():
+        # Events targeted to user's schools or global (no target_schools specified)
+        event_qs = event_qs.filter(
+            Q(target_schools__user_assignments__user=user, target_schools__user_assignments__is_active=True)
+        ) | event_qs.filter(Q(target_schools__isnull=True))
+        event_qs = event_qs.distinct()
+    upcoming_events = event_qs.order_by('start_date')[:3]
+    if not upcoming_events:
+        # Fallback to most recent events (any permissible state)
+        fallback_states = ['published', 'registration_open', 'in_progress', 'completed']
+        upcoming_events = CommunityEvent.objects.filter(status__in=fallback_states).order_by('-start_date')[:3]
 
     # Discussion categories: forum_type and count
     categories = CommunityForum.objects.values('forum_type').annotate(count=Count('id')).order_by('forum_type')
@@ -37,6 +72,7 @@ def community_overview_view(request):
         'events_this_month': events_this_month,
         'featured_discussions': featured_discussions,
         'upcoming_events': upcoming_events,
+        'featured_forums': featured_forums,
         'categories': categories,
         'top_contributors': top_contributors,
     }

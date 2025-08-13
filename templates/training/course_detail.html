@@ -131,6 +131,9 @@
                         <i class="fas fa-edit me-2"></i>Edit Course
                     </a>
                     {% endif %}
+                    <a href="{% url 'training:course_finish' course.course_id %}" class="btn btn-success">
+                        <i class="fas fa-flag-checkered me-2"></i>Finish & Take Assessment
+                    </a>
                     {% endif %}
                 </div>
             </div>

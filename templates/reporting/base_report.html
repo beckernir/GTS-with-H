@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
     <title>{% block report_title %}GrantTracker Report{% endblock %}</title>
@@ -12,55 +13,54 @@
             margin: 0;
             padding: 0;
         }
-        
+
         .report-header {
             background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
             color: white;
-            padding: 20px 30px;
+            padding: 10px 20px;
             text-align: center;
         }
-        
+
         .system-name {
-            font-size: 28px;
+            font-size: 24px;
             font-weight: 700;
-            margin-bottom: 5px;
+            margin-bottom: 3px;
             text-transform: uppercase;
             letter-spacing: 2px;
         }
-        
+
         .system-tagline {
-            font-size: 14px;
+            font-size: 12px;
             font-weight: 300;
             opacity: 0.9;
-            margin-bottom: 15px;
+            margin-bottom: 8px;
         }
-        
+
         .report-info {
             background: rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            padding: 15px;
-            margin-top: 15px;
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin-top: 8px;
         }
-        
+
         .report-title {
-            font-size: 24px;
+            font-size: 20px;
             font-weight: 600;
-            margin-bottom: 10px;
+            margin-bottom: 6px;
         }
-        
+
         .report-meta {
             display: flex;
             justify-content: space-between;
             flex-wrap: wrap;
-            gap: 20px;
-            font-size: 11px;
+            gap: 15px;
+            font-size: 10px;
         }
-        
+
         .report-content {
-            padding: 30px;
-            min-height: 500px;
+            padding: 15px 20px;
         }
-        
+
         .section-title {
             font-size: 18px;
             font-weight: 600;
@@ -69,20 +69,21 @@
             padding-bottom: 8px;
             border-bottom: 2px solid #e3f2fd;
         }
-        
+
         table {
             width: 100%;
             border-collapse: collapse;
             margin: 15px 0;
             font-size: 11px;
         }
-        
-        th, td {
+
+        th,
+        td {
             border: 1px solid #ddd;
             padding: 8px 12px;
             text-align: left;
         }
-        
+
         th {
             background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
             color: #495057;
@@ -90,30 +91,30 @@
             text-transform: uppercase;
             font-size: 10px;
         }
-        
+
         tr:nth-child(even) {
             background-color: #f8f9fa;
         }
-        
+
         .report-footer {
             background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
             color: white;
-            padding: 20px 30px;
+            padding: 10px 20px;
             text-align: center;
         }
-        
+
         .footer-content {
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 20px;
+            gap: 15px;
         }
-        
+
         .footer-section {
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
-        
+
         .footer-title {
             font-size: 12px;
             font-weight: 600;
@@ -121,18 +122,43 @@
             color: #bdc3c7;
             text-transform: uppercase;
         }
-        
+
         .footer-text {
             font-size: 11px;
             opacity: 0.9;
         }
-        
+
         .page-number {
             position: absolute;
             bottom: 10px;
             right: 30px;
             font-size: 10px;
             opacity: 0.7;
+        }
+
+        /* PDF-specific optimizations */
+        @page {
+            margin: 0.5in;
+            size: A4;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Ensure content flows properly */
+        .report-content {
+            page-break-inside: avoid;
+        }
+
+        /* Reduce spacing for PDF */
+        .content-section {
+            margin-bottom: 15px;
+        }
+
+        .section-title {
+            margin-bottom: 10px;
         }
     </style>
 </head>
@@ -142,7 +168,7 @@
     <div class="report-header">
         <div class="system-name">GrantTracker</div>
         <div class="system-tagline">Comprehensive Grant Management & Reporting System</div>
-        
+
         <div class="report-info">
             <div class="report-title">{% block report_title_content %}Report Title{% endblock %}</div>
             <div class="report-meta">
@@ -172,7 +198,7 @@
                     Kigali, Rwanda
                 </div>
             </div>
-            
+
             <div class="footer-section">
                 <div class="footer-title">System Information</div>
                 <div class="footer-text">
@@ -181,7 +207,7 @@
                     Secure • Reliable • Efficient
                 </div>
             </div>
-            
+
             <div class="footer-section">
                 <div class="footer-title">Report Details</div>
                 <div class="footer-text">
@@ -191,10 +217,11 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="page-number">
             Page 1 of 1
         </div>
     </div>
 </body>
+
 </html>

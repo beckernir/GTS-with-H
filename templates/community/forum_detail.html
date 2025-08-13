@@ -17,8 +17,13 @@
             <p><strong>Type:</strong> {{ forum.get_forum_type_display }}</p>
             <p><strong>Access:</strong> {{ forum.get_access_level_display }}</p>
             <p><strong>Description:</strong> {{ forum.description }}</p>
-            <p><strong>Status:</strong> <span class="badge {{ forum.is_active|yesno:'bg-success,bg-secondary' }}">{{
-                    forum.is_active|yesno:"Active,Inactive" }}</span></p>
+            <p><strong>Status:</strong>
+                {% if forum.is_active %}
+                <span class="badge bg-success">Active</span>
+                {% else %}
+                <span class="badge bg-secondary">Inactive</span>
+                {% endif %}
+            </p>
 
             <p><strong>Created by:</strong> {{ forum.created_by.get_full_name|default:"Unknown" }}</p>
             <p><strong>Created at:</strong> {{ forum.created_at|date:"Y-m-d H:i" }}</p>

@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from reporting.models import Report, KPI, KPIValue
 from grants.models import GrantProposal
+from grants.models import FundAllocation
 from django.db.models import Sum, Avg, F, DurationField, ExpressionWrapper, Count, Q
 from django.db.models.functions import ExtractYear
 from django.template.loader import render_to_string, get_template
@@ -347,8 +348,18 @@ def reb_budget_planning_view(request):
     total_grant = budget.total_amount if budget else 0
     year = budget.year if budget else None
     notes = budget.notes if budget else ''
-    # Total granted (allocated)
-    total_granted = GrantProposal.objects.aggregate(total=Sum('allocated_amount'))['total'] or 0
+    # Total granted (allocated). Strategy:
+    # 1) Sum of FundAllocation.allocated_amount
+    # 2) If none/zero, sum proposal.allocated_amount where status='funded'
+    # 3) If still zero, fallback to proposal.requested_amount for funded proposals
+    allocations_total = FundAllocation.objects.aggregate(total=Sum('allocated_amount'))['total']
+    total_granted = allocations_total or 0
+    if total_granted == 0:
+        proposal_alloc_total = GrantProposal.objects.filter(status='funded').aggregate(total=Sum('allocated_amount'))['total'] or 0
+        total_granted = proposal_alloc_total
+    if total_granted == 0:
+        proposal_req_total = GrantProposal.objects.filter(status='funded').aggregate(total=Sum('requested_amount'))['total'] or 0
+        total_granted = proposal_req_total
     remaining = total_grant - total_granted
     context = {
         'budget': budget,
@@ -447,7 +458,15 @@ def annual_grant_report_export_view(request, format):
         df.to_excel(response, index=False)
         return response
     elif format == 'pdf' and pisa:
-        html = render_to_string('reporting/annual_grant_report_export.html', {'grants_by_year': data})
+        html = render_to_string(
+            'reporting/annual_grant_report_export.html',
+            {
+                'grants_by_year': data,
+                'now': timezone.now(),
+                'user': request.user,
+            },
+            request=request,
+        )
         response = HttpResponse(content_type='application/pdf')
         response['Content-Disposition'] = 'attachment; filename=annual_grant_report.pdf'
         pisa.CreatePDF(html, dest=response)
@@ -462,7 +481,14 @@ def reb_budget_planning_export_excel(request):
     total_grant = budget.total_amount if budget else 0
     year = budget.year if budget else None
     notes = budget.notes if budget else ''
-    total_granted = GrantProposal.objects.aggregate(total=Sum('allocated_amount'))['total'] or 0
+    allocations_total = FundAllocation.objects.aggregate(total=Sum('allocated_amount'))['total']
+    total_granted = allocations_total or 0
+    if total_granted == 0:
+        proposal_alloc_total = GrantProposal.objects.filter(status='funded').aggregate(total=Sum('allocated_amount'))['total'] or 0
+        total_granted = proposal_alloc_total
+    if total_granted == 0:
+        proposal_req_total = GrantProposal.objects.filter(status='funded').aggregate(total=Sum('requested_amount'))['total'] or 0
+        total_granted = proposal_req_total
     remaining = total_grant - total_granted
     data = [{
         'Year': year,
@@ -484,8 +510,19 @@ def reb_budget_planning_export_pdf(request):
     total_grant = budget.total_amount if budget else 0
     year = budget.year if budget else None
     notes = budget.notes if budget else ''
-    total_granted = GrantProposal.objects.aggregate(total=Sum('allocated_amount'))['total'] or 0
+    allocations_total = FundAllocation.objects.aggregate(total=Sum('allocated_amount'))['total']
+    total_granted = allocations_total or 0
+    if total_granted == 0:
+        proposal_alloc_total = GrantProposal.objects.filter(status='funded').aggregate(total=Sum('allocated_amount'))['total'] or 0
+        total_granted = proposal_alloc_total
+    if total_granted == 0:
+        proposal_req_total = GrantProposal.objects.filter(status='funded').aggregate(total=Sum('requested_amount'))['total'] or 0
+        total_granted = proposal_req_total
     remaining = total_grant - total_granted
+    # Derived percentages for template without custom filters
+    utilization_pct = float(total_granted) / float(total_grant) * 100 if total_grant else 0
+    remaining_pct = float(remaining) / float(total_grant) * 100 if total_grant else 0
+
     context = {
         'budget': budget,
         'total_grant': total_grant,
@@ -493,8 +530,12 @@ def reb_budget_planning_export_pdf(request):
         'remaining': remaining,
         'year': year,
         'notes': notes,
+        'utilization_pct': utilization_pct,
+        'remaining_pct': remaining_pct,
+        'now': timezone.now(),
+        'user': request.user,
     }
-    html = render_to_string('reporting/reb_budget_planning_export.html', context)
+    html = render_to_string('reporting/reb_budget_planning_export.html', context, request=request)
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename=reb_budget_planning.pdf'
     pisa.CreatePDF(html, dest=response)
