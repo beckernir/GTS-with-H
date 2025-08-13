@@ -190,6 +190,12 @@
                     </a>
                     {% endif %}
                     {% endif %}
+                    
+                    {% if user.is_system_admin and proposal.status == 'approved' %}
+                    <a href="{% url 'grants:proposal_fund' proposal.proposal_id %}" class="btn btn-info">
+                        <i class="fas fa-money-bill-wave me-2"></i>Mark as Funded
+                    </a>
+                    {% endif %}
 
                     {% comment %}
                     Edit and Delete buttons hidden for all users

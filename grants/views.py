@@ -11,7 +11,11 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from django.contrib import messages
 from django.utils import timezone
-import pytesseract
+try:
+    import pytesseract
+    PYTESSERACT_AVAILABLE = True
+except ImportError:
+    PYTESSERACT_AVAILABLE = False
 from PIL import Image
 import io
 from django.core.files.uploadedfile import InMemoryUploadedFile
@@ -22,6 +26,8 @@ from reporting.models import ProposalCriterion
 from reporting.models import ProposalCriterionResponse
 from .forms import GrantProposalWithCriteriaForm
 from core.models import School
+from .models import TotalGrantAllocation
+from .forms import TotalGrantAllocationForm
 
 # Create your views here.
 
@@ -39,13 +45,25 @@ def get_proposal_score(proposal):
         elif response.criterion.type == 'file' and response.value_file:
             # Optionally use OCR or file metadata
             try:
-                ocr_text = response.value_file.read().decode(errors='ignore') if hasattr(response.value_file, 'read') else ''
-            except Exception:
+                if hasattr(response.value_file, 'read'):
+                    file_content = response.value_file.read()
+                    if isinstance(file_content, bytes):
+                        try:
+                            ocr_text = file_content.decode('utf-8', errors='ignore')
+                        except UnicodeDecodeError:
+                            ocr_text = file_content.decode('latin-1', errors='ignore')
+                    else:
+                        ocr_text = str(file_content)
+                else:
+                    ocr_text = ''
+            except Exception as e:
+                print(f"Error reading file content: {e}")
                 ocr_text = ''
             features.update(extract_features_from_ocr(ocr_text))
     try:
         score = predict(features)
-    except Exception:
+    except Exception as e:
+        print(f"Error predicting score: {e}")
         score = 0
     return score
 
@@ -103,22 +121,42 @@ def proposal_list_view(request):
         proposals = proposals.filter(grant_category_id=category_filter)
     
     # ML scoring and sorting
-    proposal_scores = [(p, get_proposal_score(p)) for p in proposals]
+    proposal_scores = []
+    for p in proposals:
+        try:
+            score = get_proposal_score(p)
+            proposal_scores.append((p, score))
+        except Exception as e:
+            print(f"Error getting score for proposal {p.proposal_id}: {e}")
+            proposal_scores.append((p, 0))
     if proposal_scores:
-        min_score = min(s for _, s in proposal_scores)
-        max_score = max(s for _, s in proposal_scores)
-        if min_score == max_score:
-            min_score = 0  # avoid division by zero
+        try:
+            min_score = min(s for _, s in proposal_scores)
+            max_score = max(s for _, s in proposal_scores)
+            if min_score == max_score:
+                min_score = 0  # avoid division by zero
+        except Exception as e:
+            print(f"Error calculating min/max scores: {e}")
+            min_score = 0
+            max_score = 1
         for p, score in proposal_scores:
-            if max_score > min_score:
-                norm_score = (score - min_score) / (max_score - min_score) * 99.9
-                p.ml_score = '{:.1f}'.format(norm_score)
-            else:
-                p.ml_score = '99.9'
+            try:
+                if max_score > min_score:
+                    norm_score = (score - min_score) / (max_score - min_score) * 99.9
+                    p.ml_score = '{:.1f}'.format(norm_score)
+                else:
+                    p.ml_score = '99.9'
+            except Exception as e:
+                print(f"Error calculating ml_score for proposal {p.proposal_id}: {e}")
+                p.ml_score = '0.0'
     else:
-        for p, _ in proposal_scores:
-            p.ml_score = '0.0'
-    proposal_scores.sort(key=lambda x: float(x[0].ml_score), reverse=True)
+        # No proposals to score
+        pass
+    try:
+        proposal_scores.sort(key=lambda x: float(x[0].ml_score), reverse=True)
+    except Exception as e:
+        print(f"Error sorting proposals: {e}")
+        # Keep original order if sorting fails
     context = {
         'proposals': [p for p, s in proposal_scores],
         'categories': categories,
@@ -131,7 +169,7 @@ def proposal_list_view(request):
     return render(request, "grants/proposal_list.html", context)
 
 @login_required
-@user_passes_test(lambda u: (hasattr(u, 'is_school_admin') and u.is_school_admin()) or (hasattr(u, 'is_system_admin') and (u.is_system_admin if isinstance(u.is_system_admin, bool) else u.is_system_admin())))
+@user_passes_test(lambda u: hasattr(u, 'is_school_admin') and u.is_school_admin())
 def proposal_create_view(request):
     if request.method == 'POST':
         from datetime import date
@@ -155,69 +193,65 @@ def proposal_create_view(request):
             total_amount = form.cleaned_data.get('total_amount', 0)
             current_amount = form.cleaned_data.get('current_amount', 0)
             proposal.requested_amount = max(0, total_amount - current_amount)
-            if hasattr(request.user, 'is_system_admin') and (
-                request.user.is_system_admin if isinstance(request.user.is_system_admin, bool) else request.user.is_system_admin()
-            ):
-                proposal.school = form.cleaned_data['school']
+            
+            # For school admins, get their assigned school
+            from datetime import date
+            from django.db.models import Q
+            school_assignment = request.user.school_assignments.filter(
+                is_active=True,
+                start_date__lte=date.today()
+            ).filter(
+                Q(end_date__isnull=True) | Q(end_date__gte=date.today())
+            ).first()
+            
+            if school_assignment:
+                proposal.school = school_assignment.school
             else:
-                from datetime import date
-                from django.db.models import Q
-                print("User:", request.user)
-                print("Assignments:", list(request.user.school_assignments.all()))
-                school_assignment = request.user.school_assignments.filter(
-                    is_active=True,
-                    start_date__lte=date.today()
-                ).filter(
-                    Q(end_date__isnull=True) | Q(end_date__gte=date.today())
-                ).first()
-                print("Filtered assignment:", school_assignment)
-                if school_assignment:
-                    proposal.school = school_assignment.school
-                else:
-                    # No assignment: allow user to select school
-                    form = GrantProposalWithCriteriaForm(request.POST, request.FILES, user=request.user, force_school_field=True)
-                    if form.is_valid():
-                        proposal = form.save(commit=False)
-                        proposal.created_by = request.user
-                        proposal.status = 'submitted'
-                        proposal.school = form.cleaned_data['school']
-                        
-                        # Automatically calculate requested_amount
-                        total_amount = form.cleaned_data.get('total_amount', 0)
-                        current_amount = form.cleaned_data.get('current_amount', 0)
-                        proposal.requested_amount = max(0, total_amount - current_amount)
-                        proposal.save()
-                        # Save criterion responses (repeat logic as above)
-                        for field_name, field in form.fields.items():
-                            if hasattr(field, 'criterion_obj'):
-                                criterion = field.criterion_obj
-                                value = form.cleaned_data.get(field_name)
-                                response_kwargs = {'proposal': proposal, 'criterion': criterion}
-                                if criterion.type == 'file':
-                                    if value:
-                                        obj, created = ProposalCriterionResponse.objects.update_or_create(
-                                            **response_kwargs,
-                                            defaults={'value_file': value, 'value_text': None, 'value_bool': None}
-                                        )
-                                        if not created and value:
-                                            obj.value_file = value
-                                            obj.save()
-                                elif criterion.type == 'text':
-                                    ProposalCriterionResponse.objects.update_or_create(
+                # No assignment: allow user to select school
+                form = GrantProposalWithCriteriaForm(request.POST, request.FILES, user=request.user, force_school_field=True)
+                if form.is_valid():
+                    proposal = form.save(commit=False)
+                    proposal.created_by = request.user
+                    proposal.status = 'submitted'
+                    proposal.school = form.cleaned_data['school']
+                    
+                    # Automatically calculate requested_amount
+                    total_amount = form.cleaned_data.get('total_amount', 0)
+                    current_amount = form.cleaned_data.get('current_amount', 0)
+                    proposal.requested_amount = max(0, total_amount - current_amount)
+                    proposal.save()
+                    # Save criterion responses
+                    for field_name, field in form.fields.items():
+                        if hasattr(field, 'criterion_obj'):
+                            criterion = field.criterion_obj
+                            value = form.cleaned_data.get(field_name)
+                            response_kwargs = {'proposal': proposal, 'criterion': criterion}
+                            if criterion.type == 'file':
+                                if value:
+                                    obj, created = ProposalCriterionResponse.objects.update_or_create(
                                         **response_kwargs,
-                                        defaults={'value_text': value, 'value_file': None, 'value_bool': None}
+                                        defaults={'value_file': value, 'value_text': None, 'value_bool': None}
                                     )
-                                elif criterion.type == 'boolean':
-                                    ProposalCriterionResponse.objects.update_or_create(
-                                        **response_kwargs,
-                                        defaults={'value_bool': value, 'value_file': None, 'value_text': None}
-                                    )
-                        return redirect('grants:proposal_list')
-                    # If not valid, fall through to render form with errors
-                    return render(request, "grants/proposal_create.html", {'form': form, 'is_system_admin': False})
+                                    if not created and value:
+                                        obj.value_file = value
+                                        obj.save()
+                            elif criterion.type == 'text':
+                                ProposalCriterionResponse.objects.update_or_create(
+                                    **response_kwargs,
+                                    defaults={'value_text': value, 'value_file': None, 'value_bool': None}
+                                )
+                            elif criterion.type == 'boolean':
+                                ProposalCriterionResponse.objects.update_or_create(
+                                    **response_kwargs,
+                                    defaults={'value_bool': value, 'value_file': None, 'value_text': None}
+                                )
+                    return redirect('grants:proposal_list')
+                # If not valid, fall through to render form with errors
+                return render(request, "grants/proposal_create.html", {'form': form})
+            
             if not proposal.school:
                 form.add_error('school', 'School is required.')
-                return render(request, "grants/proposal_create.html", {'form': form, 'is_system_admin': request.user.is_system_admin()})
+                return render(request, "grants/proposal_create.html", {'form': form})
             proposal.save()
             # Save criterion responses
             for field_name, field in form.fields.items():
@@ -276,10 +310,7 @@ def proposal_create_view(request):
         # Debug: Check form field types
         for field_name, field in form.fields.items():
             print(f"Field {field_name}: {type(field)}")
-    is_system_admin = hasattr(request.user, 'is_system_admin') and (
-        request.user.is_system_admin if isinstance(request.user.is_system_admin, bool) else request.user.is_system_admin()
-    )
-    return render(request, "grants/proposal_create.html", {'form': form, 'is_system_admin': is_system_admin})
+    return render(request, "grants/proposal_create.html", {'form': form})
 
 @login_required
 def proposal_detail_view(request, proposal_id):
@@ -322,22 +353,40 @@ def proposal_detail_view(request, proposal_id):
     }
     # ML Recommendation logic
     recommended_amount = None
-    # Aggregate OCR text from all related documents
-    ocr_texts = [doc.ocr_text for doc in proposal.documents.all() if doc.ocr_text]
-    full_ocr_text = "\n".join(ocr_texts)
-    # If no document OCR, use proposal description
-    if not full_ocr_text and proposal.description:
-        full_ocr_text = proposal.description
-    if full_ocr_text:
-        features = {
-            'requested_amount': proposal.requested_amount,
-            # Add other structured features as needed
-        }
-        features.update(extract_features_from_ocr(full_ocr_text))
-        try:
-            recommended_amount = predict(features)
-        except Exception:
-            recommended_amount = None
+    try:
+        # Aggregate OCR text from all related documents
+        ocr_texts = []
+        for doc in proposal.documents.all():
+            if doc.ocr_text:
+                try:
+                    # Handle potential encoding issues
+                    if isinstance(doc.ocr_text, bytes):
+                        ocr_text = doc.ocr_text.decode('utf-8', errors='ignore')
+                    else:
+                        ocr_text = str(doc.ocr_text)
+                    ocr_texts.append(ocr_text)
+                except Exception:
+                    continue
+        
+        full_ocr_text = "\n".join(ocr_texts)
+        # If no document OCR, use proposal description
+        if not full_ocr_text and proposal.description:
+            full_ocr_text = str(proposal.description)
+        
+        if full_ocr_text:
+            features = {
+                'requested_amount': proposal.requested_amount,
+                # Add other structured features as needed
+            }
+            features.update(extract_features_from_ocr(full_ocr_text))
+            try:
+                recommended_amount = predict(features)
+            except Exception:
+                recommended_amount = None
+    except Exception as e:
+        print(f"Error processing ML recommendation: {e}")
+        recommended_amount = None
+    
     context['recommended_amount'] = recommended_amount
     return render(request, "grants/proposal_detail.html", context)
 
@@ -345,7 +394,7 @@ def proposal_detail_view(request, proposal_id):
 def proposal_edit_view(request, proposal_id):
     proposal = get_object_or_404(GrantProposal, proposal_id=proposal_id)
     user = request.user
-    if not (user.is_system_admin() or (user.is_school_admin() and proposal.school in [a.school for a in user.school_assignments.filter(is_active=True)])):
+    if not (user.is_school_admin() and proposal.created_by == user):
         return HttpResponseForbidden()
     if request.method == 'POST':
         form = GrantProposalForm(request.POST, instance=proposal, include_status=True)
@@ -372,7 +421,7 @@ def proposal_submit_view(request, proposal_id):
 def proposal_delete_view(request, proposal_id):
     proposal = get_object_or_404(GrantProposal, proposal_id=proposal_id)
     user = request.user
-    if not (user.is_system_admin() or (user.is_school_admin() and proposal.school in [a.school for a in user.school_assignments.filter(is_active=True)])):
+    if not (user.is_school_admin() and proposal.created_by == user):
         return HttpResponseForbidden()
     if request.method == 'POST':
         proposal.delete()
@@ -592,11 +641,46 @@ def proposal_approve_view(request, proposal_id):
     if proposal.status not in ['submitted', 'under_review']:
         messages.warning(request, 'Only submitted or under review proposals can be approved.')
         return redirect('grants:proposal_detail', proposal_id=proposal_id)
+    
+    # Set allocated amount to requested amount when approving
+    if proposal.allocated_amount == 0:
+        proposal.allocated_amount = proposal.requested_amount
+        proposal.current_amount = proposal.requested_amount
+    
     proposal.status = 'approved'
     proposal.approval_date = timezone.now()
     proposal.save()
     messages.success(request, 'Proposal approved successfully!')
     return redirect('grants:proposal_detail', proposal_id=proposal_id)
+
+@login_required
+@user_passes_test(lambda u: u.is_system_admin())
+def proposal_fund_view(request, proposal_id):
+    """Allow system administrators to mark approved proposals as funded."""
+    try:
+        proposal = get_object_or_404(GrantProposal, proposal_id=proposal_id)
+        if proposal.status != 'approved':
+            messages.warning(request, 'Only approved proposals can be marked as funded.')
+            return redirect('grants:proposal_detail', proposal_id=proposal_id)
+        
+        if request.method == 'POST':
+            # Ensure allocated amount is set when funding
+            if proposal.allocated_amount == 0:
+                proposal.allocated_amount = proposal.requested_amount
+                proposal.current_amount = proposal.requested_amount
+            
+            proposal.status = 'funded'
+            proposal.save()
+            messages.success(request, 'Proposal marked as funded successfully!')
+            return redirect('grants:proposal_detail', proposal_id=proposal_id)
+        
+        return render(request, 'grants/proposal_fund.html', {'proposal': proposal})
+    except Exception as e:
+        import traceback
+        print(f"Error in proposal_fund_view: {e}")
+        print(f"Traceback: {traceback.format_exc()}")
+        messages.error(request, f'An error occurred: {str(e)}')
+        return redirect('grants:proposal_list')
 
 @login_required
 @user_passes_test(lambda u: u.is_reb_officer() or u.is_system_admin())
@@ -624,4 +708,159 @@ def proposal_review_view(request, proposal_id):
 def proposal_allocate_view(request, proposal_id):
     proposal = get_object_or_404(GrantProposal, proposal_id=proposal_id)
     # Placeholder: Add allocation logic here as needed
-    return render(request, 'grants/proposal_allocate.html', {'proposal': proposal}) 
+    return render(request, 'grants/proposal_allocate.html', {'proposal': proposal})
+
+
+# Total Grant Allocation Views (System Administrator Only)
+
+@login_required
+@user_passes_test(lambda u: u.is_system_admin())
+def total_grant_allocation_list_view(request):
+    """
+    List all total grant allocations by year for system administrators.
+    """
+    allocations = TotalGrantAllocation.objects.all().order_by('-fiscal_year')
+    
+    # Calculate summary statistics
+    total_budget = sum(alloc.total_budget for alloc in allocations)
+    total_allocated = sum(alloc.allocated_amount for alloc in allocations)
+    total_disbursed = sum(alloc.disbursed_amount for alloc in allocations)
+    
+    context = {
+        'allocations': allocations,
+        'total_budget': total_budget,
+        'total_allocated': total_allocated,
+        'total_disbursed': total_disbursed,
+        'total_remaining': total_budget - total_allocated,
+    }
+    return render(request, 'grants/total_grant_allocation_list.html', context)
+
+
+@login_required
+@user_passes_test(lambda u: u.is_system_admin())
+def total_grant_allocation_create_view(request):
+    """
+    Create a new total grant allocation for a specific year.
+    """
+    if request.method == 'POST':
+        form = TotalGrantAllocationForm(request.POST)
+        if form.is_valid():
+            allocation = form.save(commit=False)
+            allocation.created_by = request.user
+            allocation.save()
+            
+            messages.success(request, f'Total grant allocation for FY {allocation.fiscal_year} created successfully!')
+            return redirect('grants:total_grant_allocation_list')
+    else:
+        form = TotalGrantAllocationForm()
+    
+    context = {
+        'form': form,
+        'title': 'Create Total Grant Allocation',
+        'submit_text': 'Create Allocation',
+    }
+    return render(request, 'grants/total_grant_allocation_form.html', context)
+
+
+@login_required
+@user_passes_test(lambda u: u.is_system_admin())
+def total_grant_allocation_edit_view(request, allocation_id):
+    """
+    Edit an existing total grant allocation.
+    """
+    allocation = get_object_or_404(TotalGrantAllocation, allocation_id=allocation_id)
+    
+    if request.method == 'POST':
+        form = TotalGrantAllocationForm(request.POST, instance=allocation)
+        if form.is_valid():
+            allocation = form.save(commit=False)
+            allocation.updated_by = request.user
+            allocation.save()
+            
+            messages.success(request, f'Total grant allocation for FY {allocation.fiscal_year} updated successfully!')
+            return redirect('grants:total_grant_allocation_list')
+    else:
+        form = TotalGrantAllocationForm(instance=allocation)
+    
+    context = {
+        'form': form,
+        'allocation': allocation,
+        'title': f'Edit Total Grant Allocation - FY {allocation.fiscal_year}',
+        'submit_text': 'Update Allocation',
+    }
+    return render(request, 'grants/total_grant_allocation_form.html', context)
+
+
+@login_required
+@user_passes_test(lambda u: u.is_system_admin())
+def total_grant_allocation_detail_view(request, allocation_id):
+    """
+    View details of a total grant allocation.
+    """
+    allocation = get_object_or_404(TotalGrantAllocation, allocation_id=allocation_id)
+    
+    # Get related proposals for this fiscal year
+    related_proposals = GrantProposal.objects.filter(
+        created_at__year=allocation.fiscal_year
+    ).order_by('-created_at')
+    
+    context = {
+        'allocation': allocation,
+        'related_proposals': related_proposals,
+        'proposal_count': related_proposals.count(),
+    }
+    return render(request, 'grants/total_grant_allocation_detail.html', context)
+
+
+@login_required
+@user_passes_test(lambda u: u.is_system_admin())
+def total_grant_allocation_delete_view(request, allocation_id):
+    """
+    Delete a total grant allocation.
+    """
+    allocation = get_object_or_404(TotalGrantAllocation, allocation_id=allocation_id)
+    
+    if request.method == 'POST':
+        fiscal_year = allocation.fiscal_year
+        allocation.delete()
+        messages.success(request, f'Total grant allocation for FY {fiscal_year} deleted successfully!')
+        return redirect('grants:total_grant_allocation_list')
+    
+    context = {
+        'allocation': allocation,
+    }
+    return render(request, 'grants/total_grant_allocation_confirm_delete.html', context)
+
+
+@login_required
+@user_passes_test(lambda u: u.is_system_admin())
+def total_grant_allocation_dashboard_view(request):
+    """
+    Dashboard view showing overview of all grant allocations.
+    """
+    allocations = TotalGrantAllocation.objects.all().order_by('-fiscal_year')
+    
+    # Calculate summary statistics
+    total_budget = sum(alloc.total_budget for alloc in allocations)
+    total_allocated = sum(alloc.allocated_amount for alloc in allocations)
+    total_disbursed = sum(alloc.disbursed_amount for alloc in allocations)
+    
+    # Get current fiscal year allocation
+    current_year = timezone.now().year
+    current_allocation = allocations.filter(fiscal_year=current_year).first()
+    
+    # Get recent proposals
+    recent_proposals = GrantProposal.objects.all().order_by('-created_at')[:10]
+    
+    context = {
+        'allocations': allocations,
+        'current_allocation': current_allocation,
+        'recent_proposals': recent_proposals,
+        'total_budget': total_budget,
+        'total_allocated': total_allocated,
+        'total_disbursed': total_disbursed,
+        'total_remaining': total_budget - total_allocated,
+        'allocation_percentage': (total_allocated / total_budget * 100) if total_budget > 0 else 0,
+        'disbursement_percentage': (total_disbursed / total_budget * 100) if total_budget > 0 else 0,
+    }
+    return render(request, 'grants/total_grant_allocation_dashboard.html', context) 

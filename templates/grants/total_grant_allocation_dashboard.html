@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+
+{% block title %}Total Grant Allocation Dashboard{% endblock %}
+
+{% block content %}
+{% load humanize %}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Total Grant Allocation Dashboard</h1>
+        <div>
+            <a href="{% url 'grants:total_grant_allocation_list' %}" class="btn btn-outline-primary me-2">
+                <i class="fas fa-list me-1"></i>View All Allocations
+            </a>
+            <a href="{% url 'grants:total_grant_allocation_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>Add New Allocation
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Budget</h5>
+                    <h3 class="card-text">RWF {{ total_budget|intcomma }}</h3>
+                    <small>Across all fiscal years</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Funded</h5>
+                    <h3 class="card-text">RWF {{ total_allocated|intcomma }}</h3>
+                    <small>{{ allocation_percentage|floatformat:1 }}% of total budget</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Disbursed</h5>
+                    <h3 class="card-text">RWF {{ total_disbursed|intcomma }}</h3>
+                    <small>{{ disbursement_percentage|floatformat:1 }}% of total budget</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Remaining Budget</h5>
+                    <h3 class="card-text">RWF {{ total_remaining|intcomma }}</h3>
+                    <small>Available for allocation</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Current Year Allocation -->
+    {% if current_allocation %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-calendar-check me-2"></i>Current Fiscal Year ({{ current_allocation.fiscal_year }})
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <h4>RWF {{ current_allocation.total_budget|intcomma }}</h4>
+                        <small class="text-muted">Total Budget</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <h4>RWF {{ current_allocation.allocated_amount|intcomma }}</h4>
+                        <small class="text-muted">Allocated</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <h4>RWF {{ current_allocation.disbursed_amount|intcomma }}</h4>
+                        <small class="text-muted">Disbursed</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <h4
+                            class="{% if current_allocation.get_remaining_budget < 0 %}text-danger{% else %}text-success{% endif %}">
+                            RWF {{ current_allocation.get_remaining_budget|intcomma }}
+                        </h4>
+                        <small class="text-muted">Remaining</small>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-3">
+                <div class="progress mb-2" style="height: 25px;">
+                    <div class="progress-bar {% if current_allocation.get_allocation_percentage > 100 %}bg-danger{% elif current_allocation.get_allocation_percentage > 80 %}bg-warning{% else %}bg-success{% endif %}"
+                        role="progressbar"
+                        style="width: {{ current_allocation.get_allocation_percentage|floatformat:1 }}%">
+                        Allocation: {{ current_allocation.get_allocation_percentage|floatformat:1 }}%
+                    </div>
+                </div>
+                <div class="progress" style="height: 25px;">
+                    <div class="progress-bar bg-info" role="progressbar"
+                        style="width: {{ current_allocation.get_disbursement_percentage|floatformat:1 }}%">
+                        Disbursement: {{ current_allocation.get_disbursement_percentage|floatformat:1 }}%
+                    </div>
+                </div>
+            </div>
+            <div class="mt-3">
+                <a href="{% url 'grants:total_grant_allocation_detail' current_allocation.allocation_id %}"
+                    class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-eye me-1"></i>View Details
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Recent Allocations -->
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-line me-2"></i>Allocation Overview
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if allocations %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Fiscal Year</th>
+                                    <th>Total Budget</th>
+                                    <th>Allocated</th>
+                                    <th>Disbursed</th>
+                                    <th>Remaining</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for allocation in allocations %}
+                                <tr>
+                                    <td>
+                                        <strong>FY {{ allocation.fiscal_year }}</strong>
+                                        {% if allocation.is_active %}
+                                        <span class="badge bg-success ms-1">Active</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>RWF {{ allocation.total_budget|intcomma }}</td>
+                                    <td>
+                                        <span
+                                            class="{% if allocation.get_allocation_percentage > 100 %}text-danger{% elif allocation.get_allocation_percentage > 80 %}text-warning{% else %}text-success{% endif %}">
+                                            RWF {{ allocation.allocated_amount|intcomma }}
+                                        </span>
+                                    </td>
+                                    <td>RWF {{ allocation.disbursed_amount|intcomma }}</td>
+                                    <td>
+                                        <span
+                                            class="{% if allocation.get_remaining_budget < 0 %}text-danger{% else %}text-success{% endif %}">
+                                            RWF {{ allocation.get_remaining_budget|intcomma }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span
+                                            class="badge bg-{% if allocation.status == 'active' %}success{% elif allocation.status == 'draft' %}secondary{% elif allocation.status == 'closed' %}warning{% else %}dark{% endif %}">
+                                            {{ allocation.get_status_display }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        No allocations found. Create your first allocation to get started.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-clock me-2"></i>Recent Proposals
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_proposals %}
+                    <div class="list-group list-group-flush">
+                        {% for proposal in recent_proposals %}
+                        <div class="list-group-item px-0">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">
+                                        <a href="{% url 'grants:proposal_detail' proposal.proposal_id %}">
+                                            {{ proposal.proposal_title|truncatechars:30 }}
+                                        </a>
+                                    </h6>
+                                    <small class="text-muted">{{ proposal.school.school_name }}</small>
+                                </div>
+                                <div class="text-end">
+                                    <small class="text-muted">RWF {{ proposal.requested_amount|intcomma }}</small>
+                                    <br>
+                                    <span
+                                        class="badge bg-{% if proposal.status == 'approved' %}success{% elif proposal.status == 'rejected' %}danger{% elif proposal.status == 'funded' %}info{% else %}secondary{% endif %}">
+                                        {{ proposal.get_status_display }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        No recent proposals found.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .progress {
+        background-color: #e9ecef;
+        border-radius: 0.375rem;
+    }
+
+    .progress-bar {
+        transition: width 0.6s ease;
+    }
+</style>
+
+{% endblock %}

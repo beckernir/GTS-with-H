@@ -32,8 +32,11 @@
                         <ul class="mt-2">
                             {% for ach in certificate.achievements %}
                             <li>
-                                {% if ach.label %}<strong>{{ ach.label }}:</strong> {% endif %}{{ ach.value|default:ach
-                                }}
+                                {% if ach.label %}
+                                <strong>{{ ach.label }}:</strong> {{ ach.value|default:ach }}
+                                {% else %}
+                                {{ ach }}
+                                {% endif %}
                             </li>
                             {% endfor %}
                         </ul>
@@ -60,4 +63,3 @@
     </div>
 </div>
 {% endblock %}
-

@@ -15,10 +15,19 @@
                     <p><strong>Assessment:</strong> {{ result.assessment.assessment_title }}</p>
                     <p><strong>Score:</strong> {{ result.score }}% ({{ result.correct_answers }}/{{
                         result.total_questions }})</p>
-                    {% if result.score|floatformat:2 >= result.assessment.passing_score %}
-                    <div class="alert alert-success">You passed!</div>
+                    <p><strong>Passing Score:</strong> {{ result.assessment.passing_score }}%</p>
+                    <p><strong>Debug Info:</strong> Total Questions: {{ result.total_questions|default:"Not set" }},
+                        Correct: {{ result.correct_answers|default:"Not set" }}</p>
+                    {% if result.is_passed %}
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <strong>Congratulations!</strong> You passed and your certificate is ready to download.
+                    </div>
                     {% else %}
-                    <div class="alert alert-danger">You did not pass. Try again.</div>
+                    <div class="alert alert-danger">
+                        <i class="fas fa-times-circle me-2"></i>
+                        <strong>You did not pass.</strong> Try again.
+                    </div>
                     {% endif %}
                 </div>
                 <div class="card-footer d-flex justify-content-between">
@@ -37,4 +46,3 @@
     </div>
 </div>
 {% endblock %}
-

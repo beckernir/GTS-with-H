@@ -13,6 +13,7 @@ urlpatterns = [
     path('<uuid:proposal_id>/delete/', views.proposal_delete_view, name='proposal_delete'),
     path('<uuid:proposal_id>/approve/', views.proposal_approve_view, name='proposal_approve'),
     path('<uuid:proposal_id>/reject/', views.proposal_reject_view, name='proposal_reject'),
+    path('<uuid:proposal_id>/fund/', views.proposal_fund_view, name='proposal_fund'),
     path('<uuid:proposal_id>/allocate/', views.proposal_allocate_view, name='proposal_allocate'),
     
     # Grant categories
@@ -47,6 +48,14 @@ urlpatterns = [
     # AI allocation
     path('ai-allocation/', views.ai_allocation_view, name='ai_allocation'),
     path('ai-allocation/run/', views.ai_allocation_run_view, name='ai_allocation_run'),
+
+    # Total Grant Allocation Management (System Administrator Only)
+    path('total-allocations/', views.total_grant_allocation_list_view, name='total_grant_allocation_list'),
+    path('total-allocations/dashboard/', views.total_grant_allocation_dashboard_view, name='total_grant_allocation_dashboard'),
+    path('total-allocations/create/', views.total_grant_allocation_create_view, name='total_grant_allocation_create'),
+    path('total-allocations/<uuid:allocation_id>/', views.total_grant_allocation_detail_view, name='total_grant_allocation_detail'),
+    path('total-allocations/<uuid:allocation_id>/edit/', views.total_grant_allocation_edit_view, name='total_grant_allocation_edit'),
+    path('total-allocations/<uuid:allocation_id>/delete/', views.total_grant_allocation_delete_view, name='total_grant_allocation_delete'),
 
     # Enrollment
     # path('enrollments/', views.enrollment_list_view, name='enrollment_list'),

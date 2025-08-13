@@ -163,6 +163,50 @@ class GrantProposal(models.Model):
         """Calculate total AI score for allocation."""
         return (self.ai_priority_score + self.ai_need_score + self.ai_impact_score) / 3
 
+    def get_status_color(self):
+        """Return Bootstrap color class based on proposal status."""
+        status_colors = {
+            'draft': 'secondary',
+            'submitted': 'info',
+            'under_review': 'warning',
+            'approved': 'success',
+            'rejected': 'danger',
+            'funded': 'primary',
+            'completed': 'success',
+            'cancelled': 'dark',
+        }
+        return status_colors.get(self.status, 'secondary')
+
+    def get_status_description(self):
+        """Return description of the current proposal status."""
+        status_descriptions = {
+            'draft': 'Proposal is in draft stage and can be edited',
+            'submitted': 'Proposal has been submitted for review',
+            'under_review': 'Proposal is currently under review',
+            'approved': 'Proposal has been approved and is ready for funding',
+            'rejected': 'Proposal has been rejected',
+            'funded': 'Proposal has been funded and implementation can begin',
+            'completed': 'Proposal implementation has been completed',
+            'cancelled': 'Proposal has been cancelled',
+        }
+        return status_descriptions.get(self.status, 'Unknown status')
+
+    @property
+    def progress_percentage(self):
+        """Calculate implementation progress percentage."""
+        if self.status == 'completed':
+            return 100
+        elif self.status == 'funded':
+            return 75
+        elif self.status == 'approved':
+            return 50
+        elif self.status == 'under_review':
+            return 25
+        elif self.status == 'submitted':
+            return 10
+        else:
+            return 0
+
     @property
     def effective_total_amount(self):
         """Return total_amount, or requested_amount if total_amount is 0."""
@@ -369,3 +413,84 @@ class ProposalReview(models.Model):
     def get_total_score(self):
         """Calculate total review score."""
         return (self.technical_score + self.feasibility_score + self.impact_score) / 3
+
+
+class TotalGrantAllocation(models.Model):
+    """
+    Model for system administrators to set total grant allocations by year.
+    This allows tracking of annual budget limits and allocations.
+    """
+    
+    # Allocation status choices
+    STATUS_CHOICES = [
+        ('draft', 'Draft'),
+        ('active', 'Active'),
+        ('closed', 'Closed'),
+        ('archived', 'Archived'),
+    ]
+    
+    # Core fields
+    allocation_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    fiscal_year = models.PositiveIntegerField(unique=True, help_text="Fiscal year (e.g., 2024)")
+    total_budget = models.DecimalField(max_digits=15, decimal_places=2, validators=[MinValueValidator(0.01)], help_text="Total grant budget for the year")
+    
+    # Allocation details
+    allocated_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0.00, help_text="Amount already allocated to proposals")
+    disbursed_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0.00, help_text="Amount already disbursed")
+    
+    # Status and management
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
+    is_active = models.BooleanField(default=True, help_text="Whether this allocation is currently active")
+    
+    # Notes and description
+    description = models.TextField(blank=True, null=True, help_text="Additional notes about this allocation")
+    allocation_notes = models.TextField(blank=True, null=True, help_text="Internal notes for administrators")
+    
+    # Timeline
+    start_date = models.DateField(help_text="Start date of the fiscal year")
+    end_date = models.DateField(help_text="End date of the fiscal year")
+    
+    # Audit fields
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_grant_allocations')
+    updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='updated_grant_allocations')
+    
+    class Meta:
+        db_table = 'grants_total_grant_allocation'
+        verbose_name = 'Total Grant Allocation'
+        verbose_name_plural = 'Total Grant Allocations'
+        ordering = ['-fiscal_year']
+    
+    def __str__(self):
+        return f"FY {self.fiscal_year} - {self.total_budget} RWF"
+    
+    def get_remaining_budget(self):
+        """Calculate remaining budget for allocation."""
+        return self.total_budget - self.allocated_amount
+    
+    def get_allocation_percentage(self):
+        """Calculate percentage of budget allocated."""
+        if self.total_budget > 0:
+            return (self.allocated_amount / self.total_budget) * 100
+        return 0
+    
+    def get_disbursement_percentage(self):
+        """Calculate percentage of budget disbursed."""
+        if self.total_budget > 0:
+            return (self.disbursed_amount / self.total_budget) * 100
+        return 0
+    
+    def get_utilization_percentage(self):
+        """Calculate percentage of allocated budget utilized."""
+        if self.allocated_amount > 0:
+            return (self.disbursed_amount / self.allocated_amount) * 100
+        return 0
+    
+    def can_allocate(self, amount):
+        """Check if a given amount can be allocated within this budget."""
+        return self.get_remaining_budget() >= amount
+    
+    def is_over_allocated(self):
+        """Check if the allocation is over the budget limit."""
+        return self.allocated_amount > self.total_budget

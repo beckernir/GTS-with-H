@@ -12,14 +12,24 @@ from io import BytesIO
 from openpyxl import Workbook
 from django.utils import timezone
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, Sum
+from grants.models import GrantProposal
 
 # Create your views here.
 
 def budget_overview_view(request):
-    # Summary cards
+    # Summary cards - Include both school budgets and grant allocations
     total_budget = SchoolBudget.objects.aggregate(total=models.Sum('total_budget_amount'))['total'] or 0
-    allocated_budget = SchoolBudget.objects.aggregate(allocated=models.Sum('allocated_amount'))['allocated'] or 0
+    
+    # School budget allocations
+    school_allocated = SchoolBudget.objects.aggregate(allocated=models.Sum('allocated_amount'))['allocated'] or 0
+    
+    # Grant allocations (funded proposals)
+    grant_allocated = GrantProposal.objects.filter(status__in=['approved', 'funded']).aggregate(total=Sum('allocated_amount'))['total'] or 0
+    
+    # Total allocated (school budgets + grant allocations)
+    allocated_budget = school_allocated + grant_allocated
+    
     pending_budget = SchoolBudget.objects.filter(status='submitted').aggregate(pending=models.Sum('total_budget_amount'))['pending'] or 0
     remaining_budget = allocated_budget - SchoolBudget.objects.aggregate(spent=models.Sum('spent_amount'))['spent'] or 0
 
@@ -58,6 +68,8 @@ def budget_overview_view(request):
     return render(request, "budget/overview.html", {
         'total_budget': total_budget,
         'allocated_budget': allocated_budget,
+        'school_allocated': school_allocated,
+        'grant_allocated': grant_allocated,
         'pending_budget': pending_budget,
         'remaining_budget': remaining_budget,
         'recent_allocations': recent_allocations,

@@ -141,7 +141,30 @@ def detect_anomalies():
     return anomalies
 
 def extract_features_from_ocr(ocr_text):
-    keywords = ['infrastructure', 'repair', 'urgent']
-    features = {f'has_{kw}': int(kw in ocr_text.lower()) for kw in keywords}
-    features['ocr_length'] = len(ocr_text)
-    return features 
+    """Extract features from OCR text, handling potential encoding issues."""
+    try:
+        # Ensure ocr_text is a string and handle potential encoding issues
+        if ocr_text is None:
+            ocr_text = ""
+        elif isinstance(ocr_text, bytes):
+            try:
+                ocr_text = ocr_text.decode('utf-8', errors='ignore')
+            except UnicodeDecodeError:
+                ocr_text = ocr_text.decode('latin-1', errors='ignore')
+        
+        # Convert to string if it's not already
+        ocr_text = str(ocr_text)
+        
+        keywords = ['infrastructure', 'repair', 'urgent']
+        features = {f'has_{kw}': int(kw in ocr_text.lower()) for kw in keywords}
+        features['ocr_length'] = len(ocr_text)
+        return features
+    except Exception as e:
+        # If there's any error, return default features
+        print(f"Error extracting OCR features: {e}")
+        return {
+            'has_infrastructure': 0,
+            'has_repair': 0,
+            'has_urgent': 0,
+            'ocr_length': 0
+        } 

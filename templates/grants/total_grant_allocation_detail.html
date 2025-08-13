@@ -1,0 +1,279 @@
+{% extends "base.html" %}
+
+{% block title %}FY {{ allocation.fiscal_year }} - Total Grant Allocation{% endblock %}
+
+{% block content %}
+{% load humanize %}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Total Grant Allocation - FY {{ allocation.fiscal_year }}</h1>
+        <div>
+            <a href="{% url 'grants:total_grant_allocation_edit' allocation.allocation_id %}"
+                class="btn btn-primary me-2">
+                <i class="fas fa-edit me-1"></i>Edit
+            </a>
+            <a href="{% url 'grants:total_grant_allocation_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Back to List
+            </a>
+        </div>
+    </div>
+
+    <!-- Status Alert -->
+    {% if allocation.is_over_allocated %}
+    <div class="alert alert-danger">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <strong>Warning:</strong> This allocation is over budget! Allocated amount exceeds total budget.
+    </div>
+    {% endif %}
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Budget</h5>
+                    <h3 class="card-text">RWF {{ allocation.total_budget|intcomma }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Allocated Amount</h5>
+                    <h3 class="card-text">RWF {{ allocation.allocated_amount|intcomma }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Disbursed Amount</h5>
+                    <h3 class="card-text">RWF {{ allocation.disbursed_amount|intcomma }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div
+                class="card {% if allocation.get_remaining_budget < 0 %}bg-danger{% else %}bg-warning{% endif %} text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Remaining Budget</h5>
+                    <h3 class="card-text">RWF {{ allocation.get_remaining_budget|intcomma }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Bars -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h5>Allocation Progress</h5>
+            <div class="progress mb-2" style="height: 25px;">
+                <div class="progress-bar {% if allocation.get_allocation_percentage > 100 %}bg-danger{% elif allocation.get_allocation_percentage > 80 %}bg-warning{% else %}bg-success{% endif %}"
+                    role="progressbar" style="width: {{ allocation.get_allocation_percentage|floatformat:1 }}%">
+                    {{ allocation.get_allocation_percentage|floatformat:1 }}%
+                </div>
+            </div>
+            <small class="text-muted">Allocated: RWF {{ allocation.allocated_amount|intcomma }} / RWF {{
+                allocation.total_budget|intcomma }}</small>
+        </div>
+        <div class="col-md-6">
+            <h5>Disbursement Progress</h5>
+            <div class="progress mb-2" style="height: 25px;">
+                <div class="progress-bar bg-info" role="progressbar"
+                    style="width: {{ allocation.get_disbursement_percentage|floatformat:1 }}%">
+                    {{ allocation.get_disbursement_percentage|floatformat:1 }}%
+                </div>
+            </div>
+            <small class="text-muted">Disbursed: RWF {{ allocation.disbursed_amount|intcomma }} / RWF {{
+                allocation.total_budget|intcomma }}</small>
+        </div>
+    </div>
+
+    <!-- Allocation Details -->
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Allocation Details
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Fiscal Year:</strong></td>
+                                    <td>FY {{ allocation.fiscal_year }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Status:</strong></td>
+                                    <td>
+                                        <span
+                                            class="badge bg-{% if allocation.status == 'active' %}success{% elif allocation.status == 'draft' %}secondary{% elif allocation.status == 'closed' %}warning{% else %}dark{% endif %}">
+                                            {{ allocation.get_status_display }}
+                                        </span>
+                                        {% if allocation.is_active %}
+                                        <span class="badge bg-success ms-1">Active</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Start Date:</strong></td>
+                                    <td>{{ allocation.start_date|date:"F d, Y" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>End Date:</strong></td>
+                                    <td>{{ allocation.end_date|date:"F d, Y" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Created By:</strong></td>
+                                    <td>{{ allocation.created_by.get_full_name }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Created Date:</strong></td>
+                                    <td>{{ allocation.created_at|date:"F d, Y H:i" }}</td>
+                                </tr>
+                                {% if allocation.updated_by %}
+                                <tr>
+                                    <td><strong>Last Updated By:</strong></td>
+                                    <td>{{ allocation.updated_by.get_full_name }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Last Updated:</strong></td>
+                                    <td>{{ allocation.updated_at|date:"F d, Y H:i" }}</td>
+                                </tr>
+                                {% endif %}
+                            </table>
+                        </div>
+                    </div>
+
+                    {% if allocation.description %}
+                    <div class="mt-3">
+                        <h6>Description:</h6>
+                        <p class="text-muted">{{ allocation.description }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if allocation.allocation_notes %}
+                    <div class="mt-3">
+                        <h6>Internal Notes:</h6>
+                        <p class="text-muted">{{ allocation.allocation_notes }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>Statistics
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6>Utilization Rate</h6>
+                        <div class="progress mb-2" style="height: 20px;">
+                            <div class="progress-bar bg-warning" role="progressbar"
+                                style="width: {{ allocation.get_utilization_percentage|floatformat:1 }}%">
+                                {{ allocation.get_utilization_percentage|floatformat:1 }}%
+                            </div>
+                        </div>
+                        <small class="text-muted">Disbursed vs Allocated</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <h6>Budget Efficiency</h6>
+                        <div class="d-flex justify-content-between">
+                            <span>Allocation:</span>
+                            <span
+                                class="{% if allocation.get_allocation_percentage > 100 %}text-danger{% elif allocation.get_allocation_percentage > 80 %}text-warning{% else %}text-success{% endif %}">
+                                {{ allocation.get_allocation_percentage|floatformat:1 }}%
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>Disbursement:</span>
+                            <span class="text-info">{{ allocation.get_disbursement_percentage|floatformat:1 }}%</span>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <small>
+                            <i class="fas fa-info-circle me-1"></i>
+                            <strong>Related Proposals:</strong> {{ proposal_count }} proposals in FY {{
+                            allocation.fiscal_year }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Proposals -->
+    {% if related_proposals %}
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-file-alt me-2"></i>Related Proposals (FY {{ allocation.fiscal_year }})
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Title</th>
+                            <th>School</th>
+                            <th>Requested Amount</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for proposal in related_proposals %}
+                        <tr>
+                            <td>{{ proposal.proposal_code }}</td>
+                            <td>
+                                <a href="{% url 'grants:proposal_detail' proposal.proposal_id %}">
+                                    {{ proposal.proposal_title }}
+                                </a>
+                            </td>
+                            <td>{{ proposal.school.school_name }}</td>
+                            <td>RWF {{ proposal.requested_amount|intcomma }}</td>
+                            <td>
+                                <span
+                                    class="badge bg-{% if proposal.status == 'approved' %}success{% elif proposal.status == 'rejected' %}danger{% elif proposal.status == 'funded' %}info{% else %}secondary{% endif %}">
+                                    {{ proposal.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ proposal.created_at|date:"M d, Y" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .progress {
+        background-color: #e9ecef;
+        border-radius: 0.375rem;
+    }
+
+    .progress-bar {
+        transition: width 0.6s ease;
+    }
+</style>
+
+{% endblock %}

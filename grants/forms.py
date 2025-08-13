@@ -2,6 +2,7 @@ from django import forms
 from .models import GrantProposal, GrantCategory
 from core.models import School
 from reporting.models import ProposalCriterion
+from .models import TotalGrantAllocation
 
 class GrantProposalForm(forms.ModelForm):
     school = forms.ModelChoiceField(
@@ -23,8 +24,8 @@ class GrantProposalForm(forms.ModelForm):
             })
             self.fields['requested_amount'].help_text = "Automatically calculated (Total - Current)"
         
-        # Only show the school field for system admins, or if forced
-        if not (force_school_field or (user and getattr(user, 'is_system_admin', lambda: False)())):
+        # Only show the school field if forced (for school admins without assignment)
+        if not force_school_field:
             self.fields.pop('school')
             # If a school_instance is provided (for school admins), show as read-only
             if school_instance:
@@ -92,4 +93,81 @@ class GrantProposalWithCriteriaForm(GrantProposalForm):
                     required=criterion.required,
                     help_text=criterion.description,
                 )
-            self.fields[field_name].criterion_obj = criterion 
+            self.fields[field_name].criterion_obj = criterion
+
+
+class TotalGrantAllocationForm(forms.ModelForm):
+    """
+    Form for system administrators to create and edit total grant allocations by year.
+    """
+    
+    class Meta:
+        model = TotalGrantAllocation
+        fields = [
+            'fiscal_year', 'total_budget', 'start_date', 'end_date', 
+            'status', 'is_active', 'description', 'allocation_notes'
+        ]
+        widgets = {
+            'fiscal_year': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '2020',
+                'max': '2030',
+                'placeholder': 'e.g., 2024'
+            }),
+            'total_budget': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.01',
+                'min': '0.01',
+                'placeholder': 'Enter total budget amount'
+            }),
+            'start_date': forms.DateInput(attrs={
+                'type': 'date',
+                'class': 'form-control'
+            }),
+            'end_date': forms.DateInput(attrs={
+                'type': 'date',
+                'class': 'form-control'
+            }),
+            'status': forms.Select(attrs={
+                'class': 'form-select'
+            }),
+            'is_active': forms.CheckboxInput(attrs={
+                'class': 'form-check-input'
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Description of this allocation'
+            }),
+            'allocation_notes': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Internal notes for administrators'
+            }),
+        }
+    
+    def clean_fiscal_year(self):
+        """Validate that fiscal year is unique and reasonable."""
+        fiscal_year = self.cleaned_data.get('fiscal_year')
+        instance = getattr(self, 'instance', None)
+        
+        # Check if fiscal year already exists (excluding current instance)
+        if TotalGrantAllocation.objects.filter(fiscal_year=fiscal_year).exclude(pk=instance.pk if instance else None).exists():
+            raise forms.ValidationError(f"Fiscal year {fiscal_year} already exists.")
+        
+        # Validate reasonable range
+        if fiscal_year < 2020 or fiscal_year > 2030:
+            raise forms.ValidationError("Fiscal year must be between 2020 and 2030.")
+        
+        return fiscal_year
+    
+    def clean(self):
+        """Validate that end_date is after start_date."""
+        cleaned_data = super().clean()
+        start_date = cleaned_data.get('start_date')
+        end_date = cleaned_data.get('end_date')
+        
+        if start_date and end_date and end_date <= start_date:
+            raise forms.ValidationError("End date must be after start date.")
+        
+        return cleaned_data 

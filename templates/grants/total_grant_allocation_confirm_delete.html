@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Delete Total Grant Allocation - FY {{ allocation.fiscal_year }}{% endblock %}
+
+{% block content %}
+{% load humanize %}
+
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Confirm Deletion
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Warning:</strong> This action cannot be undone. Please review the details below before
+                        proceeding.
+                    </div>
+
+                    <h5>Total Grant Allocation Details:</h5>
+                    <table class="table table-borderless">
+                        <tr>
+                            <td><strong>Fiscal Year:</strong></td>
+                            <td>FY {{ allocation.fiscal_year }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Total Budget:</strong></td>
+                            <td>RWF {{ allocation.total_budget|intcomma }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Allocated Amount:</strong></td>
+                            <td>RWF {{ allocation.allocated_amount|intcomma }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Disbursed Amount:</strong></td>
+                            <td>RWF {{ allocation.disbursed_amount|intcomma }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Status:</strong></td>
+                            <td>
+                                <span
+                                    class="badge bg-{% if allocation.status == 'active' %}success{% elif allocation.status == 'draft' %}secondary{% elif allocation.status == 'closed' %}warning{% else %}dark{% endif %}">
+                                    {{ allocation.get_status_display }}
+                                </span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Timeline:</strong></td>
+                            <td>{{ allocation.start_date|date:"M d, Y" }} - {{ allocation.end_date|date:"M d, Y" }}</td>
+                        </tr>
+                    </table>
+
+                    {% if allocation.description %}
+                    <div class="mt-3">
+                        <h6>Description:</h6>
+                        <p class="text-muted">{{ allocation.description }}</p>
+                    </div>
+                    {% endif %}
+
+                    <div class="alert alert-danger">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Impact:</strong> Deleting this allocation will remove all budget tracking data for FY {{
+                        allocation.fiscal_year }}.
+                        This may affect reporting and analysis capabilities.
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'grants:total_grant_allocation_detail' allocation.allocation_id %}"
+                                class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash me-1"></i>Delete Allocation
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

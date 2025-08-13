@@ -73,6 +73,12 @@
                             href="{% url 'grants:proposal_list' %}">
                             <i class="fas fa-file-alt me-2"></i> Grant Proposals
                         </a>
+                        {% if user.is_system_admin %}
+                        <a class="nav-link {% if 'total-allocations' in request.path %}active{% endif %}"
+                            href="{% url 'grants:total_grant_allocation_list' %}">
+                            <i class="fas fa-calendar-plus me-2"></i> Total Grant plans
+                        </a>
+                        {% endif %}
                         {% if user.is_authenticated %}
                         {% if user.is_system_admin or user.is_reb_officer %}
                         <li class="nav-item">
@@ -82,7 +88,7 @@
                         </li>
                         {% endif %}
                         {% if user.is_system_admin or user.is_reb_officer %}
-                        <li class="nav-item">
+                        <li class="nav-item" style="display: none;">
                             <a class="nav-link" href="{% url 'reporting:reb_budget_planning' %}">
                                 <i class="fas fa-coins me-2"></i> REB Budget Planning
                             </a>

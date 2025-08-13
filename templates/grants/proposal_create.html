@@ -12,7 +12,7 @@
                     <h3 class="mb-0">Create Grant Proposal</h3>
                 </div>
                 <div class="card-body">
-                    {% if user.is_school_admin or user.is_system_admin %}
+                    {% if user.is_school_admin %}
                     <form method="post" enctype="multipart/form-data" novalidate>
                         {% csrf_token %}
                         {{ form.non_field_errors }}
@@ -32,12 +32,7 @@
                                 <label for="id_grant_category"
                                     class="form-label d-flex justify-content-between align-items-center">
                                     <span>Category</span>
-                                    {% if user.is_system_admin %}
-                                    <a href="/admin/grants/grantcategory/add/" target="_blank"
-                                        class="btn btn-sm btn-outline-light ms-2" title="Add New Category">
-                                        <i class="fas fa-plus"></i> New
-                                    </a>
-                                    {% endif %}
+
                                 </label>
                                 {{ form.grant_category|add_class:'form-select' }}
                             </div>
