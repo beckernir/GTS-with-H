@@ -5,17 +5,30 @@ class SchoolBudgetForm(forms.ModelForm):
     class Meta:
         model = SchoolBudget
         fields = [
-            'school', 'budget_period', 'budget_title', 'description', 'total_budget_amount', 'requesting_amount', 'status'
+            'school', 'budget_period', 'budget_title', 'description', 'total_budget_amount', 'allocated_amount', 'requesting_amount', 'status'
         ]
         widgets = {
             'school': forms.Select(attrs={'class': 'form-select'}),
             'budget_period': forms.Select(attrs={'class': 'form-select'}),
             'budget_title': forms.TextInput(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
-            'total_budget_amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
-            'requesting_amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
+            'total_budget_amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'id': 'id_total_budget_amount'}),
+            'allocated_amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'id': 'id_allocated_amount'}),
+            'requesting_amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'id': 'id_requesting_amount', 'readonly': 'readonly'}),
             'status': forms.Select(attrs={'class': 'form-select'}),
         }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Make requesting_amount read-only and add calculation attributes
+        if 'requesting_amount' in self.fields:
+            self.fields['requesting_amount'].help_text = "Automatically calculated (Total - Allocated)"
+        
+        # Update allocated_amount field label and help text
+        if 'allocated_amount' in self.fields:
+            self.fields['allocated_amount'].label = "Existing (Allocated Amount) (RWF)"
+            self.fields['allocated_amount'].help_text = "Current allocated budget amount"
 
 class BudgetLineItemForm(forms.ModelForm):
     class Meta:
@@ -58,21 +71,21 @@ class BudgetTransferForm(forms.ModelForm):
         }
 
 class BudgetDocumentForm(forms.ModelForm):
+    document = forms.FileField(required=False, widget=forms.ClearableFileInput(attrs={'class': 'form-control'}))
     class Meta:
         model = BudgetDocument
         fields = ['criteria', 'document']
         widgets = {
             'criteria': forms.Select(attrs={'class': 'form-select'}),
-            'document': forms.ClearableFileInput(attrs={'class': 'form-control'}),
         }
 
 BudgetDocumentFormSet = forms.modelformset_factory(
     BudgetDocument,
     form=BudgetDocumentForm,
-    extra=0,
-    min_num=5,
+    extra=5,
+    min_num=0,
     max_num=5,
-    validate_min=True,
+    validate_min=False,
     validate_max=True,
     can_delete=False,
-) 
+)

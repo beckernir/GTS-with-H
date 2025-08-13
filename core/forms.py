@@ -126,6 +126,8 @@ class SchoolAssignmentForm(forms.ModelForm):
     
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)
+        # The user being assigned to a school (target of the assignment)
+        self.target_user = kwargs.pop('target_user', None)
         super().__init__(*args, **kwargs)
         
         # Filter schools based on user permissions
@@ -159,8 +161,15 @@ class SchoolAssignmentForm(forms.ModelForm):
         cleaned_data = super().clean()
         start_date = cleaned_data.get('start_date')
         end_date = cleaned_data.get('end_date')
+        selected_school = cleaned_data.get('school')
         
         if start_date and end_date and start_date >= end_date:
             raise forms.ValidationError("End date must be after start date.")
+        
+        # Prevent assigning the same school twice to the same user
+        # Only applies when creating a new assignment
+        if selected_school and self.target_user and not self.instance.pk:
+            if SchoolUser.objects.filter(user=self.target_user, school=selected_school, is_active=True).exists():
+                self.add_error('school', "This user is already assigned to the selected school.")
         
         return cleaned_data 

@@ -96,6 +96,8 @@ class GrantProposal(models.Model):
     target_beneficiaries = models.TextField()
     
     # Financial information
+    total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, help_text="Total project cost")
+    current_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, help_text="Current allocated budget amount")
     requested_amount = models.DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(0.01)])
     allocated_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     disbursed_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
@@ -136,6 +138,10 @@ class GrantProposal(models.Model):
         return f"{self.proposal_title} - {self.school.school_name}"
     
     def save(self, *args, **kwargs):
+        # Auto-calculate total_amount if it's 0 and requested_amount exists
+        if self.total_amount == 0 and self.requested_amount and self.requested_amount > 0:
+            self.total_amount = self.requested_amount
+        
         if not self.pk:
             super().save(*args, **kwargs)  # Save first to get an ID
             self.proposal_code = f"GP{timezone.now().strftime('%Y%m')}{self.id:04d}"
@@ -156,6 +162,13 @@ class GrantProposal(models.Model):
     def get_ai_total_score(self):
         """Calculate total AI score for allocation."""
         return (self.ai_priority_score + self.ai_need_score + self.ai_impact_score) / 3
+
+    @property
+    def effective_total_amount(self):
+        """Return total_amount, or requested_amount if total_amount is 0."""
+        if self.total_amount == 0 and self.requested_amount and self.requested_amount > 0:
+            return self.requested_amount
+        return self.total_amount
 
 
 class ProposalDocument(models.Model):

@@ -16,7 +16,6 @@
                         {% csrf_token %}
                         {{ form.non_field_errors }}
 
-                        {# Show school field only for system admins #}
                         {% if is_sys_admin %}
                         <div class="mb-3">
                             <label for="id_school" class="form-label">
@@ -33,19 +32,29 @@
                             <div class="col-md-4 mb-3">
                                 <label for="id_total_budget_amount" class="form-label">Total Budget Amount (RWF)</label>
                                 {{ form.total_budget_amount }}
+                                {% if form.total_budget_amount.help_text %}
+                                <div class="form-text">{{ form.total_budget_amount.help_text }}</div>
+                                {% endif %}
                             </div>
                             <div class="col-md-4 mb-3">
-                                <label for="id_allocated_amount" class="form-label">Existing (Allocated Amount) (RWF)</label>
-                                <input type="number" class="form-control" id="id_allocated_amount" name="allocated_amount"
-                                       value="{{ form.instance.allocated_amount|default_if_none:0 }}">
+                                <label for="id_allocated_amount" class="form-label">Existing (Allocated Amount)
+                                    (RWF)</label>
+                                {{ form.allocated_amount }}
+                                {% if form.allocated_amount.help_text %}
+                                <div class="form-text">{{ form.allocated_amount.help_text }}</div>
+                                {% endif %}
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label for="id_requesting_amount" class="form-label">Requesting Amount (RWF)</label>
                                 {{ form.requesting_amount }}
+                                {% if form.requesting_amount.help_text %}
+                                <div class="form-text">{{ form.requesting_amount.help_text }}</div>
+                                {% endif %}
                             </div>
                         </div>
 
                         <h5 class="mt-4">Required Documents (5 Criteria)</h5>
+                        {{ formset.management_form }}
                         <div class="row">
                             {% for doc_form in formset %}
                             <div class="col-md-6 mb-3">
@@ -59,25 +68,26 @@
                             {% endfor %}
                         </div>
 
-                        {# Render all other remaining fields except ones already handled #}
                         {% for field in form %}
-                            {% if field.name != 'total_budget_amount' and field.name != 'requesting_amount' and field.name != 'allocated_amount' and field.name != 'school' %}
-                            <div class="mb-3">
-                                <label for="{{ field.id_for_label }}" class="form-label">
-                                    {{ field.label }}
-                                    {% if field.field.required %}
-                                    <span class="text-danger">*</span>
-                                    {% endif %}
-                                </label>
-                                {{ field }}
-                                {% if field.help_text %}
-                                <div class="form-text">{{ field.help_text }}</div>
+                        {% if field.name in 'total_budget_amount requesting_amount allocated_amount school' %}
+                        {# do nothing #}
+                        {% else %}
+                        <div class="mb-3">
+                            <label for="{{ field.id_for_label }}" class="form-label">
+                                {{ field.label }}
+                                {% if field.field.required %}
+                                <span class="text-danger">*</span>
                                 {% endif %}
-                                {% for error in field.errors %}
-                                <div class="text-danger small">{{ error }}</div>
-                                {% endfor %}
-                            </div>
+                            </label>
+                            {{ field }}
+                            {% if field.help_text %}
+                            <div class="form-text">{{ field.help_text }}</div>
                             {% endif %}
+                            {% for error in field.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
                         {% endfor %}
 
                         <div class="d-flex justify-content-between align-items-center mt-4">
@@ -99,4 +109,27 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const totalBudgetInput = document.getElementById('id_total_budget_amount');
+        const allocatedAmountInput = document.getElementById('id_allocated_amount');
+        const requestingAmountInput = document.getElementById('id_requesting_amount');
+
+        function calculateRequestingAmount() {
+            const totalBudget = parseInt(totalBudgetInput.value.replace(/,/g, ''), 10) || 0;
+            const allocatedAmount = parseInt(allocatedAmountInput.value.replace(/,/g, ''), 10) || 0;
+            const requestingAmount = Math.max(0, totalBudget - allocatedAmount);
+            requestingAmountInput.value = requestingAmount;
+        }
+
+        if (totalBudgetInput) {
+            totalBudgetInput.addEventListener('input', calculateRequestingAmount);
+        }
+        if (allocatedAmountInput) {
+            allocatedAmountInput.addEventListener('input', calculateRequestingAmount);
+        }
+        calculateRequestingAmount();
+    });
+</script>
 {% endblock %}

@@ -209,3 +209,7 @@ The system automatically adds these CSS classes:
 5. **Test on mobile**: Ensure filters work well on small screens
 
 
+
+
+
+

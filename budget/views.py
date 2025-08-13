@@ -159,18 +159,44 @@ def school_budget_create_view(request):
     user = request.user
     is_sys_admin = hasattr(user, 'is_system_admin') and user.is_system_admin()
     if request.method == 'POST':
-        form = SchoolBudgetForm(request.POST)
+        # Ensure non-admin users have their school injected into the form data before validation
+        post_data = request.POST.copy()
+        if not is_sys_admin:
+            school_assignment = user.school_assignments.filter(is_active=True).first()
+            if school_assignment:
+                post_data['school'] = str(school_assignment.school.pk)
+            else:
+                # No active assignment: make the form error out clearly
+                post_data['school'] = ''
+
+        form = SchoolBudgetForm(post_data)
         formset = BudgetDocumentFormSet(request.POST, request.FILES, queryset=BudgetDocument.objects.none())
         if form.is_valid() and formset.is_valid():
             budget = form.save(commit=False)
             budget.created_by = user
+            
+            # Automatically calculate requesting_amount
+            total_amount = form.cleaned_data.get('total_budget_amount', 0)
+            allocated_amount = form.cleaned_data.get('allocated_amount', 0)
+            budget.requesting_amount = max(0, total_amount - allocated_amount)
+            
             if not is_sys_admin:
+                # For safety, enforce the school from assignment again server-side
                 school_assignment = user.school_assignments.filter(is_active=True).first()
                 if school_assignment:
                     budget.school = school_assignment.school
+                else:
+                    # Should not happen due to earlier injection, but guard regardless
+                    messages.error(request, 'No active school assignment found. Cannot create budget.')
+                    return render(request, "budget/school_budget_create.html", {'form': form, 'formset': formset, 'is_sys_admin': is_sys_admin})
             budget.save()
             # Save documents
             for doc_form in formset:
+                if not doc_form.cleaned_data:
+                    continue
+                if not doc_form.cleaned_data.get('document'):
+                    # Skip empty document rows
+                    continue
                 doc = doc_form.save(commit=False)
                 doc.school_budget = budget
                 doc.save()
@@ -237,7 +263,14 @@ def school_budget_edit_view(request, budget_id):
         form = SchoolBudgetForm(request.POST, instance=budget)
         formset = BudgetDocumentFormSet(request.POST, request.FILES, queryset=budget.documents.all())
         if form.is_valid() and formset.is_valid():
-            form.save()
+            budget = form.save(commit=False)
+            
+            # Automatically calculate requesting_amount
+            total_amount = form.cleaned_data.get('total_budget_amount', 0)
+            allocated_amount = form.cleaned_data.get('allocated_amount', 0)
+            budget.requesting_amount = max(0, total_amount - allocated_amount)
+            
+            budget.save()
             for doc_form in formset:
                 doc = doc_form.save(commit=False)
                 doc.school_budget = budget
@@ -260,6 +293,29 @@ def school_budget_edit_view(request, budget_id):
                 initial.append({'criteria': c[0]})
         formset = BudgetDocumentFormSet(queryset=budget.documents.all(), initial=initial)
     return render(request, "budget/school_budget_edit.html", {'form': form, 'formset': formset, 'budget': budget, 'is_sys_admin': is_sys_admin})
+
+@login_required
+@user_passes_test(is_admin_or_reb)
+def school_budget_approve_view(request, budget_id):
+    budget = get_object_or_404(SchoolBudget, budget_id=budget_id)
+    if request.method == 'POST':
+        budget.status = 'approved'
+        budget.approval_date = timezone.now()
+        budget.save()
+        messages.success(request, 'School budget approved successfully.')
+        return redirect('budget:school_budget_detail', budget_id=budget.budget_id)
+    return render(request, 'budget/school_budget_approve.html', {'budget': budget})
+
+@login_required
+@user_passes_test(is_admin_or_reb)
+def school_budget_reject_view(request, budget_id):
+    budget = get_object_or_404(SchoolBudget, budget_id=budget_id)
+    if request.method == 'POST':
+        budget.status = 'rejected'
+        budget.save()
+        messages.success(request, 'School budget rejected.')
+        return redirect('budget:school_budget_detail', budget_id=budget.budget_id)
+    return render(request, 'budget/school_budget_reject.html', {'budget': budget})
 
 def category_list_view(request):
     return render(request, "budget/category_list.html")
@@ -490,3 +546,27 @@ def school_budget_delete_view(request, budget_id):
         messages.success(request, 'School budget deleted successfully.')
         return redirect('budget:school_budget_list')
     return render(request, 'budget/school_budget_delete.html', {'budget': budget})
+
+@login_required
+def school_budget_submit_view(request, budget_id):
+    budget = get_object_or_404(SchoolBudget, budget_id=budget_id)
+    user = request.user
+    # Authorization: school admin assigned to the school, REB officer, or system admin
+    is_authorized = False
+    if hasattr(user, 'is_system_admin') and user.is_system_admin():
+        is_authorized = True
+    elif hasattr(user, 'is_reb_officer') and user.is_reb_officer():
+        is_authorized = True
+    elif hasattr(user, 'is_school_admin') and user.is_school_admin():
+        assigned_school_ids = list(user.school_assignments.filter(is_active=True).values_list('school_id', flat=True))
+        is_authorized = budget.school.id in assigned_school_ids
+    if not is_authorized:
+        return HttpResponseForbidden()
+
+    if request.method == 'POST':
+        budget.status = 'submitted'
+        budget.submission_date = timezone.now()
+        budget.save()
+        messages.success(request, 'School budget submitted for approval.')
+        return redirect('budget:school_budget_detail', budget_id=budget.budget_id)
+    return render(request, 'budget/school_budget_submit.html', {'budget': budget})

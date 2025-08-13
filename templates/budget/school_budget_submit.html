@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}Submit School Budget{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <div class="card">
+        <div class="card-header bg-warning">
+            <h4>Submit School Budget</h4>
+        </div>
+        <div class="card-body">
+            <p>Submit the budget for <strong>{{ budget.school.school_name }}</strong> (Period: {{
+                budget.budget_period.period_name }}) for approval?</p>
+            <form method="post">{% csrf_token %}
+                <button type="submit" class="btn btn-warning"><i class="fas fa-paper-plane"></i> Submit</button>
+                <a href="{% url 'budget:school_budget_detail' budget.budget_id %}" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -39,14 +39,13 @@
 
     {% if proposals %}
     <div class="table-responsive">
-        <table id="proposalsTable" class="table table-striped"
-            data-table-filter='{
+        <table id="proposalsTable" class="table table-striped" data-table-filter='{
                 "searchPlaceholder": "Search proposals...", 
                 "filters": [
                     {
                         "column": "status", 
                         "label": "Statuses", 
-                        "columnIndex": 6, 
+                        "columnIndex": 8, 
                         "options": [
                             {"value": "Draft", "label": "Draft"},
                             {"value": "Submitted for Review", "label": "Submitted for Review"},
@@ -76,7 +75,9 @@
                     <th>Title</th>
                     <th>School</th>
                     <th>Category</th>
-                    <th>Amount</th>
+                    <th>Total Amount</th>
+                    <th>Current Amount</th>
+                    <th>Requested Amount</th>
                     <th>Status</th>
                     <th>Created</th>
                     <th>ML Score</th>
@@ -90,6 +91,8 @@
                     <td>{{ proposal.proposal_title }}</td>
                     <td>{{ proposal.school.school_name }}</td>
                     <td>{{ proposal.grant_category.category_name }}</td>
+                    <td>RWF {{ proposal.effective_total_amount|intcomma }}</td>
+                    <td>RWF {{ proposal.current_amount|intcomma }}</td>
                     <td>RWF {{ proposal.requested_amount|intcomma }}</td>
                     <td>{{ proposal.get_status_display }}</td>
                     <td>{{ proposal.created_at|date:"M d, Y" }}</td>
@@ -139,6 +142,3 @@
 
 <!-- Table will be automatically filtered by the universal table filter system -->
 {% endblock %}
-
-
-

@@ -18,9 +18,9 @@
                         {{ form.non_field_errors }}
 
                         {% for field in form.visible_fields %}
-                            {% for error in field.errors %}
-                                <div class="alert alert-danger">{{ field.label }}: {{ error }}</div>
-                            {% endfor %}
+                        {% for error in field.errors %}
+                        <div class="alert alert-danger">{{ field.label }}: {{ error }}</div>
+                        {% endfor %}
                         {% endfor %}
 
                         <div class="row">
@@ -29,11 +29,12 @@
                                 {{ form.proposal_title|add_class:'form-control' }}
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="id_grant_category" class="form-label d-flex justify-content-between align-items-center">
+                                <label for="id_grant_category"
+                                    class="form-label d-flex justify-content-between align-items-center">
                                     <span>Category</span>
                                     {% if user.is_system_admin %}
                                     <a href="/admin/grants/grantcategory/add/" target="_blank"
-                                       class="btn btn-sm btn-outline-light ms-2" title="Add New Category">
+                                        class="btn btn-sm btn-outline-light ms-2" title="Add New Category">
                                         <i class="fas fa-plus"></i> New
                                     </a>
                                     {% endif %}
@@ -71,13 +72,26 @@
                         </div>
 
                         <div class="row">
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-4 mb-3">
+                                <label for="id_total_amount" class="form-label">Total Project Cost (RWF)</label>
+                                {{ form.total_amount|add_class:'form-control' }}
+                                {% if form.total_amount.help_text %}
+                                <div class="form-text">{{ form.total_amount.help_text }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
                                 <label for="id_current_amount" class="form-label">Current Amount (RWF)</label>
                                 {{ form.current_amount|add_class:'form-control' }}
+                                {% if form.current_amount.help_text %}
+                                <div class="form-text">{{ form.current_amount.help_text }}</div>
+                                {% endif %}
                             </div>
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-4 mb-3">
                                 <label for="id_requested_amount" class="form-label">Requested Amount (RWF)</label>
                                 {{ form.requested_amount|add_class:'form-control' }}
+                                {% if form.requested_amount.help_text %}
+                                <div class="form-text">{{ form.requested_amount.help_text }}</div>
+                                {% endif %}
                             </div>
                         </div>
 
@@ -106,13 +120,15 @@
 
                         <div class="mb-4">
                             <h5>REB Proposal Criteria</h5>
+                            <p class="text-muted">Criteria fields will be loaded here.</p>
+                            <!-- Temporarily commented out to debug template issue
                             {% for field in form %}
                                 {% if field.name|slice:":10" == "criterion_" %}
                                     <div class="mb-3">
                                         <label class="form-label">
                                             {{ field.label }}
                                             {% if field.field.required %}
-                                            <span class="text-danger">*</span>
+                                                <span class="text-danger">*</span>
                                             {% endif %}
                                         </label>
 
@@ -137,15 +153,20 @@
                                     </div>
                                 {% endif %}
                             {% endfor %}
+                            -->
                         </div>
 
                         <div class="d-flex justify-content-between align-items-center mt-4">
-                            <a href="{% url 'grants:proposal_list' %}" class="btn btn-secondary">Back to Proposals</a>
-                            <button type="submit" class="btn btn-primary px-4">Submit Proposal</button>
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="fas fa-save me-1"></i>Submit
+                            </button>
+                            <a href="{% url 'grants:proposal_list' %}" class="btn btn-secondary ms-2">
+                                <i class="fas fa-arrow-left me-1"></i>Back to Proposals
+                            </a>
                         </div>
                     </form>
                     {% else %}
-                    <div class="alert alert-danger">
+                    <div class="alert alert-danger mt-3">
                         You are not authorized to create a grant proposal.
                     </div>
                     {% endif %}
@@ -154,4 +175,32 @@
         </div>
     </div>
 </div>
+
+<!-- JavaScript for automatic calculation -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const currentAmountInput = document.getElementById('id_current_amount');
+        const requestedAmountInput = document.getElementById('id_requested_amount');
+        const totalAmountInput = document.getElementById('id_total_amount');
+
+        function calculateRequestedAmount() {
+            const currentAmount = parseFloat(currentAmountInput.value) || 0;
+            const totalAmount = parseFloat(totalAmountInput.value) || 0;
+            const requestedAmount = Math.max(0, totalAmount - currentAmount);
+            requestedAmountInput.value = requestedAmount.toFixed(2);
+        }
+
+        if (currentAmountInput) {
+            currentAmountInput.addEventListener('input', calculateRequestedAmount);
+            currentAmountInput.addEventListener('change', calculateRequestedAmount);
+        }
+
+        if (totalAmountInput) {
+            totalAmountInput.addEventListener('input', calculateRequestedAmount);
+            totalAmountInput.addEventListener('change', calculateRequestedAmount);
+        }
+
+        calculateRequestedAmount();
+    });
+</script>
 {% endblock %}

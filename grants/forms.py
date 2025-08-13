@@ -13,6 +13,16 @@ class GrantProposalForm(forms.ModelForm):
     def __init__(self, *args, include_status=False, school_instance=None, force_school_field=False, **kwargs):
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
+        
+        # Make requested_amount read-only and add calculation attributes
+        if 'requested_amount' in self.fields:
+            self.fields['requested_amount'].widget.attrs.update({
+                'readonly': 'readonly',
+                'class': 'form-control',
+                'id': 'id_requested_amount'
+            })
+            self.fields['requested_amount'].help_text = "Automatically calculated (Total - Current)"
+        
         # Only show the school field for system admins, or if forced
         if not (force_school_field or (user and getattr(user, 'is_system_admin', lambda: False)())):
             self.fields.pop('school')
@@ -32,10 +42,12 @@ class GrantProposalForm(forms.ModelForm):
         model = GrantProposal
         fields = [
             'proposal_title', 'grant_category', 'description', 'objectives',
-            'expected_outcomes', 'target_beneficiaries', 'requested_amount',
+            'expected_outcomes', 'target_beneficiaries', 'total_amount', 'current_amount', 'requested_amount',
             'start_date', 'end_date', 'priority_level', 'status'
         ]
         widgets = {
+            'total_amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'id': 'id_total_amount'}),
+            'current_amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'id': 'id_current_amount'}),
             'start_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'end_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'status': forms.Select(attrs={'class': 'form-select'}),

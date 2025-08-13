@@ -20,6 +20,9 @@ urlpatterns = [
     path('school-budgets/<uuid:budget_id>/', views.school_budget_detail_view, name='school_budget_detail'),
     path('school-budgets/<uuid:budget_id>/edit/', views.school_budget_edit_view, name='school_budget_edit'),
     path('school-budgets/<uuid:budget_id>/delete/', views.school_budget_delete_view, name='school_budget_delete'),
+    path('school-budgets/<uuid:budget_id>/approve/', views.school_budget_approve_view, name='school_budget_approve'),
+    path('school-budgets/<uuid:budget_id>/reject/', views.school_budget_reject_view, name='school_budget_reject'),
+    path('school-budgets/<uuid:budget_id>/submit/', views.school_budget_submit_view, name='school_budget_submit'),
     
     # Budget categories
     path('categories/', views.category_list_view, name='category_list'),

@@ -150,6 +150,11 @@ def proposal_create_view(request):
             proposal = form.save(commit=False)
             proposal.created_by = request.user
             proposal.status = 'submitted'
+            
+            # Automatically calculate requested_amount from form-only fields
+            total_amount = form.cleaned_data.get('total_amount', 0)
+            current_amount = form.cleaned_data.get('current_amount', 0)
+            proposal.requested_amount = max(0, total_amount - current_amount)
             if hasattr(request.user, 'is_system_admin') and (
                 request.user.is_system_admin if isinstance(request.user.is_system_admin, bool) else request.user.is_system_admin()
             ):
@@ -176,6 +181,11 @@ def proposal_create_view(request):
                         proposal.created_by = request.user
                         proposal.status = 'submitted'
                         proposal.school = form.cleaned_data['school']
+                        
+                        # Automatically calculate requested_amount
+                        total_amount = form.cleaned_data.get('total_amount', 0)
+                        current_amount = form.cleaned_data.get('current_amount', 0)
+                        proposal.requested_amount = max(0, total_amount - current_amount)
                         proposal.save()
                         # Save criterion responses (repeat logic as above)
                         for field_name, field in form.fields.items():
@@ -252,6 +262,20 @@ def proposal_create_view(request):
         else:
             # No assignment: allow user to select school
             form = GrantProposalWithCriteriaForm(user=request.user, force_school_field=True)
+        
+        # Debug: Print form fields
+        print("Form fields:", list(form.fields.keys()))
+        print("Form visible fields:", list(form.visible_fields()))
+        print("Form errors:", form.errors)
+        
+        # Debug: Check if form has the expected fields
+        print("Has total_amount:", 'total_amount' in form.fields)
+        print("Has current_amount:", 'current_amount' in form.fields)
+        print("Has requested_amount:", 'requested_amount' in form.fields)
+        
+        # Debug: Check form field types
+        for field_name, field in form.fields.items():
+            print(f"Field {field_name}: {type(field)}")
     is_system_admin = hasattr(request.user, 'is_system_admin') and (
         request.user.is_system_admin if isinstance(request.user.is_system_admin, bool) else request.user.is_system_admin()
     )

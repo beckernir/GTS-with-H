@@ -755,7 +755,7 @@ def school_assignment_view(request, user_id):
         return redirect('core:user_detail', user_id=user_id)
     
     if request.method == 'POST':
-        form = SchoolAssignmentForm(request.POST, user=request.user)
+        form = SchoolAssignmentForm(request.POST, user=request.user, target_user=user_detail)
         if form.is_valid():
             school_assignment = form.save(commit=False)
             school_assignment.user = user_detail
@@ -797,7 +797,7 @@ def school_assignment_view(request, user_id):
             
             return redirect('core:user_detail', user_id=user_id)
     else:
-        form = SchoolAssignmentForm(user=request.user)
+        form = SchoolAssignmentForm(user=request.user, target_user=user_detail)
     
     # Get existing school assignments for this user
     existing_assignments = SchoolUser.objects.filter(user=user_detail).select_related('school')

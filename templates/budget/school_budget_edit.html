@@ -94,4 +94,37 @@
         </div>
     </div>
 </div>
+
+<!-- JavaScript for automatic calculation -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const totalBudgetInput = document.getElementById('id_total_budget_amount');
+        const allocatedAmountInput = document.getElementById('id_allocated_amount');
+        const requestingAmountInput = document.getElementById('id_requesting_amount');
+
+        // Function to calculate requesting amount
+        function calculateRequestingAmount() {
+            const totalBudget = parseFloat(totalBudgetInput.value) || 0;
+            const allocatedAmount = parseFloat(allocatedAmountInput.value) || 0;
+
+            // Calculate requesting amount (Total - Allocated)
+            const requestingAmount = Math.max(0, totalBudget - allocatedAmount);
+            requestingAmountInput.value = requestingAmount.toFixed(2);
+        }
+
+        // Add event listeners for real-time calculation
+        if (totalBudgetInput) {
+            totalBudgetInput.addEventListener('input', calculateRequestingAmount);
+            totalBudgetInput.addEventListener('change', calculateRequestingAmount);
+        }
+
+        if (allocatedAmountInput) {
+            allocatedAmountInput.addEventListener('input', calculateRequestingAmount);
+            allocatedAmountInput.addEventListener('change', calculateRequestingAmount);
+        }
+
+        // Initial calculation
+        calculateRequestingAmount();
+    });
+</script>
 {% endblock %}

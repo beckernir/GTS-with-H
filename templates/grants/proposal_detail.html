@@ -31,6 +31,9 @@
                     </div>
                     <div class="col-md-6">
                         <h6>Financial Information</h6>
+                        <p><strong>Total Project Cost:</strong> {{ proposal.effective_total_amount|floatformat:0 }} RWF
+                        </p>
+                        <p><strong>Current Amount:</strong> {{ proposal.current_amount|floatformat:0 }} RWF</p>
                         <p><strong>Requested Amount:</strong> {{ proposal.requested_amount|floatformat:0 }} RWF</p>
                         <p><strong>Allocated Amount:</strong> {% if proposal.allocated_amount %}
                             {{ proposal.allocated_amount|floatformat:0 }} RWF
