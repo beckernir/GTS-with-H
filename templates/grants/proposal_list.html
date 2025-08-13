@@ -6,23 +6,18 @@
 {% load core_extras %}
 {% load humanize %}
 
-{% comment %}
-Optional: Hide create/edit/delete for non-admins only
-{% endcomment %}
-{% if not user.is_school_admin and not user.is_system_admin %}
 <style>
-    /* Hide Create Grant Proposal button */
+    /* Hide Create Grant Proposal button for all users */
     a[href="{% url 'grants:proposal_create' %}"] {
         display: none !important;
     }
 
-    /* Hide Edit and Delete icons */
+    /* Hide Edit and Delete icons for all users */
     a[title="Edit Proposal"],
     a[title="Delete Proposal"] {
         display: none !important;
     }
 </style>
-{% endif %}
 
 <div class="container-fluid">
     <h1>Grant Proposals</h1>
@@ -38,22 +33,21 @@ Optional: Hide create/edit/delete for non-admins only
         <select name="school" id="school" class="form-select" style="width:auto;display:inline-block;">
             <option value="">-- All Schools --</option>
             {% for school in schools %}
-            <option value="{{ school.id }}" {% if school.id|stringformat:"s" == selected_school_id|stringformat:"s" %}selected{% endif %}>
-                {{ school.school_name }}
-            </option>
+                <option value="{{ school.id }}" {% if school.id == selected_school_id %}selected{% endif %}>
+                    {{ school.school_name }}
+                </option>
             {% endfor %}
         </select>
+        
         <button type="submit" class="btn btn-primary btn-sm">
             <i class="fas fa-filter me-1"></i>Filter
         </button>
     </form>
     {% endif %}
 
-    {% if user.is_school_admin or user.is_system_admin %}
-    <a href="{% url 'grants:proposal_create' %}" class="btn btn-primary mb-3">
-        <i class="fas fa-plus me-2"></i>Create Grant Proposal
-    </a>
-    {% endif %}
+    {% comment %}
+    Create Grant Proposal button hidden for all users
+    {% endcomment %}
 
     {% if proposals %}
     <div class="table-responsive">
@@ -125,16 +119,9 @@ Optional: Hide create/edit/delete for non-admins only
                             class="btn btn-sm btn-outline-info" title="View Details">
                             <i class="fas fa-eye"></i>
                         </a>
-                        {% if user.is_school_admin or user.is_system_admin %}
-                        <a href="{% url 'grants:proposal_edit' proposal.proposal_id %}"
-                            class="btn btn-sm btn-outline-primary" title="Edit Proposal">
-                            <i class="fas fa-edit"></i>
-                        </a>
-                        <a href="{% url 'grants:proposal_delete' proposal.proposal_id %}"
-                            class="btn btn-sm btn-outline-danger" title="Delete Proposal">
-                            <i class="fas fa-trash"></i>
-                        </a>
-                        {% endif %}
+                        {% comment %}
+                        Edit and Delete buttons hidden for all users
+                        {% endcomment %}
                         {% if user.is_reb_officer or user.is_system_admin %}
                         <a href="{% url 'grants:proposal_approve' proposal.proposal_id %}"
                             class="btn btn-sm btn-outline-success" title="Approve Proposal">

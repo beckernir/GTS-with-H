@@ -40,17 +40,17 @@
                         <td>{{ forum.get_forum_type_display }}</td>
                         <td>
                             {% if forum.access_level == 'public' %}
-                            <span class="badge bg-primary">{{ forum.get_access_level_display }}</span>
+                            <span class="badge bg-primary">Public</span>
                             {% elif forum.access_level == 'school_members' %}
-                            <span class="badge bg-warning text-dark">{{ forum.get_access_level_display }}</span>
+                            <span class="badge bg-warning text-dark">School Members Only</span>
                             {% elif forum.access_level == 'registered_users' %}
-                            <span class="badge bg-info">{{ forum.get_access_level_display }}</span>
+                            <span class="badge bg-info">Registered Users Only</span>
                             {% elif forum.access_level == 'moderated' %}
-                            <span class="badge bg-secondary">{{ forum.get_access_level_display }}</span>
+                            <span class="badge bg-secondary">Moderated Access</span>
                             {% elif forum.access_level == 'private' %}
-                            <span class="badge bg-dark">{{ forum.get_access_level_display }}</span>
+                            <span class="badge bg-dark">Private</span>
                             {% else %}
-                            {{ forum.get_access_level_display }}
+                            {{ forum.access_level }}
                             {% endif %}
                         </td>
                         <td>

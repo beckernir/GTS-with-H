@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.core.paginator import Paginator
 from .models import CommunityForum, ForumTopic, ForumPost, Announcement, CommunityEvent, CommunityMessage
 from .forms import CommunityForumForm, ForumTopicForm, ForumPostForm, AnnouncementForm, CommunityEventForm, CommunityMessageForm
 from django.db.models import Count, Q
@@ -87,7 +88,13 @@ def forum_list_view(request):
         forums = CommunityForum.objects.filter(school__user_assignments__user=user).order_by('forum_type', 'forum_name')
     else:
         forums = CommunityForum.objects.filter(is_active=True, access_level__in=['public', 'registered_users']).order_by('forum_type', 'forum_name')
-    return render(request, "community/forum_list.html", {'forums': forums})
+    
+    # Pagination
+    paginator = Paginator(forums, 5)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    return render(request, "community/forum_list.html", {'forums': page_obj, 'page_obj': page_obj})
 
 @login_required
 @user_passes_test(lambda u: (hasattr(u, 'is_school_admin') and u.is_school_admin()) or (hasattr(u, 'is_reb_officer') and u.is_reb_officer()) or (hasattr(u, 'is_system_admin') and u.is_system_admin()))
@@ -132,7 +139,13 @@ def topic_list_view(request, forum_id):
         topics = forum.topics.all().order_by('-is_sticky', '-last_activity')
     else:
         topics = forum.topics.filter(status='active').order_by('-is_sticky', '-last_activity')
-    return render(request, "community/topic_list.html", {'forum': forum, 'topics': topics})
+    
+    # Pagination
+    paginator = Paginator(topics, 5)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    return render(request, "community/topic_list.html", {'forum': forum, 'topics': page_obj, 'page_obj': page_obj})
 
 @login_required
 @user_passes_test(lambda u: hasattr(u, 'is_school_admin') and u.is_school_admin())
@@ -190,7 +203,13 @@ def post_list_view(request, topic_id):
         posts = topic.posts.all().order_by('created_at')
     else:
         posts = topic.posts.filter(status='active').order_by('created_at')
-    return render(request, "community/post_list.html", {'topic': topic, 'posts': posts})
+    
+    # Pagination
+    paginator = Paginator(posts, 5)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    return render(request, "community/post_list.html", {'topic': topic, 'posts': page_obj, 'page_obj': page_obj})
 
 @login_required
 def post_create_view(request, topic_id):
@@ -246,7 +265,23 @@ def post_reply_view(request, post_id):
 def message_list_view(request):
     received = CommunityMessage.objects.filter(recipients=request.user).order_by('-created_at')
     sent = CommunityMessage.objects.filter(sender=request.user).order_by('-created_at')
-    return render(request, "community/message_list.html", {'received': received, 'sent': sent})
+    
+    # Pagination for received messages
+    received_paginator = Paginator(received, 5)
+    received_page_number = request.GET.get('received_page')
+    received_page_obj = received_paginator.get_page(received_page_number)
+    
+    # Pagination for sent messages
+    sent_paginator = Paginator(sent, 5)
+    sent_page_number = request.GET.get('sent_page')
+    sent_page_obj = sent_paginator.get_page(sent_page_number)
+    
+    return render(request, "community/message_list.html", {
+        'received': received_page_obj, 
+        'sent': sent_page_obj,
+        'received_page_obj': received_page_obj,
+        'sent_page_obj': sent_page_obj
+    })
 
 @login_required
 def message_create_view(request):
@@ -316,7 +351,13 @@ def announcement_list_view(request):
         announcements = Announcement.objects.all().order_by('-priority', '-publish_date')
     else:
         announcements = Announcement.objects.filter(is_active=True).order_by('-priority', '-publish_date')
-    return render(request, "community/announcement_list.html", {'announcements': announcements})
+    
+    # Pagination
+    paginator = Paginator(announcements, 5)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    return render(request, "community/announcement_list.html", {'announcements': page_obj, 'page_obj': page_obj})
 
 @login_required
 @user_passes_test(lambda u: hasattr(u, 'is_reb_officer') and u.is_reb_officer() or u.is_system_admin())
@@ -371,7 +412,13 @@ def event_list_view(request):
         events = CommunityEvent.objects.all().order_by('-start_date')
     else:
         events = CommunityEvent.objects.filter(status__in=['published', 'registration_open', 'in_progress', 'completed']).order_by('-start_date')
-    return render(request, "community/event_list.html", {'events': events})
+    
+    # Pagination
+    paginator = Paginator(events, 5)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    return render(request, "community/event_list.html", {'events': page_obj, 'page_obj': page_obj})
 
 @login_required
 @user_passes_test(lambda u: hasattr(u, 'is_school_admin') and u.is_school_admin() or u.is_reb_officer() or u.is_system_admin())

@@ -191,17 +191,9 @@
                     {% endif %}
                     {% endif %}
 
-                    {% if proposal.submitted_by == user or user.is_school_admin or user.is_system_admin %}
-                    <a href="{% url 'grants:proposal_edit' proposal.proposal_id %}" class="btn btn-outline-primary">
-                        <i class="fas fa-edit me-2"></i>Edit Proposal
-                    </a>
-                    {% endif %}
-
-                    {% if user.is_school_admin or user.is_system_admin %}
-                    <a href="{% url 'grants:proposal_delete' proposal.proposal_id %}" class="btn btn-outline-danger">
-                        <i class="fas fa-trash me-2"></i>Delete Proposal
-                    </a>
-                    {% endif %}
+                    {% comment %}
+                    Edit and Delete buttons hidden for all users
+                    {% endcomment %}
 
                     {% if proposal.status == 'draft' and proposal.submitted_by == user %}
                     <form method="post" action="{% url 'grants:proposal_submit' proposal.proposal_id %}">

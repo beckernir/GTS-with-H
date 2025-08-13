@@ -15,7 +15,21 @@
     <div class="card mb-3">
         <div class="card-body">
             <p><strong>Type:</strong> {{ forum.get_forum_type_display }}</p>
-            <p><strong>Access:</strong> {{ forum.get_access_level_display }}</p>
+            <p><strong>Access:</strong>
+                {% if forum.access_level == 'public' %}
+                Public
+                {% elif forum.access_level == 'school_members' %}
+                School Members Only
+                {% elif forum.access_level == 'registered_users' %}
+                Registered Users Only
+                {% elif forum.access_level == 'moderated' %}
+                Moderated Access
+                {% elif forum.access_level == 'private' %}
+                Private
+                {% else %}
+                {{ forum.access_level }}
+                {% endif %}
+            </p>
             <p><strong>Description:</strong> {{ forum.description }}</p>
             <p><strong>Status:</strong>
                 {% if forum.is_active %}
